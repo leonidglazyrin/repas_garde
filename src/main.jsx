@@ -13,6 +13,7 @@ import "./desserts.js";
 import "./mobileKeyboardStability.js";
 import "./libraryPickerVisibility.js";
 import "./hideNewLibraryButton.js";
+import "./libraryPlacement.js";
 import "./mobileOptimizations.css";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
