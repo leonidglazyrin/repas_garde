@@ -39,6 +39,13 @@ button {
     overflow-x: hidden;
   }
 
+  /* Sur téléphone, la grande banderole du haut défile avec la page
+     au lieu de rester collée à l'écran. */
+  header {
+    position: relative !important;
+    top: auto !important;
+  }
+
   header > div {
     width: 100%;
     max-width: 100% !important;
@@ -62,7 +69,6 @@ button {
     max-width: 100% !important;
   }
 
-  /* Cartes de repas : sur téléphone, toutes les zones passent sur une seule colonne. */
   input[placeholder="Nom du souper"] {
     width: 100% !important;
   }
@@ -72,7 +78,6 @@ button {
     max-width: none !important;
   }
 
-  /* Les blocs statut et avis parent prennent la même largeur que ingrédients/accompagnement. */
   input[placeholder^="Commentaire du parent"] {
     width: 100% !important;
     min-width: 0 !important;
@@ -83,7 +88,6 @@ button {
     flex: 1 1 auto !important;
   }
 
-  /* Le conteneur direct de l'avis parent devient pleine largeur. */
   div:has(> input[placeholder^="Commentaire du parent"]) {
     flex: 1 1 100% !important;
     width: 100% !important;
@@ -91,7 +95,6 @@ button {
     min-width: 0 !important;
   }
 
-  /* Le bloc des boutons d'avis se place aussi sur toute la largeur, sans décaler la carte. */
   div:has(> button[aria-pressed]) {
     width: 100% !important;
     flex: 1 1 100% !important;
