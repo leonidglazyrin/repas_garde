@@ -29,12 +29,13 @@ function getWeekId() {
 function getMealRow(input) {
   let node = input?.parentElement;
   while (node && node !== document.body) {
-    if (
+    const hasMealFields =
       node.querySelector?.('input[placeholder="Nom du souper"]') &&
-      node.querySelector?.('textarea[placeholder^="Ingrédients"]')
-    ) {
-      return node;
-    }
+      node.querySelector?.('textarea[placeholder^="Ingrédients"]');
+    const text = node.innerText || "";
+    const hasDay = DAYS.some(([label]) => text.includes(label));
+
+    if (hasMealFields && hasDay) return node;
     node = node.parentElement;
   }
   return null;
@@ -43,6 +44,21 @@ function getMealRow(input) {
 function getDay(row) {
   const text = row?.innerText || "";
   return DAYS.find(([label]) => text.includes(label)) || null;
+}
+
+function getMealControls(row) {
+  const input = row?.querySelector?.('input[placeholder="Nom du souper"]');
+  if (!input) return null;
+
+  let line = input.parentElement;
+  while (line && line !== row) {
+    const librarySelect = line.querySelector?.('select[aria-label="Piger dans la bibliothèque"]');
+    if (librarySelect) return { input, line, librarySelect };
+    line = line.parentElement;
+  }
+
+  const librarySelect = row.querySelector?.('select[aria-label="Piger dans la bibliothèque"]');
+  return librarySelect ? { input, line: librarySelect.parentElement, librarySelect } : null;
 }
 
 function allOptions(customOptions) {
@@ -216,17 +232,14 @@ export default function Accompaniments() {
         const row = getMealRow(input);
         const day = getDay(row);
         if (!row || !day) return;
+
         const [label, dayKey] = day;
         if (row.querySelector(`[data-accompaniment-group="${dayKey}"]`)) return;
 
-        const line = input.parentElement;
-        if (!line) return;
+        const controls = getMealControls(row);
+        if (!controls) return;
+        const { line, librarySelect } = controls;
 
-        const librarySelect = line.querySelector('select[aria-label="Piger dans la bibliothèque"]');
-        if (!librarySelect) return;
-
-        // Sur téléphone, chaque contrôle occupe sa propre ligne :
-        // nom du souper -> accompagnement -> bibliothèque.
         Object.assign(line.style, {
           display: "flex",
           flexDirection: "column",
@@ -254,6 +267,8 @@ export default function Accompaniments() {
           gap: "6px",
           width: "100%",
           minWidth: "0",
+          marginTop: "2px",
+          marginBottom: "2px",
         });
 
         const select = buildSelect(label, dayKey, customOptions, save);
