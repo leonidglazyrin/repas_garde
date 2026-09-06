@@ -14,6 +14,54 @@ button {
   max-width: 100%;
 }
 
+/* Les deux rangées accompagnement/dessert utilisent exactement la même grille. */
+[data-meal-extras-row] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+[data-accompaniment-group],
+[data-dessert-group] {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) 42px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+[data-accompaniment-group] select,
+[data-dessert-group] select {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  box-sizing: border-box !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  font-size: 16px !important;
+}
+
+[data-accompaniment-icon],
+[data-dessert-icon],
+[data-accompaniment-edit],
+[data-dessert-edit] {
+  width: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
 /* Centre la banderole du haut aussi sur ordinateur. */
 header {
   text-align: center;
@@ -151,18 +199,6 @@ header > div > div {
   header button {
     margin-left: auto;
     margin-right: auto;
-  }
-
-  [data-accompaniment-group] {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  [data-accompaniment-group] select {
-    flex: 1 1 auto;
-    min-width: 0 !important;
-    width: 100%;
-    max-width: none !important;
   }
 
   [data-meal-ingredients-toggle="true"],
