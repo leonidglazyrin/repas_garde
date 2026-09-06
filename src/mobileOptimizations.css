@@ -32,6 +32,61 @@ header > div > div {
   justify-content: center !important;
 }
 
+/* Version ordinateur : cartes des soupers mieux alignées et espacées.
+   La version téléphone reste inchangée plus bas. */
+@media (min-width: 701px) {
+  main {
+    --desktop-section-gap: 22px;
+  }
+
+  main > section,
+  main > #discover-dishes-slot {
+    margin-bottom: var(--desktop-section-gap) !important;
+  }
+
+  /* Une carte de souper contient : jour, plat, avis, commentaire parent. */
+  div:has(> div > input[placeholder^="Commentaire du parent"]):has(input[placeholder="Nom du souper"]) {
+    display: grid !important;
+    grid-template-columns: 92px minmax(280px, 2fr) 142px minmax(240px, 1.15fr);
+    column-gap: 18px !important;
+    row-gap: 10px !important;
+    align-items: start !important;
+  }
+
+  div:has(> div > input[placeholder^="Commentaire du parent"]):has(input[placeholder="Nom du souper"]) > div {
+    min-width: 0 !important;
+  }
+
+  /* Avis des parents : même logique qu'avant, mais mieux posé sur ordinateur. */
+  div:has(> input[placeholder^="Commentaire du parent"]) {
+    width: 100% !important;
+    min-width: 0 !important;
+    align-self: stretch !important;
+    display: flex !important;
+    align-items: stretch !important;
+  }
+
+  input[placeholder^="Commentaire du parent"] {
+    width: 100% !important;
+    min-height: 40px !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+  }
+
+  div:has(> button[aria-pressed]) {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  div:has(> button[aria-pressed]) > button {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 34px !important;
+  }
+}
+
 @media (max-width: 700px) {
   input,
   textarea,
