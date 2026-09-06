@@ -29,7 +29,7 @@ function getResultsBlocks(section) {
   return Array.from(content.children).filter((child) => {
     if (child === searchRow) return false;
     if (child.dataset.libraryTabs === "true") return false;
-    if (child.dataset.libraryAlphabet === "true") return false;
+    if (child.dataset.libraryGenres === "true") return false;
     if (child.querySelector?.('input[placeholder="Nom du plat"]')) return false;
     return true;
   });
@@ -48,19 +48,38 @@ function getDishCards(section) {
   return cards;
 }
 
-function getDishName(card) {
-  return card?.querySelector("[data-library-dish-name]")?.textContent?.trim() ||
-    card?.querySelector("span")?.textContent?.trim() || "";
-}
-
-function getInitial(name) {
-  const first = String(name || "")
+function normalize(value) {
+  return String(value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .charAt(0)
-    .toUpperCase();
-  return /^[A-Z]$/.test(first) ? first : "#";
+    .toLocaleLowerCase("fr-CA");
+}
+
+function getDishText(card) {
+  return normalize(card?.textContent || "");
+}
+
+const GENRES = [
+  { key: "poulet", label: "Poulet / volaille", words: ["poulet", "dinde", "volaille", "canard"] },
+  { key: "boeuf", label: "Bœuf", words: ["boeuf", "bœuf", "steak", "boeuf hache", "bœuf haché"] },
+  { key: "porc", label: "Porc", words: ["porc", "jambon", "bacon", "saucisse", "cotelette"] },
+  { key: "poisson", label: "Poisson / fruits de mer", words: ["poisson", "saumon", "thon", "crevette", "morue", "tilapia", "truite", "fruits de mer"] },
+  { key: "pates", label: "Pâtes", words: ["pate", "pâtes", "spaghetti", "lasagne", "macaroni", "penne", "linguine", "ravioli", "tortellini"] },
+  { key: "riz", label: "Riz / bols", words: ["riz", "bol ", "poke", "buddha"] },
+  { key: "soupe", label: "Soupes / chili", words: ["soupe", "potage", "chili", "ragoût", "ragout"] },
+  { key: "vegetarien", label: "Végétarien", words: ["tofu", "lentille", "pois chiche", "haricot", "vegetar", "végétar", "falafel"] },
+];
+
+function getGenre(card) {
+  const text = getDishText(card);
+  for (const genre of GENRES) {
+    if (genre.words.some((word) => text.includes(normalize(word)))) return genre.key;
+  }
+  return "autres";
+}
+
+function genreLabel(key) {
+  return GENRES.find((genre) => genre.key === key)?.label || "Autres";
 }
 
 function isOpen(section) {
@@ -111,11 +130,10 @@ function ensureTabs(section) {
   styleTab(savedTab, isOpen(section));
 }
 
-function styleLetterButton(button, active) {
+function styleGenreButton(button, active) {
   Object.assign(button.style, {
-    minWidth: "34px",
     minHeight: "34px",
-    padding: "5px 9px",
+    padding: "6px 10px",
     borderRadius: "17px",
     border: `1px solid ${active ? "var(--herb)" : "var(--line)"}`,
     background: active ? "var(--herb)" : "var(--card)",
@@ -126,48 +144,48 @@ function styleLetterButton(button, active) {
   });
 }
 
-function ensureAlphabet(section) {
+function ensureGenres(section) {
   const content = getLibraryContent(section);
   const searchRow = getSearchRow(section);
   if (!content || !searchRow) return;
 
-  let alphabet = content.querySelector("[data-library-alphabet]");
-  if (!alphabet) {
-    alphabet = document.createElement("div");
-    alphabet.dataset.libraryAlphabet = "true";
-    alphabet.setAttribute("aria-label", "Filtrer les plats par lettre");
-    Object.assign(alphabet.style, {
+  let filters = content.querySelector("[data-library-genres]");
+  if (!filters) {
+    filters = document.createElement("div");
+    filters.dataset.libraryGenres = "true";
+    filters.setAttribute("aria-label", "Filtrer les plats par genre");
+    Object.assign(filters.style, {
       display: "flex",
       flexWrap: "wrap",
       gap: "6px",
       marginBottom: "10px",
     });
-    searchRow.insertAdjacentElement("afterend", alphabet);
+    searchRow.insertAdjacentElement("afterend", filters);
   }
 
-  const letters = Array.from(new Set(getDishCards(section).map((card) => getInitial(getDishName(card)))))
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b, "fr"));
-  const wanted = ["ALL", ...letters];
-  const currentButtons = Array.from(alphabet.querySelectorAll("button[data-library-letter]"));
-  const current = currentButtons.map((button) => button.dataset.libraryLetter).join("|");
+  const available = Array.from(new Set(getDishCards(section).map(getGenre)));
+  const ordered = [...GENRES.map((genre) => genre.key), "autres"].filter((key) => available.includes(key));
+  const wanted = ["ALL", ...ordered];
+  const current = Array.from(filters.querySelectorAll("button[data-library-genre]"))
+    .map((button) => button.dataset.libraryGenre)
+    .join("|");
+
   if (current !== wanted.join("|")) {
-    alphabet.replaceChildren();
-    wanted.forEach((letter) => {
+    filters.replaceChildren();
+    wanted.forEach((key) => {
       const button = document.createElement("button");
       button.type = "button";
-      button.dataset.libraryLetter = letter;
-      button.textContent = letter === "ALL" ? "Tous" : letter;
-      button.setAttribute("aria-label", letter === "ALL" ? "Afficher tous les plats" : `Afficher les plats en ${letter}`);
-      alphabet.appendChild(button);
+      button.dataset.libraryGenre = key;
+      button.textContent = key === "ALL" ? "Tous" : genreLabel(key);
+      filters.appendChild(button);
     });
   }
 
-  const selected = section.dataset.libraryLetter || "ALL";
-  alphabet.querySelectorAll("button[data-library-letter]").forEach((button) => {
-    styleLetterButton(button, button.dataset.libraryLetter === selected);
+  const selected = section.dataset.libraryGenre || "ALL";
+  filters.querySelectorAll("button[data-library-genre]").forEach((button) => {
+    styleGenreButton(button, button.dataset.libraryGenre === selected);
   });
-  alphabet.style.display = isOpen(section) && letters.length ? "flex" : "none";
+  filters.style.display = isOpen(section) && available.length ? "flex" : "none";
 }
 
 function setBlockVisible(block, visible) {
@@ -188,16 +206,16 @@ function setBlockVisible(block, visible) {
   }
 }
 
-function applyLetterFilter(section) {
-  const selected = section.dataset.libraryLetter || "ALL";
+function applyGenreFilter(section) {
+  const selected = section.dataset.libraryGenre || "ALL";
   getDishCards(section).forEach((card) => {
-    const matches = selected === "ALL" || getInitial(getDishName(card)) === selected;
-    card.style.setProperty("display", matches ? "" : "none", matches ? "" : "important");
+    const matches = selected === "ALL" || getGenre(card) === selected;
     if (matches) card.style.removeProperty("display");
+    else card.style.setProperty("display", "none", "important");
   });
 
-  section.querySelectorAll("button[data-library-letter]").forEach((button) => {
-    styleLetterButton(button, button.dataset.libraryLetter === selected);
+  section.querySelectorAll("button[data-library-genre]").forEach((button) => {
+    styleGenreButton(button, button.dataset.libraryGenre === selected);
   });
 }
 
@@ -215,8 +233,8 @@ function syncResults(section) {
   const savedTab = section.querySelector("[data-library-mode-button='saved']");
   if (savedTab) styleTab(savedTab, open);
   section.querySelector("[data-library-toggle]")?.remove();
-  ensureAlphabet(section);
-  applyLetterFilter(section);
+  ensureGenres(section);
+  applyGenreFilter(section);
 }
 
 function toggleDish(card) {
@@ -264,14 +282,14 @@ function initLibraryDisclosure() {
 
   section.dataset.libraryDisclosureReady = "true";
   section.dataset.libraryOpen = "false";
-  section.dataset.libraryLetter = "ALL";
+  section.dataset.libraryGenre = "ALL";
   ensureTabs(section);
   decorateLibrary(section);
-  ensureAlphabet(section);
+  ensureGenres(section);
   syncResults(section);
 
   search.addEventListener("input", () => {
-    section.dataset.libraryLetter = "ALL";
+    section.dataset.libraryGenre = "ALL";
     requestAnimationFrame(() => {
       decorateLibrary(section);
       syncResults(section);
@@ -286,10 +304,10 @@ function initLibraryDisclosure() {
       return;
     }
 
-    const letterButton = event.target.closest?.("button[data-library-letter]");
-    if (letterButton) {
-      section.dataset.libraryLetter = letterButton.dataset.libraryLetter || "ALL";
-      applyLetterFilter(section);
+    const genreButton = event.target.closest?.("button[data-library-genre]");
+    if (genreButton) {
+      section.dataset.libraryGenre = genreButton.dataset.libraryGenre || "ALL";
+      applyGenreFilter(section);
       return;
     }
 
@@ -313,7 +331,7 @@ function initLibraryDisclosure() {
     requestAnimationFrame(() => {
       ensureTabs(section);
       decorateLibrary(section);
-      ensureAlphabet(section);
+      ensureGenres(section);
       syncResults(section);
       syncing = false;
     });
