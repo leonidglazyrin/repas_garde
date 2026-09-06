@@ -197,6 +197,27 @@ function decorateActionButtons() {
   });
 }
 
+function customizeUi() {
+  document.querySelectorAll("button").forEach((button) => {
+    if ((button.textContent || "").includes("Copier la semaine dernière")) {
+      button.remove();
+    }
+  });
+
+  document.querySelectorAll('select[aria-label="Piger dans la bibliothèque"]').forEach((select) => {
+    const firstOption = select.querySelector('option[value=""]');
+    if (firstOption) firstOption.textContent = "Piger dans la bibliothèque";
+    select.style.maxWidth = "230px";
+  });
+
+  document.querySelectorAll("p").forEach((paragraph) => {
+    const text = (paragraph.textContent || "").trim();
+    if (text.startsWith("📱 Ajoute ce lien à l'écran d'accueil")) {
+      paragraph.remove();
+    }
+  });
+}
+
 // Chaque frappe est mise en file et persistée dans l'ordre. Ainsi, même si la
 // personne tape vite, la dernière valeur finit toujours dans Supabase.
 document.addEventListener("input", (event) => {
@@ -225,16 +246,21 @@ document.addEventListener("click", (event) => {
     return;
   }
 
-  if (/Ajouter|Enregistrer|Copier la semaine/.test(text)) {
+  if (/Ajouter|Enregistrer/.test(text)) {
     showBadge("saving", "Synchronisation…");
     clearTimeout(badgeTimer);
     badgeTimer = setTimeout(() => showBadge("saved", "Synchronisé"), 700);
   }
 });
 
-const observer = new MutationObserver(() => decorateActionButtons());
+const refreshUi = () => {
+  decorateActionButtons();
+  customizeUi();
+};
+
+const observer = new MutationObserver(refreshUi);
 observer.observe(document.documentElement, { childList: true, subtree: true });
-queueMicrotask(decorateActionButtons);
+queueMicrotask(refreshUi);
 
 // App.jsx est abonné à Supabase Realtime. Dès qu'une écriture arrive dans la
 // base, les autres appareils rechargent automatiquement les données concernées.
