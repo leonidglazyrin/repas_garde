@@ -11,6 +11,7 @@ import "./todayFocus.js";
 import "./desserts.js";
 import "./mobileKeyboardStability.js";
 import "./libraryPickerVisibility.js";
+import "./hideNewLibraryButton.js";
 import "./mobileOptimizations.css";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
