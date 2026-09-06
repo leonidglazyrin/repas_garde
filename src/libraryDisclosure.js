@@ -10,81 +10,39 @@ function getLibraryContent(section) {
   ) || null;
 }
 
+function getSearchInput(section) {
+  return getLibraryContent(section)?.querySelector?.('input[placeholder="Chercher un plat ou un ingrédient..."]') || null;
+}
+
 function getResultsBlocks(section) {
   const content = getLibraryContent(section);
   if (!content) return [];
 
   const children = Array.from(content.children);
   return children.filter((child, index) => {
-    // Le premier bloc contient la recherche + « Nouveau plat » et reste toujours visible.
+    // La première ligne contient toujours la recherche + « Nouveau plat ».
     if (index === 0) return false;
 
-    // Le formulaire « Nouveau plat » doit rester utilisable même quand les plats sont repliés.
+    // Le formulaire de création reste visible lorsqu'il est ouvert.
     if (child.querySelector?.('input[placeholder="Nom du plat"]')) return false;
 
-    // Le reste correspond à la grille de plats ou au message « aucun plat ».
+    // Le reste correspond aux résultats de recherche ou au message « aucun plat ».
     return true;
   });
 }
 
-function setResultsVisible(section, visible) {
+function syncSearchResults(section) {
+  const search = getSearchInput(section);
+  if (!search) return;
+
+  const hasQuery = search.value.trim().length > 0;
   getResultsBlocks(section).forEach((block) => {
-    block.hidden = !visible;
+    block.hidden = !hasQuery;
     block.dataset.libraryResultsBlock = "true";
   });
-}
 
-function toggleLibrary(section) {
-  const button = section.querySelector("[data-library-toggle]");
-  if (!button) return;
-
-  const opening = button.getAttribute("aria-expanded") !== "true";
-  setResultsVisible(section, opening);
-  button.setAttribute("aria-expanded", String(opening));
-  button.textContent = opening ? "Masquer les plats ▴" : "Afficher les plats ▾";
-}
-
-function ensureLibraryToggle(section) {
-  const content = getLibraryContent(section);
-  if (!content) return;
-
-  let button = section.querySelector("[data-library-toggle]");
-  if (!button) {
-    button = document.createElement("button");
-    button.type = "button";
-    button.dataset.libraryToggle = "true";
-    button.setAttribute("aria-expanded", "false");
-    button.textContent = "Afficher les plats ▾";
-    Object.assign(button.style, {
-      width: "100%",
-      minHeight: "42px",
-      marginTop: "10px",
-      marginBottom: "10px",
-      border: "1px solid var(--line)",
-      borderRadius: "8px",
-      padding: "9px 12px",
-      background: "var(--card)",
-      color: "var(--ink)",
-      fontSize: "16px",
-      fontWeight: "600",
-      textAlign: "left",
-      cursor: "pointer",
-    });
-
-    // Le bouton est placé dans la bibliothèque, après la barre de recherche.
-    const firstRow = content.firstElementChild;
-    if (firstRow?.nextSibling) content.insertBefore(button, firstRow.nextSibling);
-    else content.appendChild(button);
-  }
-
-  if (!content.dataset.libraryCollapsedReady) {
-    content.dataset.libraryCollapsedReady = "true";
-    setResultsVisible(section, false);
-  } else {
-    // React peut recréer la grille après une recherche : conserver l'état courant.
-    const visible = button.getAttribute("aria-expanded") === "true";
-    setResultsVisible(section, visible);
-  }
+  // Ancien bouton de dépliage : il n'est plus nécessaire.
+  section.querySelector("[data-library-toggle]")?.remove();
 }
 
 function toggleDish(card) {
@@ -127,17 +85,23 @@ function initLibraryDisclosure() {
   const section = findLibrarySection();
   if (!section || section.dataset.libraryDisclosureReady === "true") return false;
 
+  const search = getSearchInput(section);
+  if (!search) return false;
+
   section.dataset.libraryDisclosureReady = "true";
-  ensureLibraryToggle(section);
   decorateLibrary(section);
+  syncSearchResults(section);
+
+  // Les recettes apparaissent uniquement dès qu'on écrit un nom de plat
+  // ou un ingrédient dans la barre de recherche.
+  search.addEventListener("input", () => {
+    requestAnimationFrame(() => {
+      decorateLibrary(section);
+      syncSearchResults(section);
+    });
+  });
 
   section.addEventListener("click", (event) => {
-    const libraryToggle = event.target.closest?.("[data-library-toggle]");
-    if (libraryToggle) {
-      toggleLibrary(section);
-      return;
-    }
-
     if (event.target.closest('button[aria-label^="Supprimer "]')) return;
     const name = event.target.closest("[data-library-dish-name]");
     if (!name) return;
@@ -152,8 +116,8 @@ function initLibraryDisclosure() {
   });
 
   const observer = new MutationObserver(() => {
-    ensureLibraryToggle(section);
     decorateLibrary(section);
+    syncSearchResults(section);
   });
   observer.observe(section, { childList: true, subtree: true });
   return true;
