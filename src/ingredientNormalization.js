@@ -40,15 +40,19 @@ const UNIT_WORDS = new Set([
   "tranches",
 ]);
 
+const LEADING_WORDS = new Set(["de", "des", "du", "le", "la", "les", "un", "une"]);
+
 function singularizeWord(word) {
   if (!word || INVARIANT_WORDS.has(word)) return word;
   if (IRREGULAR.has(word)) return IRREGULAR.get(word);
 
-  if (word.length > 4 && word.endsWith("aux")) {
-    return `${word.slice(0, -3)}al`;
-  }
+  // poireaux -> poireau, gâteaux -> gâteau
   if (word.length > 4 && word.endsWith("eaux")) {
     return word.slice(0, -1);
+  }
+  // chevaux -> cheval
+  if (word.length > 4 && word.endsWith("aux")) {
+    return `${word.slice(0, -3)}al`;
   }
   if (word.length > 3 && word.endsWith("s")) {
     return word.slice(0, -1);
@@ -67,7 +71,7 @@ function stripLeadingQuantity(words) {
       copy.shift();
       continue;
     }
-    if (UNIT_WORDS.has(first)) {
+    if (UNIT_WORDS.has(first) || LEADING_WORDS.has(first)) {
       copy.shift();
       continue;
     }
@@ -81,6 +85,7 @@ export function canonicalIngredientKey(value) {
     .normalize("NFKC")
     .toLocaleLowerCase("fr-CA")
     .replace(/[’']/g, "'")
+    .replace(/^(\d+(?:[.,]\d+)?)(kg|mg|g|ml|cl|dl|l)\b/u, "$1 $2 ")
     .replace(/[()\[\]{}]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
