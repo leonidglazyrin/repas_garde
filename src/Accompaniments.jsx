@@ -9,19 +9,16 @@ const DAYS = [
   ["Vendredi", "fri"],
 ];
 
-const OPTIONS = [
-  "Salade",
-  "Légumes",
-  "Riz",
-  "Pâtes",
-  "Pommes de terre",
-  "Frites",
-  "Couscous",
-  "Quinoa",
-  "Pain",
-  "Soupe",
-  "Aucun",
-  "À décider",
+const DEFAULT_OPTIONS = [
+  "Salade composée",
+  "Riz basmati",
+  "Riz collant",
+  "Assortiments de légumes chauds",
+  "Semoules",
+  "Purées de pommes de terres",
+  "Pommes de terres sautées",
+  "Pains naans",
+  "Pains pita",
 ];
 
 function getWeekId() {
@@ -48,7 +45,41 @@ function getDay(row) {
   return DAYS.find(([label]) => text.includes(label)) || null;
 }
 
-function buildSelect(label, dayKey, onChange) {
+function allOptions(customOptions) {
+  const seen = new Set();
+  return [...DEFAULT_OPTIONS, ...customOptions]
+    .map((value) => String(value || "").trim())
+    .filter((value) => {
+      const key = value.toLocaleLowerCase("fr-CA");
+      if (!value || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function refillSelect(select, customOptions, selectedValue = "") {
+  const current = selectedValue || select.value || "";
+  select.replaceChildren();
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Accompagnement…";
+  select.appendChild(placeholder);
+
+  const options = allOptions(customOptions);
+  if (current && !options.some((value) => value === current)) options.push(current);
+
+  options.forEach((value) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  });
+
+  select.value = current;
+}
+
+function buildSelect(label, dayKey, customOptions, onChange) {
   const select = document.createElement("select");
   select.dataset.accompanimentDay = dayKey;
   select.setAttribute("aria-label", `Accompagnement pour ${label}`);
@@ -61,25 +92,40 @@ function buildSelect(label, dayKey, onChange) {
     fontSize: "13px",
     background: "var(--card)",
     color: "var(--ink)",
-    maxWidth: "190px",
-    minWidth: "155px",
+    maxWidth: "220px",
+    minWidth: "175px",
     cursor: "pointer",
   });
 
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "Accompagnement…";
-  select.appendChild(placeholder);
-
-  OPTIONS.forEach((value) => {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = value;
-    select.appendChild(option);
-  });
-
+  refillSelect(select, customOptions);
   select.addEventListener("change", () => onChange(dayKey, select.value));
   return select;
+}
+
+function buildEditButton(onClick) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.accompanimentEdit = "true";
+  button.textContent = "✎";
+  button.setAttribute("aria-label", "Ajouter une idée d’accompagnement");
+  button.title = "Ajouter une idée d’accompagnement";
+  Object.assign(button.style, {
+    width: "30px",
+    height: "30px",
+    borderRadius: "7px",
+    border: "1px solid var(--line)",
+    background: "var(--card)",
+    color: "var(--ink-soft)",
+    cursor: "pointer",
+    fontSize: "16px",
+    lineHeight: "1",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: "0",
+  });
+  button.addEventListener("click", onClick);
+  return button;
 }
 
 export default function Accompaniments() {
@@ -87,14 +133,55 @@ export default function Accompaniments() {
     let disposed = false;
     let activeWeek = null;
     let channel = null;
+    let optionChannel = null;
     let frame = null;
+    let customOptions = [];
+
+    const updateAllMenus = () => {
+      document.querySelectorAll("select[data-accompaniment-day]").forEach((select) => {
+        refillSelect(select, customOptions, select.value);
+      });
+    };
 
     const setValues = (rows = []) => {
       const values = Object.fromEntries(rows.map((row) => [row.day_key, row.accompaniment || ""]));
       document.querySelectorAll("select[data-accompaniment-day]").forEach((select) => {
         const value = values[select.dataset.accompanimentDay] || "";
-        if (document.activeElement !== select) select.value = value;
+        if (document.activeElement !== select) refillSelect(select, customOptions, value);
       });
+    };
+
+    const loadOptions = async () => {
+      const { data, error } = await supabase
+        .from("accompaniment_options")
+        .select("name")
+        .order("name", { ascending: true });
+      if (disposed) return;
+      if (error) {
+        console.error("fetch accompaniment_options", error);
+        return;
+      }
+      customOptions = (data || []).map((row) => row.name).filter(Boolean);
+      updateAllMenus();
+    };
+
+    const addCustomOption = async () => {
+      const idea = window.prompt("Nouvelle idée d’accompagnement :", "");
+      const name = String(idea || "").trim();
+      if (!name) return;
+
+      if (!allOptions(customOptions).some((value) => value.toLocaleLowerCase("fr-CA") === name.toLocaleLowerCase("fr-CA"))) {
+        customOptions = [...customOptions, name];
+        updateAllMenus();
+      }
+
+      const { error } = await supabase
+        .from("accompaniment_options")
+        .upsert({ name, updated_at: new Date().toISOString() }, { onConflict: "name" });
+      if (error) {
+        console.error("save accompaniment option", error);
+        loadOptions();
+      }
     };
 
     const loadWeek = async (weekId) => {
@@ -129,11 +216,23 @@ export default function Accompaniments() {
         const day = getDay(row);
         if (!row || !day) return;
         const [label, dayKey] = day;
-        if (row.querySelector(`select[data-accompaniment-day="${dayKey}"]`)) return;
+        if (row.querySelector(`[data-accompaniment-group="${dayKey}"]`)) return;
 
         const line = input.parentElement;
         if (!line) return;
-        line.appendChild(buildSelect(label, dayKey, save));
+
+        const group = document.createElement("span");
+        group.dataset.accompanimentGroup = dayKey;
+        Object.assign(group.style, {
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "5px",
+          flexWrap: "nowrap",
+        });
+
+        group.appendChild(buildSelect(label, dayKey, customOptions, save));
+        group.appendChild(buildEditButton(addCustomOption));
+        line.appendChild(group);
       });
     };
 
@@ -147,6 +246,13 @@ export default function Accompaniments() {
           { event: "*", schema: "public", table: "week_accompaniments", filter: `week_id=eq.${weekId}` },
           () => loadWeek(weekId)
         )
+        .subscribe();
+    };
+
+    const subscribeOptions = () => {
+      optionChannel = supabase
+        .channel("accompaniment-options")
+        .on("postgres_changes", { event: "*", schema: "public", table: "accompaniment_options" }, loadOptions)
         .subscribe();
     };
 
@@ -169,6 +275,8 @@ export default function Accompaniments() {
       });
     };
 
+    loadOptions();
+    subscribeOptions();
     sync();
     const root = document.getElementById("root") || document.body;
     const observer = new MutationObserver(scheduleSync);
@@ -179,7 +287,8 @@ export default function Accompaniments() {
       observer.disconnect();
       if (frame !== null) cancelAnimationFrame(frame);
       if (channel) supabase.removeChannel(channel);
-      document.querySelectorAll("select[data-accompaniment-day]").forEach((select) => select.remove());
+      if (optionChannel) supabase.removeChannel(optionChannel);
+      document.querySelectorAll("[data-accompaniment-group]").forEach((group) => group.remove());
     };
   }, []);
 
