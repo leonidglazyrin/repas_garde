@@ -11,10 +11,13 @@ const DAY_KEYS = {
 // On attend une vraie pause de saisie avant d'écrire dans Supabase.
 // Cela évite qu'un retour Realtime arrive pendant que quelqu'un est encore en train de taper.
 const AUTOSAVE_DELAY_MS = 1500;
+const REALTIME_WARNING_DELAY_MS = 5000;
 
 const mealTimers = new Map();
 let weekendTimer = null;
 let badgeTimer = null;
+let realtimeWarningTimer = null;
+let realtimeHealthy = false;
 
 function getWeekId() {
   const match = document.body?.innerText?.match(/Semaine\s+(\d{4}-S\d{2})/);
@@ -66,11 +69,13 @@ function showBadge(message, persistent = false) {
 }
 
 function ensureRefreshReminder() {
-  if (document.getElementById("refresh-reminder")) return;
+  let reminder = document.getElementById("refresh-reminder");
+  if (reminder) return reminder;
 
-  const reminder = document.createElement("div");
+  reminder = document.createElement("div");
   reminder.id = "refresh-reminder";
   reminder.setAttribute("role", "note");
+  reminder.setAttribute("aria-live", "polite");
   reminder.textContent = "↻ N’oubliez pas d’actualiser la page pour voir les dernières modifications";
   Object.assign(reminder.style, {
     position: "fixed",
@@ -89,8 +94,74 @@ function ensureRefreshReminder() {
     fontWeight: "700",
     lineHeight: "1.25",
     textAlign: "center",
+    opacity: "0",
+    transform: "translateY(-5px)",
+    transition: "opacity .2s ease, transform .2s ease",
+    pointerEvents: "none",
   });
   document.body.appendChild(reminder);
+  return reminder;
+}
+
+function setRefreshReminderVisible(visible) {
+  const reminder = ensureRefreshReminder();
+  reminder.style.opacity = visible ? "1" : "0";
+  reminder.style.transform = visible ? "translateY(0)" : "translateY(-5px)";
+}
+
+function markRealtimeHealthy() {
+  realtimeHealthy = true;
+  clearTimeout(realtimeWarningTimer);
+  setRefreshReminderVisible(false);
+}
+
+function markRealtimeUnavailable() {
+  realtimeHealthy = false;
+  clearTimeout(realtimeWarningTimer);
+  setRefreshReminderVisible(true);
+}
+
+function monitorRealtimeHealth() {
+  ensureRefreshReminder();
+
+  if (!supabaseConfigured || !navigator.onLine) {
+    markRealtimeUnavailable();
+    return;
+  }
+
+  // Ce canal ne transporte aucune donnée métier. Il sert uniquement à vérifier
+  // que la connexion Realtime est réellement active. Tant qu'elle fonctionne,
+  // le rappel d'actualisation reste caché.
+  const channel = supabase.channel("realtime-ui-health").subscribe((status) => {
+    if (status === "SUBSCRIBED") {
+      markRealtimeHealthy();
+      return;
+    }
+
+    if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+      markRealtimeUnavailable();
+    }
+  });
+
+  realtimeWarningTimer = setTimeout(() => {
+    if (!realtimeHealthy) setRefreshReminderVisible(true);
+  }, REALTIME_WARNING_DELAY_MS);
+
+  window.addEventListener("offline", markRealtimeUnavailable);
+  window.addEventListener("online", () => {
+    // On ne cache pas le rappel simplement parce qu'Internet revient :
+    // on attend la confirmation SUBSCRIBED du canal Realtime.
+    if (!realtimeHealthy) {
+      clearTimeout(realtimeWarningTimer);
+      realtimeWarningTimer = setTimeout(() => {
+        if (!realtimeHealthy) setRefreshReminderVisible(true);
+      }, REALTIME_WARNING_DELAY_MS);
+    }
+  });
+
+  window.addEventListener("beforeunload", () => {
+    supabase.removeChannel(channel);
+  });
 }
 
 function applyAppTitle() {
@@ -218,10 +289,9 @@ document.addEventListener("input", (event) => {
   }
 });
 
-// Le rendu React se fait juste après l'import de ce module. Un microtask suffit
-// pour appliquer les éléments statiques sans observer continuellement tout le DOM.
+// Le rendu React se fait juste après l'import de ce module.
 queueMicrotask(() => {
-  ensureRefreshReminder();
   applyAppTitle();
+  monitorRealtimeHealth();
 });
 setTimeout(applyAppTitle, 100);
