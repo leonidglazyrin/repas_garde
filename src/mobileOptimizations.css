@@ -44,11 +44,40 @@ button {
   header {
     position: relative !important;
     top: auto !important;
+    text-align: center !important;
   }
 
+  /* Centre tout le contenu de la banderole comme sur ordinateur. */
   header > div {
     width: 100%;
     max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  header h1,
+  header h2,
+  header p,
+  header span {
+    text-align: center !important;
+  }
+
+  /* La ligne semaine + flèches reste centrée horizontalement. */
+  header div:has(> button) {
+    justify-content: center !important;
+    align-items: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Le bouton Aujourd'hui reste centré sous la date. */
+  header button {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   [data-accompaniment-group] {
