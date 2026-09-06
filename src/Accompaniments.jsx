@@ -228,11 +228,16 @@ export default function Accompaniments() {
           alignItems: "center",
           gap: "5px",
           flexWrap: "nowrap",
+          order: "1",
         });
 
         group.appendChild(buildSelect(label, dayKey, customOptions, save));
         group.appendChild(buildEditButton(addCustomOption));
-        line.appendChild(group);
+
+        // Le menu doit apparaître immédiatement à côté du champ « Nom du souper »,
+        // avant le menu « Piger dans la bibliothèque ».
+        if (input.nextSibling) line.insertBefore(group, input.nextSibling);
+        else line.appendChild(group);
       });
     };
 
