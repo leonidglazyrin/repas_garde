@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
+import Accompaniments from "./Accompaniments.jsx";
 import "./autosaveRealtime.js";
 import "./libraryDisclosure.js";
 
@@ -30,6 +31,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <>
     <ErrorBoundary fallback={<div style={{ padding: 24, fontFamily: "system-ui" }}>L'application n'a pas pu s'afficher. Recharge la page.</div>}>
       <App />
+    </ErrorBoundary>
+    <ErrorBoundary fallback={null}>
+      <Accompaniments />
     </ErrorBoundary>
     <ErrorBoundary fallback={null}>
       <React.Suspense fallback={null}>
