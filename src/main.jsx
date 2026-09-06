@@ -6,6 +6,7 @@ import "./autosaveRealtime.js";
 import "./libraryDisclosure.js";
 import "./groceryGrouping.js";
 import "./groceryCategories.js";
+import "./groceryDisclosure.js";
 import "./mealIngredientDisclosure.js";
 import "./todayFocus.js";
 import "./desserts.js";
