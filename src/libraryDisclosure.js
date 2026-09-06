@@ -34,24 +34,20 @@ function getResultsBlocks(section) {
   });
 }
 
-function getMode(section) {
-  return section.dataset.libraryMode || "search";
-}
-
-function styleTab(button, active) {
+function styleTab(button) {
   Object.assign(button.style, {
-    flex: "1 1 160px",
+    width: "100%",
     minHeight: "42px",
-    border: `1px solid ${active ? "var(--herb)" : "var(--line)"}`,
+    border: "1px solid var(--herb)",
     borderRadius: "8px",
     padding: "9px 12px",
-    background: active ? "var(--herb-soft)" : "var(--card)",
-    color: active ? "var(--herb)" : "var(--ink-soft)",
+    background: "var(--herb-soft)",
+    color: "var(--herb)",
     fontSize: "14px",
     fontWeight: "700",
-    cursor: "pointer",
+    cursor: "default",
   });
-  button.setAttribute("aria-selected", String(active));
+  button.setAttribute("aria-selected", "true");
 }
 
 function ensureTabs(section) {
@@ -63,71 +59,35 @@ function ensureTabs(section) {
     tabs = document.createElement("div");
     tabs.dataset.libraryTabs = "true";
     tabs.setAttribute("role", "tablist");
-    Object.assign(tabs.style, {
-      display: "flex",
-      gap: "8px",
-      flexWrap: "wrap",
-      marginBottom: "10px",
-    });
-
-    const searchTab = document.createElement("button");
-    searchTab.type = "button";
-    searchTab.dataset.libraryModeButton = "search";
-    searchTab.setAttribute("role", "tab");
-    searchTab.textContent = "Recherche";
-
-    const savedTab = document.createElement("button");
-    savedTab.type = "button";
-    savedTab.dataset.libraryModeButton = "saved";
-    savedTab.setAttribute("role", "tab");
-    savedTab.textContent = "Bibliothèque de plats déjà faits";
-
-    tabs.append(searchTab, savedTab);
+    tabs.style.marginBottom = "10px";
     content.insertBefore(tabs, content.firstElementChild);
   }
 
-  section.querySelectorAll("[data-library-mode-button]").forEach((button) => {
-    styleTab(button, button.dataset.libraryModeButton === getMode(section));
-  });
-}
+  tabs.replaceChildren();
 
-function forceBlockVisibility(block, visible) {
-  block.dataset.libraryResultsBlock = "true";
-  block.hidden = !visible;
-  block.setAttribute("aria-hidden", String(!visible));
-
-  if (visible) {
-    block.style.removeProperty("display");
-    block.style.removeProperty("visibility");
-    block.style.removeProperty("height");
-    block.style.removeProperty("overflow");
-  } else {
-    // Le JSX de React applique parfois display:grid en inline, ce qui peut annuler
-    // l'attribut hidden sur iPhone. On force donc réellement l'absence du bloc.
-    block.style.setProperty("display", "none", "important");
-    block.style.setProperty("visibility", "hidden", "important");
-    block.style.setProperty("height", "0", "important");
-    block.style.setProperty("overflow", "hidden", "important");
-  }
+  const savedTab = document.createElement("button");
+  savedTab.type = "button";
+  savedTab.dataset.libraryModeButton = "saved";
+  savedTab.setAttribute("role", "tab");
+  savedTab.textContent = "Bibliothèque de plats déjà faits";
+  styleTab(savedTab);
+  tabs.appendChild(savedTab);
 }
 
 function syncResults(section) {
   const search = getSearchInput(section);
   if (!search) return;
 
-  const mode = getMode(section);
-  const visible = mode === "saved";
-
-  getResultsBlocks(section).forEach((block) => forceBlockVisibility(block, visible));
-
-  search.placeholder = mode === "saved"
-    ? "Filtrer les plats déjà faits ou un ingrédient..."
-    : "Chercher un plat ou un ingrédient...";
-
-  section.querySelectorAll("[data-library-mode-button]").forEach((button) => {
-    styleTab(button, button.dataset.libraryModeButton === mode);
+  getResultsBlocks(section).forEach((block) => {
+    block.hidden = false;
+    block.removeAttribute("aria-hidden");
+    block.style.removeProperty("display");
+    block.style.removeProperty("visibility");
+    block.style.removeProperty("height");
+    block.style.removeProperty("overflow");
   });
 
+  search.placeholder = "Filtrer les plats déjà faits ou un ingrédient...";
   section.querySelector("[data-library-toggle]")?.remove();
 }
 
@@ -175,7 +135,6 @@ function initLibraryDisclosure() {
   if (!search) return false;
 
   section.dataset.libraryDisclosureReady = "true";
-  section.dataset.libraryMode = "search";
   ensureTabs(section);
   decorateLibrary(section);
   syncResults(section);
@@ -188,13 +147,7 @@ function initLibraryDisclosure() {
   });
 
   section.addEventListener("click", (event) => {
-    const modeButton = event.target.closest?.("[data-library-mode-button]");
-    if (modeButton) {
-      section.dataset.libraryMode = modeButton.dataset.libraryModeButton;
-      syncResults(section);
-      return;
-    }
-
+    if (event.target.closest?.("[data-library-mode-button]")) return;
     if (event.target.closest('button[aria-label^="Supprimer "]')) return;
     const name = event.target.closest("[data-library-dish-name]");
     if (!name) return;
