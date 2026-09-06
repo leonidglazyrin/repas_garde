@@ -1,0 +1,64 @@
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+input,
+textarea,
+select,
+button {
+  max-width: 100%;
+}
+
+@media (max-width: 700px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  input,
+  select,
+  button {
+    min-height: 42px;
+  }
+
+  textarea {
+    line-height: 1.4;
+  }
+
+  main {
+    width: 100%;
+    max-width: 100% !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    overflow-x: hidden;
+  }
+
+  header > div {
+    width: 100%;
+    max-width: 100% !important;
+  }
+
+  [data-accompaniment-group] {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  [data-accompaniment-group] select {
+    flex: 1 1 auto;
+    min-width: 0 !important;
+    width: 100%;
+    max-width: none !important;
+  }
+
+  [data-meal-ingredients-toggle="true"],
+  [data-meal-ingredients-panel="true"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
