@@ -169,6 +169,24 @@ function isWeekendField(target) {
   );
 }
 
+function decorateActionButtons() {
+  document.querySelectorAll("button").forEach((button) => {
+    if (button.querySelector("svg") || button.dataset.addIcon === "true") return;
+    const label = (button.textContent || "").trim();
+    if (label !== "Ajouter" && label !== "Enregistrer") return;
+
+    const icon = document.createElement("span");
+    icon.textContent = "+";
+    icon.setAttribute("aria-hidden", "true");
+    icon.style.fontSize = "16px";
+    icon.style.lineHeight = "1";
+    icon.style.fontWeight = "700";
+    icon.style.marginRight = "6px";
+    button.prepend(icon);
+    button.dataset.addIcon = "true";
+  });
+}
+
 document.addEventListener("input", (event) => {
   const target = event.target;
 
@@ -205,6 +223,10 @@ document.addEventListener("click", (event) => {
   }
 });
 
+const observer = new MutationObserver(() => decorateActionButtons());
+observer.observe(document.documentElement, { childList: true, subtree: true });
+queueMicrotask(decorateActionButtons);
+
 // Les abonnements Realtime de App.jsx rechargent déjà les données dès qu'un autre
 // appareil écrit dans Supabase. Ce module ajoute l'auto-enregistrement des champs
-// pendant la saisie et un indicateur visuel de synchronisation.
+// pendant la saisie, les icônes d'ajout et un indicateur visuel de synchronisation.
