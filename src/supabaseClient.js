@@ -1,20 +1,32 @@
 import { createClient } from "@supabase/supabase-js";
 
+// Ces deux valeurs sont publiques par conception dans une app navigateur Supabase.
+// Vercel peut les surcharger via ses variables d'environnement.
+const defaultUrl = "https://cdkmpeihiidgpleknzhj.supabase.co";
+const defaultPublishableKey = "sb_publishable_RplNfEOohIw0nLqDBz1OBw_kb3BnKtv";
+
 const configuredUrl = import.meta.env.VITE_SUPABASE_URL;
 const configuredKey =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabaseConfigured = Boolean(configuredUrl && configuredKey);
+const supabaseUrl = configuredUrl || defaultUrl;
+const supabaseKey = configuredKey || defaultPublishableKey;
 
-if (!supabaseConfigured) {
-  console.warn("Supabase environment variables are missing.");
+export const supabaseConfigured = Boolean(supabaseUrl && supabaseKey);
+export const supabaseProjectRef = (() => {
+  try {
+    return new URL(supabaseUrl).hostname.split(".")[0];
+  } catch {
+    return "";
+  }
+})();
+
+if (supabaseProjectRef !== "cdkmpeihiidgpleknzhj") {
+  console.warn(
+    `Supabase pointe vers le projet ${supabaseProjectRef || "inconnu"} au lieu de cdkmpeihiidgpleknzhj.`
+  );
 }
-
-// Keep the UI renderable even before the hosting environment is configured.
-// These placeholders are not credentials and cannot access a real Supabase project.
-const supabaseUrl = configuredUrl || "https://example.supabase.co";
-const supabaseKey = configuredKey || "public-key-placeholder";
 
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
