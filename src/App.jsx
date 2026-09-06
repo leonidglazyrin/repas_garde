@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Check, X, Clock, Plus, Trash2, ShoppingBasket, Users, Copy, Loader2, BookOpen, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, Plus, Trash2, ShoppingBasket, Users, BookOpen, Search } from "lucide-react";
 import { supabase } from "./supabaseClient";
 
 const WEEKDAYS = [
@@ -53,6 +53,27 @@ function emptyMeals() {
   return meals;
 }
 
+function cacheKey(weekId) {
+  return `repasgarde:week:${weekId}`;
+}
+
+function readWeekCache(weekId) {
+  try {
+    const raw = localStorage.getItem(cacheKey(weekId));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeWeekCache(weekId, data) {
+  try {
+    localStorage.setItem(cacheKey(weekId), JSON.stringify(data));
+  } catch {
+    // Le cache local est seulement une accélération; Supabase reste la source officielle.
+  }
+}
+
 // ---- Accès aux données (Supabase) ----
 
 async function fetchWeekMeals(weekId) {
@@ -60,7 +81,7 @@ async function fetchWeekMeals(weekId) {
   const { data, error } = await supabase.from("week_meals").select("*").eq("week_id", weekId);
   if (error) {
     console.error("fetchWeekMeals", error);
-    return meals;
+    return null;
   }
   (data || []).forEach((row) => {
     if (meals[row.day_key]) {
@@ -86,7 +107,7 @@ async function fetchWeekendNote(weekId) {
   const { data, error } = await supabase.from("weekend_notes").select("note").eq("week_id", weekId).maybeSingle();
   if (error) {
     console.error("fetchWeekendNote", error);
-    return "";
+    return null;
   }
   return data?.note || "";
 }
@@ -102,7 +123,7 @@ async function fetchProfiles() {
   const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: true });
   if (error) {
     console.error("fetchProfiles", error);
-    return [];
+    return null;
   }
   return data || [];
 }
@@ -122,7 +143,7 @@ async function fetchLibrary() {
   const { data, error } = await supabase.from("meal_library").select("*").order("name", { ascending: true });
   if (error) {
     console.error("fetchLibrary", error);
-    return [];
+    return null;
   }
   return data || [];
 }
@@ -148,7 +169,7 @@ async function fetchGroceryChecked(weekId) {
   const { data, error } = await supabase.from("grocery_checked").select("*").eq("week_id", weekId);
   if (error) {
     console.error("fetchGroceryChecked", error);
-    return {};
+    return null;
   }
   const map = {};
   (data || []).forEach((row) => (map[row.item_key] = row.checked));
@@ -164,7 +185,7 @@ async function fetchGroceryExtra(weekId) {
   const { data, error } = await supabase.from("grocery_extra").select("item").eq("week_id", weekId);
   if (error) {
     console.error("fetchGroceryExtra", error);
-    return [];
+    return null;
   }
   return (data || []).map((r) => r.item);
 }
@@ -182,14 +203,26 @@ async function removeGroceryExtraRow(weekId, item) {
 export default function App() {
   const [monday, setMonday] = useState(() => getMonday(new Date()));
   const weekId = useMemo(() => getWeekId(monday), [monday]);
+  const initialCache = useMemo(() => readWeekCache(weekId), []);
 
-  const [meals, setMeals] = useState(emptyMeals());
-  const [weekendNote, setWeekendNote] = useState("");
-  const [profiles, setProfiles] = useState([]);
-  const [library, setLibrary] = useState([]);
-  const [grocery, setGrocery] = useState({});
-  const [groceryExtra, setGroceryExtra] = useState([]);
-  const [loadingWeek, setLoadingWeek] = useState(true);
+  const [meals, setMeals] = useState(() => initialCache?.meals || emptyMeals());
+  const [weekendNote, setWeekendNote] = useState(() => initialCache?.weekendNote || "");
+  const [profiles, setProfiles] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("repasgarde:profiles") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [library, setLibrary] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("repasgarde:library") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [grocery, setGrocery] = useState(() => initialCache?.grocery || {});
+  const [groceryExtra, setGroceryExtra] = useState(() => initialCache?.groceryExtra || []);
 
   const [newProfileName, setNewProfileName] = useState("");
   const [newProfileNotes, setNewProfileNotes] = useState("");
@@ -202,37 +235,50 @@ export default function App() {
 
   const [newGroceryItem, setNewGroceryItem] = useState("");
 
-  const reloadWeek = useCallback(async () => {
-    const [m, note, checked, extra] = await Promise.all([
-      fetchWeekMeals(weekId),
-      fetchWeekendNote(weekId),
-      fetchGroceryChecked(weekId),
-      fetchGroceryExtra(weekId),
-    ]);
-    setMeals(m);
-    setWeekendNote(note);
-    setGrocery(checked);
-    setGroceryExtra(extra);
-    setLoadingWeek(false);
+  const reloadWeek = useCallback(() => {
+    // Chaque morceau est chargé indépendamment : aucune requête lente ne bloque toute la semaine.
+    fetchWeekMeals(weekId).then((value) => value && setMeals(value));
+    fetchWeekendNote(weekId).then((value) => value !== null && setWeekendNote(value));
+    fetchGroceryChecked(weekId).then((value) => value && setGrocery(value));
+    fetchGroceryExtra(weekId).then((value) => value && setGroceryExtra(value));
   }, [weekId]);
 
-  const reloadGlobals = useCallback(async () => {
-    const [p, l] = await Promise.all([fetchProfiles(), fetchLibrary()]);
-    setProfiles(p);
-    setLibrary(l);
+  const reloadGlobals = useCallback(() => {
+    fetchProfiles().then((value) => value && setProfiles(value));
+    fetchLibrary().then((value) => value && setLibrary(value));
   }, []);
 
-  // Chargement initial + à chaque changement de semaine
+  // Affichage instantané depuis le cache local, puis synchronisation Supabase en arrière-plan.
   useEffect(() => {
-    setLoadingWeek(true);
+    const cached = readWeekCache(weekId);
+    setMeals(cached?.meals || emptyMeals());
+    setWeekendNote(cached?.weekendNote || "");
+    setGrocery(cached?.grocery || {});
+    setGroceryExtra(cached?.groceryExtra || []);
     reloadWeek();
-  }, [reloadWeek]);
+  }, [weekId, reloadWeek]);
 
   useEffect(() => {
     reloadGlobals();
   }, [reloadGlobals]);
 
-  // Temps réel : tout le monde voit les changements des autres, sans recharger la page
+  useEffect(() => {
+    writeWeekCache(weekId, { meals, weekendNote, grocery, groceryExtra });
+  }, [weekId, meals, weekendNote, grocery, groceryExtra]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("repasgarde:profiles", JSON.stringify(profiles));
+    } catch {}
+  }, [profiles]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("repasgarde:library", JSON.stringify(library));
+    } catch {}
+  }, [library]);
+
+  // Temps réel : tout le monde voit les changements des autres, sans recharger la page.
   useEffect(() => {
     const channel = supabase
       .channel(`week-${weekId}`)
@@ -285,21 +331,6 @@ export default function App() {
     setNewLibName("");
     setNewLibIngredients("");
     setShowAddLibraryItem(false);
-  };
-
-  const duplicatePreviousWeek = async () => {
-    const prevMonday = addDays(monday, -7);
-    const prevWeekId = getWeekId(prevMonday);
-    const prevMeals = await fetchWeekMeals(prevWeekId);
-    await Promise.all(
-      WEEKDAYS.map((d) => {
-        const prevMeal = prevMeals[d.key];
-        if (!prevMeal || !prevMeal.name.trim()) return Promise.resolve();
-        const nextMeal = { name: prevMeal.name, ingredients: prevMeal.ingredients, status: "pending", comment: "" };
-        return upsertWeekMeal(weekId, d.key, nextMeal);
-      })
-    );
-    reloadWeek();
   };
 
   const addProfile = async () => {
@@ -416,7 +447,6 @@ export default function App() {
         input, textarea, button, select { font-family: inherit; }
         input:focus, textarea:focus, button:focus-visible, select:focus { outline: 2px solid var(--herb); outline-offset: 1px; }
         textarea { resize: none; }
-        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
       <header style={{ background: "#2F3B2C", color: "#F3EFE4", padding: "20px 20px 18px", position: "sticky", top: 0, zIndex: 10 }}>
@@ -437,10 +467,6 @@ export default function App() {
             </button>
             <button onClick={() => setMonday(getMonday(new Date()))} style={{ ...pillBtnStyle, marginLeft: 6 }}>
               Aujourd'hui
-            </button>
-            <button onClick={duplicatePreviousWeek} style={{ ...pillBtnStyle, marginLeft: "auto" }}>
-              <Copy size={14} style={{ marginRight: 6 }} />
-              Copier la semaine dernière
             </button>
           </div>
         </div>
@@ -555,100 +581,88 @@ export default function App() {
           </div>
         </section>
 
-        {loadingWeek ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--ink-soft)", padding: 40, justifyContent: "center" }}>
-            <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
-            Chargement de la semaine…
+        <div
+          style={{
+            background: pendingCount > 0 ? "var(--honey-soft)" : "var(--herb-soft)",
+            border: `1px solid ${pendingCount > 0 ? "var(--honey)" : "var(--herb)"}`,
+            borderRadius: 8,
+            padding: "10px 14px",
+            fontSize: 13,
+            marginBottom: 16,
+          }}
+        >
+          {pendingCount > 0
+            ? `${pendingCount} souper${pendingCount > 1 ? "s" : ""} en attente d'approbation avant de faire l'épicerie.`
+            : "Tous les soupers saisis ont une réponse des parents. Prêt pour l'épicerie."}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {WEEKDAYS.map((d, i) => (
+            <EveningRow
+              key={`${weekId}-${d.key}`}
+              dayLabel={d.label}
+              dateLabel={formatShort(weekDates[i])}
+              meal={meals[d.key] || emptyMeal()}
+              library={library}
+              onChange={(patch) => updateMeal(d.key, patch)}
+              onLibraryUpsert={upsertLibrary}
+            />
+          ))}
+          <WeekendCard
+            key={`weekend-${weekId}`}
+            dateLabel={`${formatShort(weekendStart)} – ${formatShort(weekendEnd)}`}
+            note={weekendNote}
+            onChange={updateWeekendNote}
+          />
+        </div>
+
+        <section style={{ marginTop: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <ShoppingBasket size={16} color="var(--ink-soft)" />
+            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Liste d'épicerie</span>
           </div>
-        ) : (
-          <>
-            <div
-              style={{
-                background: pendingCount > 0 ? "var(--honey-soft)" : "var(--herb-soft)",
-                border: `1px solid ${pendingCount > 0 ? "var(--honey)" : "var(--herb)"}`,
-                borderRadius: 8,
-                padding: "10px 14px",
-                fontSize: 13,
-                marginBottom: 16,
-              }}
-            >
-              {pendingCount > 0
-                ? `${pendingCount} souper${pendingCount > 1 ? "s" : ""} en attente d'approbation avant de faire l'épicerie.`
-                : "Tous les soupers saisis ont une réponse des parents. Prêt pour l'épicerie."}
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {WEEKDAYS.map((d, i) => (
-                <EveningRow
-                  key={d.key}
-                  dayLabel={d.label}
-                  dateLabel={formatShort(weekDates[i])}
-                  meal={meals[d.key] || emptyMeal()}
-                  library={library}
-                  onChange={(patch) => updateMeal(d.key, patch)}
-                  onLibraryUpsert={upsertLibrary}
-                />
-              ))}
-              <WeekendCard
-                dateLabel={`${formatShort(weekendStart)} – ${formatShort(weekendEnd)}`}
-                note={weekendNote}
-                onChange={updateWeekendNote}
+          <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              <input
+                placeholder="Ajouter un item (ex. lait, papier essuie-tout...)"
+                value={newGroceryItem}
+                onChange={(e) => setNewGroceryItem(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addGroceryItem()}
+                style={{ ...inputStyle, flex: 1 }}
               />
+              <button onClick={addGroceryItem} style={{ ...pillBtnStyle, background: "var(--herb)", color: "#fff" }}>
+                <Plus size={14} style={{ marginRight: 6 }} />
+                Ajouter
+              </button>
             </div>
-
-            <section style={{ marginTop: 32 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <ShoppingBasket size={16} color="var(--ink-soft)" />
-                <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Liste d'épicerie</span>
-              </div>
-              <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
-                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                  <input
-                    placeholder="Ajouter un item (ex. lait, papier essuie-tout...)"
-                    value={newGroceryItem}
-                    onChange={(e) => setNewGroceryItem(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addGroceryItem()}
-                    style={{ ...inputStyle, flex: 1 }}
-                  />
-                  <button onClick={addGroceryItem} style={{ ...pillBtnStyle, background: "var(--herb)", color: "#fff" }}>
-                    <Plus size={14} style={{ marginRight: 6 }} />
-                    Ajouter
-                  </button>
-                </div>
-                {groceryList.length === 0 ? (
-                  <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>
-                    Aucun item pour l'instant. Les ingrédients des soupers approuvés apparaissent ici automatiquement, ou ajoute un item toi-même.
-                  </p>
-                ) : (
-                  <>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 6 }}>
-                      {groceryList.map((item) => (
-                        <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", flex: 1, textDecoration: grocery[item.key] ? "line-through" : "none", color: grocery[item.key] ? "var(--ink-soft)" : "var(--ink)" }}>
-                            <input type="checkbox" checked={!!grocery[item.key]} onChange={() => toggleGroceryItem(item.key)} />
-                            {item.label}
-                          </label>
-                          {item.removable && (
-                            <button onClick={() => removeGroceryExtra(item.label)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)" }} aria-label={`Retirer ${item.label}`}>
-                              <X size={13} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
+            {groceryList.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>
+                Aucun item pour l'instant. Les ingrédients des soupers approuvés apparaissent ici automatiquement, ou ajoute un item toi-même.
+              </p>
+            ) : (
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 6 }}>
+                  {groceryList.map((item) => (
+                    <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
+                      <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", flex: 1, textDecoration: grocery[item.key] ? "line-through" : "none", color: grocery[item.key] ? "var(--ink-soft)" : "var(--ink)" }}>
+                        <input type="checkbox" checked={!!grocery[item.key]} onChange={() => toggleGroceryItem(item.key)} />
+                        {item.label}
+                      </label>
+                      {item.removable && (
+                        <button onClick={() => removeGroceryExtra(item.label)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)" }} aria-label={`Retirer ${item.label}`}>
+                          <X size={13} />
+                        </button>
+                      )}
                     </div>
-                    <button onClick={clearCheckedGrocery} style={{ ...pillBtnStyle, marginTop: 12, background: "transparent", border: "1px solid var(--line)", color: "var(--ink-soft)" }}>
-                      Décocher tout
-                    </button>
-                  </>
-                )}
-              </div>
-            </section>
-
-            <p style={{ marginTop: 28, fontSize: 12, color: "var(--ink-soft)" }}>
-              📱 Ajoute ce lien à l'écran d'accueil de ton téléphone pour l'ouvrir comme une application. Les changements sont synchronisés en direct pour tout le monde.
-            </p>
-          </>
-        )}
+                  ))}
+                </div>
+                <button onClick={clearCheckedGrocery} style={{ ...pillBtnStyle, marginTop: 12, background: "transparent", border: "1px solid var(--line)", color: "var(--ink-soft)" }}>
+                  Décocher tout
+                </button>
+              </>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
@@ -688,11 +702,11 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
   useEffect(() => setComment(meal.comment), [meal.comment]);
 
   const statusColors = {
-    pending: { bg: "var(--card)", border: "var(--line)", text: "var(--ink-soft)" },
-    approved: { bg: "var(--herb-soft)", border: "var(--herb)", text: "var(--herb)" },
-    refused: { bg: "var(--paprika-soft)", border: "var(--paprika)", text: "var(--paprika)" },
+    pending: { bg: "var(--card)", border: "var(--line)" },
+    approved: { bg: "var(--herb-soft)", border: "var(--herb)" },
+    refused: { bg: "var(--paprika-soft)", border: "var(--paprika)" },
   };
-  const sc = statusColors[meal.status];
+  const sc = statusColors[meal.status] || statusColors.pending;
 
   const handlePickFromLibrary = (e) => {
     const id = e.target.value;
@@ -700,8 +714,8 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
     const item = library.find((m) => m.id === id);
     if (item) {
       setName(item.name);
-      setIngredients(item.ingredients);
-      onChange({ name: item.name, ingredients: item.ingredients });
+      setIngredients(item.ingredients || "");
+      onChange({ name: item.name, ingredients: item.ingredients || "" });
     }
     e.target.value = "";
   };
@@ -714,7 +728,7 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
       </div>
 
       <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <input
             placeholder="Nom du souper"
             value={name}
@@ -723,10 +737,10 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
               onChange({ name });
               onLibraryUpsert(name, ingredients);
             }}
-            style={{ ...inputStyle, flex: 1, fontWeight: 600, background: "var(--card)" }}
+            style={{ ...inputStyle, flex: "1 1 180px", fontWeight: 600, background: "var(--card)" }}
           />
-          <select onChange={handlePickFromLibrary} defaultValue="" style={{ ...inputStyle, background: "var(--card)", maxWidth: 160 }} aria-label="Piger dans la bibliothèque">
-            <option value="">Piger…</option>
+          <select onChange={handlePickFromLibrary} defaultValue="" style={{ ...inputStyle, background: "var(--card)", maxWidth: 220 }} aria-label="Piger dans la bibliothèque">
+            <option value="">Piger dans la bibliothèque</option>
             {library.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
