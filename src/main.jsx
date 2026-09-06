@@ -7,6 +7,7 @@ import "./libraryDisclosure.js";
 import "./groceryGrouping.js";
 import "./groceryCategories.js";
 import "./mealIngredientDisclosure.js";
+import "./todayFocus.js";
 import "./mobileOptimizations.css";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
