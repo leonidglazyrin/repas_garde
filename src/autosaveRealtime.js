@@ -8,9 +8,9 @@ const DAY_KEYS = {
   Vendredi: "fri",
 };
 
-const mealQueues = new WeakMap();
-let weekendQueue = Promise.resolve();
-let badgeTimer;
+const mealTimers = new Map();
+let weekendTimer = null;
+let badgeTimer = null;
 
 function getWeekId() {
   const match = document.body?.innerText?.match(/Semaine\s+(\d{4}-S\d{2})/);
@@ -30,9 +30,6 @@ function ensureBadge() {
     right: "14px",
     bottom: "14px",
     zIndex: "9999",
-    display: "flex",
-    alignItems: "center",
-    gap: "7px",
     padding: "8px 11px",
     borderRadius: "999px",
     background: "rgba(47, 59, 44, 0.94)",
@@ -43,25 +40,24 @@ function ensureBadge() {
     boxShadow: "0 4px 16px rgba(0,0,0,.18)",
     opacity: "0",
     transform: "translateY(5px)",
-    transition: "opacity .18s ease, transform .18s ease",
+    transition: "opacity .16s ease, transform .16s ease",
     pointerEvents: "none",
   });
   document.body.appendChild(badge);
   return badge;
 }
 
-function showBadge(state, message) {
+function showBadge(message, persistent = false) {
   const badge = ensureBadge();
-  const icon = state === "saved" ? "✓" : state === "error" ? "!" : "↻";
-  badge.textContent = `${icon} ${message}`;
+  badge.textContent = message;
   badge.style.opacity = "1";
   badge.style.transform = "translateY(0)";
   clearTimeout(badgeTimer);
-  if (state !== "saving") {
+  if (!persistent) {
     badgeTimer = setTimeout(() => {
       badge.style.opacity = "0";
       badge.style.transform = "translateY(5px)";
-    }, 1500);
+    }, 1200);
   }
 }
 
@@ -89,18 +85,17 @@ function getDayKey(row) {
 }
 
 function getStatus(row) {
-  const active = Array.from(row.querySelectorAll('button[aria-pressed="true"]'));
-  const label = active.map((button) => button.textContent || "").join(" ");
+  const active = row.querySelector('button[aria-pressed="true"]');
+  const label = active?.textContent || "";
   if (label.includes("Approuvé")) return "approved";
   if (label.includes("Refusé")) return "refused";
   return "pending";
 }
 
-function snapshotMealRow(row) {
+function snapshotMeal(row) {
   const weekId = getWeekId();
   const dayKey = getDayKey(row);
   if (!weekId || !dayKey) return null;
-
   return {
     week_id: weekId,
     day_key: dayKey,
@@ -112,155 +107,72 @@ function snapshotMealRow(row) {
   };
 }
 
-async function persistMeal(snapshot) {
+async function saveMeal(snapshot) {
   if (!supabaseConfigured || !snapshot) return;
-  showBadge("saving", "Enregistrement…");
+  showBadge("↻ Enregistrement…", true);
   const { error } = await supabase.from("week_meals").upsert(snapshot);
-
   if (error) {
     console.error("autosave week_meals", error);
-    showBadge("error", `Erreur: ${error.message || "enregistrement impossible"}`);
-    throw error;
+    showBadge(`! ${error.message || "Erreur d’enregistrement"}`);
+    return;
   }
-
-  showBadge("saved", "Enregistré et synchronisé");
+  showBadge("✓ Enregistré et synchronisé");
 }
 
-function queueMealSave(row) {
-  const snapshot = snapshotMealRow(row);
+function scheduleMealSave(row) {
+  const snapshot = snapshotMeal(row);
   if (!snapshot) return;
-
-  const previous = mealQueues.get(row) || Promise.resolve();
-  const next = previous
-    .catch(() => {})
-    .then(() => persistMeal(snapshot));
-  mealQueues.set(row, next);
+  const key = `${snapshot.week_id}:${snapshot.day_key}`;
+  clearTimeout(mealTimers.get(key));
+  mealTimers.set(
+    key,
+    setTimeout(() => {
+      mealTimers.delete(key);
+      saveMeal(snapshot);
+    }, 300)
+  );
 }
 
-function queueWeekendSave(textarea) {
+async function saveWeekend(textarea) {
   if (!supabaseConfigured) return;
   const weekId = getWeekId();
   if (!weekId) return;
-
   const snapshot = {
     week_id: weekId,
     note: textarea.value || "",
     updated_at: new Date().toISOString(),
   };
-
-  weekendQueue = weekendQueue
-    .catch(() => {})
-    .then(async () => {
-      showBadge("saving", "Enregistrement…");
-      const { error } = await supabase.from("weekend_notes").upsert(snapshot);
-      if (error) {
-        console.error("autosave weekend_notes", error);
-        showBadge("error", `Erreur: ${error.message || "enregistrement impossible"}`);
-        throw error;
-      }
-      showBadge("saved", "Enregistré et synchronisé");
-    });
+  showBadge("↻ Enregistrement…", true);
+  const { error } = await supabase.from("weekend_notes").upsert(snapshot);
+  if (error) {
+    console.error("autosave weekend_notes", error);
+    showBadge(`! ${error.message || "Erreur d’enregistrement"}`);
+    return;
+  }
+  showBadge("✓ Enregistré et synchronisé");
 }
 
 function isMealField(target) {
   if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return false;
   const placeholder = target.getAttribute("placeholder") || "";
-  return (
-    placeholder === "Nom du souper" ||
-    placeholder.startsWith("Ingrédients") ||
-    placeholder.startsWith("Commentaire du parent")
-  );
+  return placeholder === "Nom du souper" || placeholder.startsWith("Ingrédients") || placeholder.startsWith("Commentaire du parent");
 }
 
 function isWeekendField(target) {
-  return (
-    target instanceof HTMLTextAreaElement &&
-    (target.getAttribute("placeholder") || "").startsWith("Ce qui est déjà prêt")
-  );
+  return target instanceof HTMLTextAreaElement && (target.getAttribute("placeholder") || "").startsWith("Ce qui est déjà prêt");
 }
 
-function decorateActionButtons() {
-  document.querySelectorAll("button").forEach((button) => {
-    if (button.querySelector("svg") || button.dataset.addIcon === "true") return;
-    const label = (button.textContent || "").trim();
-    if (label !== "Ajouter" && label !== "Enregistrer") return;
-
-    const icon = document.createElement("span");
-    icon.textContent = "+";
-    icon.setAttribute("aria-hidden", "true");
-    icon.style.fontSize = "16px";
-    icon.style.lineHeight = "1";
-    icon.style.fontWeight = "700";
-    icon.style.marginRight = "6px";
-    button.prepend(icon);
-    button.dataset.addIcon = "true";
-  });
-}
-
-function customizeUi() {
-  document.querySelectorAll("button").forEach((button) => {
-    if ((button.textContent || "").includes("Copier la semaine dernière")) {
-      button.remove();
-    }
-  });
-
-  document.querySelectorAll('select[aria-label="Piger dans la bibliothèque"]').forEach((select) => {
-    const firstOption = select.querySelector('option[value=""]');
-    if (firstOption) firstOption.textContent = "Piger dans la bibliothèque";
-    select.style.maxWidth = "230px";
-  });
-
-  document.querySelectorAll("p").forEach((paragraph) => {
-    const text = (paragraph.textContent || "").trim();
-    if (text.startsWith("📱 Ajoute ce lien à l'écran d'accueil")) {
-      paragraph.remove();
-    }
-  });
-}
-
-// Chaque frappe est mise en file et persistée dans l'ordre. Ainsi, même si la
-// personne tape vite, la dernière valeur finit toujours dans Supabase.
+// Une seule écriture après une courte pause de saisie. Cela conserve l'auto-enregistrement
+// tout en évitant des dizaines de requêtes Supabase et de rafraîchissements Realtime.
 document.addEventListener("input", (event) => {
   const target = event.target;
-
   if (isMealField(target)) {
     const row = findMealRow(target);
-    if (row) queueMealSave(row);
+    if (row) scheduleMealSave(row);
     return;
   }
-
   if (isWeekendField(target)) {
-    queueWeekendSave(target);
+    clearTimeout(weekendTimer);
+    weekendTimer = setTimeout(() => saveWeekend(target), 300);
   }
 });
-
-document.addEventListener("click", (event) => {
-  const button = event.target?.closest?.("button");
-  if (!button) return;
-
-  const text = button.textContent || "";
-  if (text.includes("En attente") || text.includes("Approuvé") || text.includes("Refusé")) {
-    const row = findMealRow(button);
-    if (!row) return;
-    setTimeout(() => queueMealSave(row), 0);
-    return;
-  }
-
-  if (/Ajouter|Enregistrer/.test(text)) {
-    showBadge("saving", "Synchronisation…");
-    clearTimeout(badgeTimer);
-    badgeTimer = setTimeout(() => showBadge("saved", "Synchronisé"), 700);
-  }
-});
-
-const refreshUi = () => {
-  decorateActionButtons();
-  customizeUi();
-};
-
-const observer = new MutationObserver(refreshUi);
-observer.observe(document.documentElement, { childList: true, subtree: true });
-queueMicrotask(refreshUi);
-
-// App.jsx est abonné à Supabase Realtime. Dès qu'une écriture arrive dans la
-// base, les autres appareils rechargent automatiquement les données concernées.
