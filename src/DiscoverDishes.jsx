@@ -37,6 +37,7 @@ export default function DiscoverDishes() {
   const [newName, setNewName] = useState("");
   const [newDetails, setNewDetails] = useState("");
   const [adding, setAdding] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editDetails, setEditDetails] = useState("");
@@ -121,6 +122,7 @@ export default function DiscoverDishes() {
       setDishes((prev) => [data, ...prev]);
       setNewName("");
       setNewDetails("");
+      setShowAddForm(false);
     }
     setAdding(false);
   };
@@ -204,30 +206,55 @@ export default function DiscoverDishes() {
     <section style={{ marginBottom: 28 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <Sparkles size={16} color="var(--honey)" />
-        <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 600 }}>Plats à découvrir</span>
+        <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 600, flex: 1 }}>Plats à découvrir</span>
+        <button
+          type="button"
+          onClick={() => setShowAddForm((visible) => !visible)}
+          aria-label={showAddForm ? "Fermer l’ajout d’un plat" : "Ajouter un plat à découvrir"}
+          aria-expanded={showAddForm}
+          title={showAddForm ? "Fermer" : "Ajouter un plat"}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            border: "1px solid var(--honey)",
+            background: showAddForm ? "var(--honey-soft)" : "var(--card)",
+            color: "var(--honey)",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 0,
+            flexShrink: 0,
+          }}
+        >
+          {showAddForm ? <X size={16} /> : <Plus size={16} />}
+        </button>
       </div>
 
       <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: dishes.length ? 14 : 0 }}>
-          <input
-            placeholder="Nom du plat à découvrir"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addDish()}
-            style={{ ...inputStyle, flex: "1 1 190px", fontWeight: 600 }}
-          />
-          <input
-            placeholder="Petit détail (facultatif)"
-            value={newDetails}
-            onChange={(e) => setNewDetails(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addDish()}
-            style={{ ...inputStyle, flex: "2 1 240px" }}
-          />
-          <button onClick={addDish} disabled={adding || !newName.trim()} style={{ ...pillBtnStyle, background: "var(--honey)", color: "#fff", opacity: adding || !newName.trim() ? 0.55 : 1 }}>
-            <Plus size={14} style={{ marginRight: 6 }} />
-            Ajouter
-          </button>
-        </div>
+        {showAddForm && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: dishes.length ? 14 : 0 }}>
+            <input
+              placeholder="Nom du plat à découvrir"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addDish()}
+              style={{ ...inputStyle, flex: "1 1 190px", fontWeight: 600 }}
+            />
+            <input
+              placeholder="Petit détail (facultatif)"
+              value={newDetails}
+              onChange={(e) => setNewDetails(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addDish()}
+              style={{ ...inputStyle, flex: "2 1 240px" }}
+            />
+            <button onClick={addDish} disabled={adding || !newName.trim()} style={{ ...pillBtnStyle, background: "var(--honey)", color: "#fff", opacity: adding || !newName.trim() ? 0.55 : 1 }}>
+              <Plus size={14} style={{ marginRight: 6 }} />
+              Ajouter
+            </button>
+          </div>
+        )}
 
         {dishes.length === 0 ? (
           <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "10px 0 0" }}>
