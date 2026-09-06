@@ -65,6 +65,41 @@ function showBadge(message, persistent = false) {
   }
 }
 
+function ensureRefreshReminder() {
+  if (document.getElementById("refresh-reminder")) return;
+
+  const reminder = document.createElement("div");
+  reminder.id = "refresh-reminder";
+  reminder.setAttribute("role", "note");
+  reminder.textContent = "↻ N’oubliez pas d’actualiser la page pour voir les dernières modifications";
+  Object.assign(reminder.style, {
+    position: "fixed",
+    top: "12px",
+    right: "12px",
+    zIndex: "10001",
+    maxWidth: "min(430px, calc(100vw - 24px))",
+    padding: "9px 13px",
+    borderRadius: "999px",
+    background: "#F6E9D3",
+    color: "#2A241E",
+    border: "1px solid #C98A3B",
+    boxShadow: "0 4px 14px rgba(0,0,0,.16)",
+    fontFamily: "Inter, system-ui, sans-serif",
+    fontSize: "12px",
+    fontWeight: "700",
+    lineHeight: "1.25",
+    textAlign: "center",
+  });
+  document.body.appendChild(reminder);
+}
+
+function applyAppTitle() {
+  const title = "Les souper de la semaine";
+  document.title = title;
+  const heading = document.querySelector("h1");
+  if (heading) heading.textContent = title;
+}
+
 function findMealRow(element) {
   let node = element?.parentElement;
   while (node && node !== document.body) {
@@ -182,3 +217,11 @@ document.addEventListener("input", (event) => {
     weekendTimer = setTimeout(() => saveWeekend(target), AUTOSAVE_DELAY_MS);
   }
 });
+
+// Le rendu React se fait juste après l'import de ce module. Un microtask suffit
+// pour appliquer les éléments statiques sans observer continuellement tout le DOM.
+queueMicrotask(() => {
+  ensureRefreshReminder();
+  applyAppTitle();
+});
+setTimeout(applyAppTitle, 100);
