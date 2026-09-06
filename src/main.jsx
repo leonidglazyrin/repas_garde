@@ -6,6 +6,7 @@ import "./autosaveRealtime.js";
 import "./libraryDisclosure.js";
 import "./groceryGrouping.js";
 import "./groceryCategories.js";
+import "./mealIngredientDisclosure.js";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
 
