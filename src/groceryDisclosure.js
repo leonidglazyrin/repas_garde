@@ -20,8 +20,8 @@ function styleHeader(header, open) {
     cursor: "pointer",
     userSelect: "none",
     width: "100%",
-    minHeight: "52px",
-    padding: "12px 16px",
+    minHeight: "56px",
+    padding: "12px 14px 12px 16px",
     borderRadius: "10px",
     border: `2px solid ${open ? "var(--herb)" : "var(--honey)"}`,
     background: open ? "var(--herb-soft)" : "var(--honey-soft)",
@@ -29,7 +29,8 @@ function styleHeader(header, open) {
     fontWeight: "700",
     fontSize: "15px",
     alignItems: "center",
-    marginBottom: open ? "10px" : "0",
+    gap: "10px",
+    marginBottom: open ? "12px" : "0",
   });
 
   Array.from(header.querySelectorAll("span")).forEach((span) => {
@@ -60,14 +61,24 @@ function setOpen(section, header, body, open) {
     arrow.setAttribute("aria-hidden", "true");
     Object.assign(arrow.style, {
       marginLeft: "auto",
-      fontSize: "18px",
-      fontWeight: "800",
+      width: "34px",
+      height: "34px",
+      borderRadius: "50%",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "22px",
+      fontWeight: "900",
+      lineHeight: "1",
       color: "var(--ink)",
+      background: "var(--card)",
+      border: "2px solid currentColor",
+      boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
       flexShrink: "0",
     });
     header.appendChild(arrow);
   }
-  arrow.textContent = open ? "▴" : "▾";
+  arrow.textContent = open ? "▲" : "▼";
   arrow.style.color = open ? "var(--herb)" : "var(--honey)";
 
   body.hidden = !open;
