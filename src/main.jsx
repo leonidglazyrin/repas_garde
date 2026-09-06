@@ -9,6 +9,7 @@ import "./groceryCategories.js";
 import "./mealIngredientDisclosure.js";
 import "./todayFocus.js";
 import "./desserts.js";
+import "./mobileKeyboardStability.js";
 import "./mobileOptimizations.css";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
