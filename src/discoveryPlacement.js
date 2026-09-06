@@ -1,10 +1,23 @@
-function moveDiscoveryToTop() {
+function findProfilesSection(main) {
+  return Array.from(main.querySelectorAll(":scope > section")).find((section) =>
+    (section.textContent || "").includes("Profils et restrictions")
+  ) || null;
+}
+
+function placeProfilesThenDiscovery() {
   const main = document.querySelector("main");
   const slot = document.getElementById("discover-dishes-slot");
   if (!main || !slot) return false;
 
-  if (main.firstElementChild !== slot) {
-    main.insertBefore(slot, main.firstElementChild);
+  const profiles = findProfilesSection(main);
+  if (!profiles) return false;
+
+  if (main.firstElementChild !== profiles) {
+    main.insertBefore(profiles, main.firstElementChild);
+  }
+
+  if (profiles.nextElementSibling !== slot) {
+    profiles.insertAdjacentElement("afterend", slot);
   }
 
   return true;
@@ -15,7 +28,7 @@ function scheduleMove() {
   if (frame !== null) return;
   frame = requestAnimationFrame(() => {
     frame = null;
-    moveDiscoveryToTop();
+    placeProfilesThenDiscovery();
   });
 }
 
