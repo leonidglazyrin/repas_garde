@@ -34,7 +34,11 @@ function getResultsBlocks(section) {
   });
 }
 
-function styleTab(button) {
+function isOpen(section) {
+  return section.dataset.libraryOpen === "true";
+}
+
+function styleTab(button, open) {
   Object.assign(button.style, {
     width: "100%",
     minHeight: "42px",
@@ -45,9 +49,12 @@ function styleTab(button) {
     color: "var(--herb)",
     fontSize: "14px",
     fontWeight: "700",
-    cursor: "default",
+    cursor: "pointer",
   });
-  button.setAttribute("aria-selected", "true");
+  button.setAttribute("aria-expanded", String(open));
+  button.textContent = open
+    ? "Bibliothèque de plats déjà faits ▴"
+    : "Bibliothèque de plats déjà faits ▾";
 }
 
 function ensureTabs(section) {
@@ -58,36 +65,54 @@ function ensureTabs(section) {
   if (!tabs) {
     tabs = document.createElement("div");
     tabs.dataset.libraryTabs = "true";
-    tabs.setAttribute("role", "tablist");
     tabs.style.marginBottom = "10px";
     content.insertBefore(tabs, content.firstElementChild);
   }
 
-  tabs.replaceChildren();
+  let savedTab = tabs.querySelector("[data-library-mode-button='saved']");
+  if (!savedTab) {
+    tabs.replaceChildren();
+    savedTab = document.createElement("button");
+    savedTab.type = "button";
+    savedTab.dataset.libraryModeButton = "saved";
+    savedTab.setAttribute("aria-controls", "library-saved-results");
+    tabs.appendChild(savedTab);
+  }
 
-  const savedTab = document.createElement("button");
-  savedTab.type = "button";
-  savedTab.dataset.libraryModeButton = "saved";
-  savedTab.setAttribute("role", "tab");
-  savedTab.textContent = "Bibliothèque de plats déjà faits";
-  styleTab(savedTab);
-  tabs.appendChild(savedTab);
+  styleTab(savedTab, isOpen(section));
+}
+
+function setBlockVisible(block, visible) {
+  block.dataset.libraryResultsBlock = "true";
+  block.hidden = !visible;
+  block.setAttribute("aria-hidden", String(!visible));
+
+  if (visible) {
+    block.style.removeProperty("display");
+    block.style.removeProperty("visibility");
+    block.style.removeProperty("height");
+    block.style.removeProperty("overflow");
+  } else {
+    block.style.setProperty("display", "none", "important");
+    block.style.setProperty("visibility", "hidden", "important");
+    block.style.setProperty("height", "0", "important");
+    block.style.setProperty("overflow", "hidden", "important");
+  }
 }
 
 function syncResults(section) {
   const search = getSearchInput(section);
   if (!search) return;
 
-  getResultsBlocks(section).forEach((block) => {
-    block.hidden = false;
-    block.removeAttribute("aria-hidden");
-    block.style.removeProperty("display");
-    block.style.removeProperty("visibility");
-    block.style.removeProperty("height");
-    block.style.removeProperty("overflow");
+  const open = isOpen(section);
+  getResultsBlocks(section).forEach((block, index) => {
+    if (index === 0) block.id = "library-saved-results";
+    setBlockVisible(block, open);
   });
 
   search.placeholder = "Filtrer les plats déjà faits ou un ingrédient...";
+  const savedTab = section.querySelector("[data-library-mode-button='saved']");
+  if (savedTab) styleTab(savedTab, open);
   section.querySelector("[data-library-toggle]")?.remove();
 }
 
@@ -135,6 +160,7 @@ function initLibraryDisclosure() {
   if (!search) return false;
 
   section.dataset.libraryDisclosureReady = "true";
+  section.dataset.libraryOpen = "false";
   ensureTabs(section);
   decorateLibrary(section);
   syncResults(section);
@@ -147,7 +173,13 @@ function initLibraryDisclosure() {
   });
 
   section.addEventListener("click", (event) => {
-    if (event.target.closest?.("[data-library-mode-button]")) return;
+    const savedTab = event.target.closest?.("[data-library-mode-button='saved']");
+    if (savedTab) {
+      section.dataset.libraryOpen = String(!isOpen(section));
+      syncResults(section);
+      return;
+    }
+
     if (event.target.closest('button[aria-label^="Supprimer "]')) return;
     const name = event.target.closest("[data-library-dish-name]");
     if (!name) return;
