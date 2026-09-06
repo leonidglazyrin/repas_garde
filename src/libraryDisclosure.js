@@ -4,6 +4,57 @@ function findLibrarySection() {
   );
 }
 
+function getLibraryContent(section) {
+  return Array.from(section.children).find((child) =>
+    child.querySelector?.('input[placeholder="Chercher un plat ou un ingrédient..."]')
+  ) || null;
+}
+
+function toggleLibrary(section) {
+  const content = getLibraryContent(section);
+  const button = section.querySelector("[data-library-toggle]");
+  if (!content || !button) return;
+
+  const opening = content.hidden;
+  content.hidden = !opening;
+  button.setAttribute("aria-expanded", String(opening));
+  button.textContent = opening ? "Masquer la bibliothèque ▴" : "Afficher la bibliothèque ▾";
+}
+
+function ensureLibraryToggle(section) {
+  const content = getLibraryContent(section);
+  if (!content) return;
+
+  let button = section.querySelector("[data-library-toggle]");
+  if (!button) {
+    button = document.createElement("button");
+    button.type = "button";
+    button.dataset.libraryToggle = "true";
+    button.setAttribute("aria-expanded", "false");
+    button.textContent = "Afficher la bibliothèque ▾";
+    Object.assign(button.style, {
+      width: "100%",
+      minHeight: "42px",
+      marginBottom: "10px",
+      border: "1px solid var(--line)",
+      borderRadius: "8px",
+      padding: "9px 12px",
+      background: "var(--card)",
+      color: "var(--ink)",
+      fontSize: "16px",
+      fontWeight: "600",
+      textAlign: "left",
+      cursor: "pointer",
+    });
+    content.insertAdjacentElement("beforebegin", button);
+  }
+
+  if (!content.dataset.libraryCollapsedReady) {
+    content.dataset.libraryCollapsedReady = "true";
+    content.hidden = true;
+  }
+}
+
 function toggleDish(card) {
   const ingredients = card?.querySelector("[data-library-ingredients]");
   const name = card?.querySelector("[data-library-dish-name]");
@@ -45,9 +96,16 @@ function initLibraryDisclosure() {
   if (!section || section.dataset.libraryDisclosureReady === "true") return false;
 
   section.dataset.libraryDisclosureReady = "true";
+  ensureLibraryToggle(section);
   decorateLibrary(section);
 
   section.addEventListener("click", (event) => {
+    const libraryToggle = event.target.closest?.("[data-library-toggle]");
+    if (libraryToggle) {
+      toggleLibrary(section);
+      return;
+    }
+
     if (event.target.closest('button[aria-label^="Supprimer "]')) return;
     const name = event.target.closest("[data-library-dish-name]");
     if (!name) return;
@@ -61,7 +119,10 @@ function initLibraryDisclosure() {
     toggleDish(name.closest("[data-library-disclosure='true']"));
   });
 
-  const observer = new MutationObserver(() => decorateLibrary(section));
+  const observer = new MutationObserver(() => {
+    ensureLibraryToggle(section);
+    decorateLibrary(section);
+  });
   observer.observe(section, { childList: true, subtree: true });
   return true;
 }
