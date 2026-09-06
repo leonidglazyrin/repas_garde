@@ -20,28 +20,92 @@ function getResultsBlocks(section) {
 
   const children = Array.from(content.children);
   return children.filter((child, index) => {
-    // La première ligne contient toujours la recherche + « Nouveau plat ».
     if (index === 0) return false;
-
-    // Le formulaire de création reste visible lorsqu'il est ouvert.
+    if (child.dataset.libraryTabs === "true") return false;
     if (child.querySelector?.('input[placeholder="Nom du plat"]')) return false;
-
-    // Le reste correspond aux résultats de recherche ou au message « aucun plat ».
     return true;
   });
 }
 
-function syncSearchResults(section) {
+function getMode(section) {
+  return section.dataset.libraryMode || "search";
+}
+
+function styleTab(button, active) {
+  Object.assign(button.style, {
+    flex: "1 1 160px",
+    minHeight: "42px",
+    border: `1px solid ${active ? "var(--herb)" : "var(--line)"}`,
+    borderRadius: "8px",
+    padding: "9px 12px",
+    background: active ? "var(--herb-soft)" : "var(--card)",
+    color: active ? "var(--herb)" : "var(--ink-soft)",
+    fontSize: "14px",
+    fontWeight: "700",
+    cursor: "pointer",
+  });
+  button.setAttribute("aria-selected", String(active));
+}
+
+function ensureTabs(section) {
+  const content = getLibraryContent(section);
+  if (!content) return;
+
+  let tabs = content.querySelector("[data-library-tabs]");
+  if (!tabs) {
+    tabs = document.createElement("div");
+    tabs.dataset.libraryTabs = "true";
+    tabs.setAttribute("role", "tablist");
+    Object.assign(tabs.style, {
+      display: "flex",
+      gap: "8px",
+      flexWrap: "wrap",
+      marginBottom: "10px",
+    });
+
+    const searchTab = document.createElement("button");
+    searchTab.type = "button";
+    searchTab.dataset.libraryModeButton = "search";
+    searchTab.setAttribute("role", "tab");
+    searchTab.textContent = "Recherche";
+
+    const savedTab = document.createElement("button");
+    savedTab.type = "button";
+    savedTab.dataset.libraryModeButton = "saved";
+    savedTab.setAttribute("role", "tab");
+    savedTab.textContent = "Bibliothèque de plats déjà faits";
+
+    tabs.append(searchTab, savedTab);
+    content.insertBefore(tabs, content.firstElementChild);
+  }
+
+  section.querySelectorAll("[data-library-mode-button]").forEach((button) => {
+    styleTab(button, button.dataset.libraryModeButton === getMode(section));
+  });
+}
+
+function syncResults(section) {
   const search = getSearchInput(section);
   if (!search) return;
 
+  const mode = getMode(section);
   const hasQuery = search.value.trim().length > 0;
+  const visible = mode === "saved" || hasQuery;
+
   getResultsBlocks(section).forEach((block) => {
-    block.hidden = !hasQuery;
+    block.hidden = !visible;
     block.dataset.libraryResultsBlock = "true";
   });
 
-  // Ancien bouton de dépliage : il n'est plus nécessaire.
+  const placeholder = mode === "saved"
+    ? "Filtrer les plats déjà faits ou un ingrédient..."
+    : "Chercher un plat ou un ingrédient...";
+  search.placeholder = placeholder;
+
+  section.querySelectorAll("[data-library-mode-button]").forEach((button) => {
+    styleTab(button, button.dataset.libraryModeButton === mode);
+  });
+
   section.querySelector("[data-library-toggle]")?.remove();
 }
 
@@ -89,19 +153,27 @@ function initLibraryDisclosure() {
   if (!search) return false;
 
   section.dataset.libraryDisclosureReady = "true";
+  section.dataset.libraryMode = "search";
+  ensureTabs(section);
   decorateLibrary(section);
-  syncSearchResults(section);
+  syncResults(section);
 
-  // Les recettes apparaissent uniquement dès qu'on écrit un nom de plat
-  // ou un ingrédient dans la barre de recherche.
   search.addEventListener("input", () => {
     requestAnimationFrame(() => {
       decorateLibrary(section);
-      syncSearchResults(section);
+      syncResults(section);
     });
   });
 
   section.addEventListener("click", (event) => {
+    const modeButton = event.target.closest?.("[data-library-mode-button]");
+    if (modeButton) {
+      section.dataset.libraryMode = modeButton.dataset.libraryModeButton;
+      syncResults(section);
+      if (section.dataset.libraryMode === "search") search.focus();
+      return;
+    }
+
     if (event.target.closest('button[aria-label^="Supprimer "]')) return;
     const name = event.target.closest("[data-library-dish-name]");
     if (!name) return;
@@ -115,9 +187,16 @@ function initLibraryDisclosure() {
     toggleDish(name.closest("[data-library-disclosure='true']"));
   });
 
+  let syncing = false;
   const observer = new MutationObserver(() => {
-    decorateLibrary(section);
-    syncSearchResults(section);
+    if (syncing) return;
+    syncing = true;
+    requestAnimationFrame(() => {
+      ensureTabs(section);
+      decorateLibrary(section);
+      syncResults(section);
+      syncing = false;
+    });
   });
   observer.observe(section, { childList: true, subtree: true });
   return true;
