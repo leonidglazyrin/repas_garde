@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, HelpCircle, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { Check, HelpCircle, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { supabase } from "./supabaseClient";
 
 const CACHE_KEY = "repasgarde:discovery";
@@ -37,6 +37,10 @@ export default function DiscoverDishes() {
   const [newName, setNewName] = useState("");
   const [newDetails, setNewDetails] = useState("");
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editDetails, setEditDetails] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     const placeSection = () => {
@@ -121,7 +125,47 @@ export default function DiscoverDishes() {
     setAdding(false);
   };
 
+  const startEdit = (dish) => {
+    setEditingId(dish.id);
+    setEditName(dish.name || "");
+    setEditDetails(dish.details || "");
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditDetails("");
+  };
+
+  const saveEdit = async () => {
+    const name = editName.trim();
+    if (!editingId || !name || savingEdit) return;
+
+    setSavingEdit(true);
+    const updates = {
+      name,
+      details: editDetails.trim(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from("discovery_dishes")
+      .update(updates)
+      .eq("id", editingId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("update discovery dish", error);
+    } else if (data) {
+      setDishes((prev) => prev.map((dish) => (dish.id === data.id ? data : dish)));
+      cancelEdit();
+    }
+    setSavingEdit(false);
+  };
+
   const deleteDish = async (id) => {
+    if (editingId === id) cancelEdit();
     setDishes((prev) => prev.filter((dish) => dish.id !== id));
     setVotes((prev) => {
       const next = { ...prev };
@@ -191,38 +235,87 @@ export default function DiscoverDishes() {
           </p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {dishes.map((dish) => (
-              <div key={dish.id} style={{ border: "1px solid var(--line)", borderRadius: 9, padding: 11, background: "var(--paper)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>{dish.name}</div>
-                    {dish.details && <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 3 }}>{dish.details}</div>}
-                  </div>
-                  <button onClick={() => deleteDish(dish.id)} aria-label={`Supprimer ${dish.name}`} style={{ border: "none", background: "transparent", color: "var(--ink-soft)", cursor: "pointer", padding: 2 }}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-
-                {profiles.length === 0 ? (
-                  <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 9 }}>Ajoute d'abord un profil pour pouvoir voter.</div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 10 }}>
-                    {profiles.map((profile) => {
-                      const choice = votes[dish.id]?.[profile.id] || null;
-                      return (
-                        <div key={profile.id} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          <span style={{ width: 9, height: 9, borderRadius: "50%", background: profile.color || "var(--ink-soft)" }} />
-                          <span style={{ minWidth: 82, fontSize: 13, fontWeight: 600 }}>{profile.name}</span>
-                          <VoteButton active={choice === "want"} onClick={() => setVote(dish.id, profile.id, "want")} icon={<Check size={12} />} label="Oui, à goûter" color="var(--herb)" />
-                          <VoteButton active={choice === "maybe"} onClick={() => setVote(dish.id, profile.id, "maybe")} icon={<HelpCircle size={12} />} label="Peut-être" color="var(--honey)" />
-                          <VoteButton active={choice === "no"} onClick={() => setVote(dish.id, profile.id, "no")} icon={<X size={12} />} label="Non merci" color="var(--paprika)" />
+            {dishes.map((dish) => {
+              const isEditing = editingId === dish.id;
+              return (
+                <div key={dish.id} style={{ border: "1px solid var(--line)", borderRadius: 9, padding: 11, background: "var(--paper)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
+                    {isEditing ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
+                        <input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                          placeholder="Nom du plat"
+                          autoFocus
+                          style={{ ...inputStyle, width: "100%", fontWeight: 700 }}
+                        />
+                        <input
+                          value={editDetails}
+                          onChange={(e) => setEditDetails(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                          placeholder="Petit détail (facultatif)"
+                          style={{ ...inputStyle, width: "100%" }}
+                        />
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          <button
+                            onClick={saveEdit}
+                            disabled={savingEdit || !editName.trim()}
+                            style={{ ...pillBtnStyle, padding: "6px 10px", background: "var(--herb)", color: "#fff", opacity: savingEdit || !editName.trim() ? 0.55 : 1 }}
+                          >
+                            <Check size={13} style={{ marginRight: 5 }} />
+                            Enregistrer
+                          </button>
+                          <button onClick={cancelEdit} style={{ ...pillBtnStyle, padding: "6px 10px", background: "transparent", border: "1px solid var(--line)", color: "var(--ink-soft)" }}>
+                            Annuler
+                          </button>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ) : (
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14 }}>{dish.name}</div>
+                        {dish.details && <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 3 }}>{dish.details}</div>}
+                      </div>
+                    )}
+
+                    {!isEditing && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                        <button
+                          onClick={() => startEdit(dish)}
+                          aria-label={`Modifier ${dish.name}`}
+                          title="Modifier"
+                          style={{ border: "none", background: "transparent", color: "var(--ink-soft)", cursor: "pointer", padding: 4, display: "flex" }}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => deleteDish(dish.id)} aria-label={`Supprimer ${dish.name}`} style={{ border: "none", background: "transparent", color: "var(--ink-soft)", cursor: "pointer", padding: 4, display: "flex" }}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {profiles.length === 0 ? (
+                    <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 9 }}>Ajoute d'abord un profil pour pouvoir voter.</div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 10 }}>
+                      {profiles.map((profile) => {
+                        const choice = votes[dish.id]?.[profile.id] || null;
+                        return (
+                          <div key={profile.id} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            <span style={{ width: 9, height: 9, borderRadius: "50%", background: profile.color || "var(--ink-soft)" }} />
+                            <span style={{ minWidth: 82, fontSize: 13, fontWeight: 600 }}>{profile.name}</span>
+                            <VoteButton active={choice === "want"} onClick={() => setVote(dish.id, profile.id, "want")} icon={<Check size={12} />} label="Oui, à goûter" color="var(--herb)" />
+                            <VoteButton active={choice === "maybe"} onClick={() => setVote(dish.id, profile.id, "maybe")} icon={<HelpCircle size={12} />} label="Peut-être" color="var(--honey)" />
+                            <VoteButton active={choice === "no"} onClick={() => setVote(dish.id, profile.id, "no")} icon={<X size={12} />} label="Non merci" color="var(--paprika)" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
