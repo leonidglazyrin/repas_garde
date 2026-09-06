@@ -5,6 +5,7 @@ import Accompaniments from "./Accompaniments.jsx";
 import "./autosaveRealtime.js";
 import "./libraryDisclosure.js";
 import "./groceryGrouping.js";
+import "./groceryCategories.js";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
 
