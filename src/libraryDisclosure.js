@@ -17,13 +17,17 @@ function getSearchInput(section) {
   ) || null;
 }
 
+function getSearchRow(section) {
+  return getSearchInput(section)?.parentElement || null;
+}
+
 function getResultsBlocks(section) {
   const content = getLibraryContent(section);
+  const searchRow = getSearchRow(section);
   if (!content) return [];
 
-  const children = Array.from(content.children);
-  return children.filter((child, index) => {
-    if (index === 0) return false;
+  return Array.from(content.children).filter((child) => {
+    if (child === searchRow) return false;
     if (child.dataset.libraryTabs === "true") return false;
     if (child.querySelector?.('input[placeholder="Nom du plat"]')) return false;
     return true;
@@ -87,20 +91,34 @@ function ensureTabs(section) {
   });
 }
 
+function forceBlockVisibility(block, visible) {
+  block.dataset.libraryResultsBlock = "true";
+  block.hidden = !visible;
+  block.setAttribute("aria-hidden", String(!visible));
+
+  if (visible) {
+    block.style.removeProperty("display");
+    block.style.removeProperty("visibility");
+    block.style.removeProperty("height");
+    block.style.removeProperty("overflow");
+  } else {
+    // Le JSX de React applique parfois display:grid en inline, ce qui peut annuler
+    // l'attribut hidden sur iPhone. On force donc réellement l'absence du bloc.
+    block.style.setProperty("display", "none", "important");
+    block.style.setProperty("visibility", "hidden", "important");
+    block.style.setProperty("height", "0", "important");
+    block.style.setProperty("overflow", "hidden", "important");
+  }
+}
+
 function syncResults(section) {
   const search = getSearchInput(section);
   if (!search) return;
 
   const mode = getMode(section);
-
-  // Dans l'onglet Recherche, aucun plat enregistré n'est affiché.
-  // Ils deviennent visibles uniquement après avoir ouvert
-  // « Bibliothèque de plats déjà faits ».
   const visible = mode === "saved";
-  getResultsBlocks(section).forEach((block) => {
-    block.hidden = !visible;
-    block.dataset.libraryResultsBlock = "true";
-  });
+
+  getResultsBlocks(section).forEach((block) => forceBlockVisibility(block, visible));
 
   search.placeholder = mode === "saved"
     ? "Filtrer les plats déjà faits ou un ingrédient..."
@@ -174,7 +192,6 @@ function initLibraryDisclosure() {
     if (modeButton) {
       section.dataset.libraryMode = modeButton.dataset.libraryModeButton;
       syncResults(section);
-      // Ne jamais déclencher le clavier en changeant d'onglet.
       return;
     }
 
