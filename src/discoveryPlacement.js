@@ -1,22 +1,15 @@
-function findProfilesBlock(main) {
-  const marker = Array.from(main.querySelectorAll("*" )).find((node) =>
-    (node.textContent || "").includes("Profils et restrictions") &&
-    (node.textContent || "").includes("Ajouter un profil")
-  );
-  if (!marker) return null;
-
-  let block = marker;
-  while (block.parentElement && block.parentElement !== main) {
-    block = block.parentElement;
-  }
-  return block.parentElement === main ? block : null;
+function findProfilesSection(main) {
+  return Array.from(main.children).find((child) => {
+    const text = child.textContent || "";
+    return text.includes("Profils et restrictions") || text.includes("Ajouter un profil");
+  }) || null;
 }
 
 function placeProfilesThenDiscovery() {
   const main = document.querySelector("main");
   if (!main) return false;
 
-  const profiles = findProfilesBlock(main);
+  const profiles = findProfilesSection(main);
   if (!profiles) return false;
 
   if (main.firstElementChild !== profiles) {
@@ -25,7 +18,7 @@ function placeProfilesThenDiscovery() {
 
   const slot = document.getElementById("discover-dishes-slot");
   if (slot && profiles.nextElementSibling !== slot) {
-    profiles.insertAdjacentElement("afterend", slot);
+    main.insertBefore(slot, profiles.nextElementSibling);
   }
 
   return true;
@@ -44,3 +37,5 @@ const observer = new MutationObserver(scheduleMove);
 observer.observe(document.documentElement, { childList: true, subtree: true });
 
 queueMicrotask(scheduleMove);
+setTimeout(scheduleMove, 250);
+setTimeout(scheduleMove, 1000);
