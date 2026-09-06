@@ -65,16 +65,49 @@ async function save(dayKey, dessert) {
   if (error) console.error("save week_desserts", error);
 }
 
+function styleDessertButton(button, hasDessert, open) {
+  Object.assign(button.style, {
+    minWidth: hasDessert ? "auto" : "40px",
+    minHeight: "40px",
+    border: `1px solid ${hasDessert || open ? "var(--honey)" : "var(--line)"}`,
+    borderRadius: "20px",
+    padding: hasDessert ? "7px 11px" : "7px",
+    background: hasDessert || open ? "var(--honey-soft)" : "var(--card)",
+    color: hasDessert || open ? "var(--honey)" : "var(--ink-soft)",
+    fontSize: "14px",
+    fontWeight: "700",
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
+    flexShrink: "0",
+  });
+}
+
+function updateDessertButton(group, dayKey) {
+  const button = group.querySelector("[data-dessert-toggle]");
+  if (!button) return;
+
+  const dessert = (values[dayKey] || "").trim();
+  const open = group.dataset.dessertOpen === "true";
+  button.setAttribute("aria-expanded", String(open));
+  button.setAttribute("aria-label", dessert ? `Dessert : ${dessert}` : "Ajouter un dessert");
+  button.title = dessert ? `Dessert : ${dessert}` : "Ajouter un dessert";
+  button.textContent = dessert ? `🍰 ${dessert}` : "🍰";
+  styleDessertButton(button, !!dessert, open);
+}
+
 function buildDessertField(dayKey, value = "") {
   const input = document.createElement("input");
   input.type = "text";
-  input.placeholder = "Dessert (optionnel)";
+  input.placeholder = "Choisir un dessert";
   input.value = value;
   input.dataset.dessertDay = dayKey;
-  input.setAttribute("aria-label", "Dessert optionnel");
+  input.setAttribute("aria-label", "Dessert");
 
   Object.assign(input.style, {
-    width: "100%",
+    flex: "1 1 180px",
     minWidth: "0",
     minHeight: "40px",
     border: "1px solid var(--line)",
@@ -85,9 +118,58 @@ function buildDessertField(dayKey, value = "") {
     fontSize: "16px",
   });
 
-  input.addEventListener("change", () => save(dayKey, input.value.trim()));
-  input.addEventListener("blur", () => save(dayKey, input.value.trim()));
+  const commit = async () => {
+    await save(dayKey, input.value.trim());
+    const group = input.closest("[data-dessert-group]");
+    if (group) updateDessertButton(group, dayKey);
+  };
+
+  input.addEventListener("change", commit);
+  input.addEventListener("blur", commit);
   return input;
+}
+
+function buildDessertGroup(dayKey, value = "") {
+  const group = document.createElement("div");
+  group.dataset.dessertGroup = dayKey;
+  group.dataset.dessertOpen = "false";
+  Object.assign(group.style, {
+    width: "100%",
+    minWidth: "0",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    marginTop: "2px",
+    marginBottom: "2px",
+  });
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.dessertToggle = "true";
+  button.setAttribute("aria-controls", `dessert-field-${dayKey}`);
+
+  const field = buildDessertField(dayKey, value);
+  field.id = `dessert-field-${dayKey}`;
+  field.hidden = true;
+  field.style.setProperty("display", "none", "important");
+
+  button.addEventListener("click", () => {
+    const opening = group.dataset.dessertOpen !== "true";
+    group.dataset.dessertOpen = String(opening);
+    field.hidden = !opening;
+    if (opening) {
+      field.style.removeProperty("display");
+      requestAnimationFrame(() => field.focus({ preventScroll: true }));
+    } else {
+      field.style.setProperty("display", "none", "important");
+    }
+    updateDessertButton(group, dayKey);
+  });
+
+  group.appendChild(button);
+  group.appendChild(field);
+  updateDessertButton(group, dayKey);
+  return group;
 }
 
 function mountFields() {
@@ -103,19 +185,7 @@ function mountFields() {
     if (!controls) return;
     const { line, librarySelect } = controls;
 
-    const group = document.createElement("div");
-    group.dataset.dessertGroup = dayKey;
-    Object.assign(group.style, {
-      width: "100%",
-      minWidth: "0",
-      display: "flex",
-      alignItems: "center",
-      marginTop: "2px",
-      marginBottom: "2px",
-    });
-
-    group.appendChild(buildDessertField(dayKey, values[dayKey] || ""));
-
+    const group = buildDessertGroup(dayKey, values[dayKey] || "");
     const accompaniment = row.querySelector(`[data-accompaniment-group="${dayKey}"]`);
     if (accompaniment?.parentElement === line) {
       accompaniment.insertAdjacentElement("afterend", group);
@@ -127,7 +197,10 @@ function mountFields() {
 
 function applyValues() {
   document.querySelectorAll("input[data-dessert-day]").forEach((input) => {
-    if (document.activeElement !== input) input.value = values[input.dataset.dessertDay] || "";
+    const dayKey = input.dataset.dessertDay;
+    if (document.activeElement !== input) input.value = values[dayKey] || "";
+    const group = input.closest("[data-dessert-group]");
+    if (group) updateDessertButton(group, dayKey);
   });
 }
 
