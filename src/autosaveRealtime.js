@@ -8,6 +8,10 @@ const DAY_KEYS = {
   Vendredi: "fri",
 };
 
+// On attend une vraie pause de saisie avant d'écrire dans Supabase.
+// Cela évite qu'un retour Realtime arrive pendant que quelqu'un est encore en train de taper.
+const AUTOSAVE_DELAY_MS = 1500;
+
 const mealTimers = new Map();
 let weekendTimer = null;
 let badgeTimer = null;
@@ -120,16 +124,17 @@ async function saveMeal(snapshot) {
 }
 
 function scheduleMealSave(row) {
-  const snapshot = snapshotMeal(row);
-  if (!snapshot) return;
-  const key = `${snapshot.week_id}:${snapshot.day_key}`;
+  const initialSnapshot = snapshotMeal(row);
+  if (!initialSnapshot) return;
+  const key = `${initialSnapshot.week_id}:${initialSnapshot.day_key}`;
   clearTimeout(mealTimers.get(key));
   mealTimers.set(
     key,
     setTimeout(() => {
       mealTimers.delete(key);
-      saveMeal(snapshot);
-    }, 300)
+      // On relit la valeur au dernier moment pour enregistrer exactement ce qui est affiché.
+      saveMeal(snapshotMeal(row));
+    }, AUTOSAVE_DELAY_MS)
   );
 }
 
@@ -162,9 +167,10 @@ function isWeekendField(target) {
   return target instanceof HTMLTextAreaElement && (target.getAttribute("placeholder") || "").startsWith("Ce qui est déjà prêt");
 }
 
-// Une seule écriture après une courte pause de saisie. Cela conserve l'auto-enregistrement
-// tout en évitant des dizaines de requêtes Supabase et de rafraîchissements Realtime.
+// Une seule écriture après 1,5 s sans frappe. Les événements IME/composition
+// (accents, claviers mobiles, prédiction) ne déclenchent pas de sauvegarde au milieu d'un mot.
 document.addEventListener("input", (event) => {
+  if (event.isComposing) return;
   const target = event.target;
   if (isMealField(target)) {
     const row = findMealRow(target);
@@ -173,6 +179,6 @@ document.addEventListener("input", (event) => {
   }
   if (isWeekendField(target)) {
     clearTimeout(weekendTimer);
-    weekendTimer = setTimeout(() => saveWeekend(target), 300);
+    weekendTimer = setTimeout(() => saveWeekend(target), AUTOSAVE_DELAY_MS);
   }
 });
