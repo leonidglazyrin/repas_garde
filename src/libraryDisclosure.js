@@ -92,12 +92,13 @@ function syncResults(section) {
   if (!search) return;
 
   const mode = getMode(section);
-  const hasQuery = search.value.trim().length > 0;
 
-  // Les plats restent toujours cachés tant qu'aucune recherche n'est saisie,
-  // même dans l'onglet « Bibliothèque de plats déjà faits ».
+  // Dans l'onglet Recherche, aucun plat enregistré n'est affiché.
+  // Ils deviennent visibles uniquement après avoir ouvert
+  // « Bibliothèque de plats déjà faits ».
+  const visible = mode === "saved";
   getResultsBlocks(section).forEach((block) => {
-    block.hidden = !hasQuery;
+    block.hidden = !visible;
     block.dataset.libraryResultsBlock = "true";
   });
 
@@ -173,8 +174,7 @@ function initLibraryDisclosure() {
     if (modeButton) {
       section.dataset.libraryMode = modeButton.dataset.libraryModeButton;
       syncResults(section);
-      // Ne pas appeler focus() ici : sur téléphone, le clavier doit s'ouvrir
-      // uniquement lorsque l'utilisateur touche directement la barre de recherche.
+      // Ne jamais déclencher le clavier en changeant d'onglet.
       return;
     }
 
