@@ -63,7 +63,7 @@ function refillSelect(select, customOptions, selectedValue = "") {
 
   const placeholder = document.createElement("option");
   placeholder.value = "";
-  placeholder.textContent = "Accompagnement…";
+  placeholder.textContent = "Accompagnement";
   select.appendChild(placeholder);
 
   const options = allOptions(customOptions);
@@ -88,12 +88,13 @@ function buildSelect(label, dayKey, customOptions, onChange) {
   Object.assign(select.style, {
     border: "1px solid var(--line)",
     borderRadius: "6px",
-    padding: "6px 10px",
-    fontSize: "13px",
+    padding: "8px 10px",
+    fontSize: "16px",
     background: "var(--card)",
     color: "var(--ink)",
     width: "100%",
     minWidth: "0",
+    minHeight: "40px",
     cursor: "pointer",
   });
 
@@ -110,14 +111,14 @@ function buildEditButton(onClick) {
   button.setAttribute("aria-label", "Ajouter une idée d’accompagnement");
   button.title = "Ajouter une idée d’accompagnement";
   Object.assign(button.style, {
-    width: "34px",
-    height: "34px",
+    width: "40px",
+    height: "40px",
     borderRadius: "7px",
     border: "1px solid var(--line)",
     background: "var(--card)",
     color: "var(--ink-soft)",
     cursor: "pointer",
-    fontSize: "16px",
+    fontSize: "18px",
     lineHeight: "1",
     display: "inline-flex",
     alignItems: "center",
@@ -224,11 +225,26 @@ export default function Accompaniments() {
         const librarySelect = line.querySelector('select[aria-label="Piger dans la bibliothèque"]');
         if (!librarySelect) return;
 
-        input.style.order = "0";
-        librarySelect.style.order = "2";
-        librarySelect.style.flex = "1 1 100%";
-        librarySelect.style.maxWidth = "none";
-        librarySelect.style.width = "100%";
+        // Sur téléphone, chaque contrôle occupe sa propre ligne :
+        // nom du souper -> accompagnement -> bibliothèque.
+        Object.assign(line.style, {
+          display: "flex",
+          flexDirection: "column",
+          flexWrap: "nowrap",
+          alignItems: "stretch",
+          width: "100%",
+        });
+        Object.assign(input.style, {
+          width: "100%",
+          flex: "0 0 auto",
+          fontSize: "16px",
+        });
+        Object.assign(librarySelect.style, {
+          width: "100%",
+          maxWidth: "none",
+          flex: "0 0 auto",
+          fontSize: "16px",
+        });
 
         const group = document.createElement("div");
         group.dataset.accompanimentGroup = dayKey;
@@ -236,9 +252,8 @@ export default function Accompaniments() {
           display: "flex",
           alignItems: "center",
           gap: "6px",
-          flex: "1 1 100%",
           width: "100%",
-          order: "1",
+          minWidth: "0",
         });
 
         const select = buildSelect(label, dayKey, customOptions, save);
@@ -246,7 +261,6 @@ export default function Accompaniments() {
         group.appendChild(select);
         group.appendChild(buildEditButton(addCustomOption));
 
-        // Toujours entre le nom du souper et « Piger dans la bibliothèque ».
         line.insertBefore(group, librarySelect);
       });
     };
