@@ -40,14 +40,12 @@ function getDay(row) {
 function getMealControls(row) {
   const input = row?.querySelector?.('input[placeholder="Nom du souper"]');
   if (!input) return null;
-
   let line = input.parentElement;
   while (line && line !== row) {
     const librarySelect = line.querySelector?.('select[aria-label="Piger dans la bibliothèque"]');
     if (librarySelect) return { line, librarySelect };
     line = line.parentElement;
   }
-
   const librarySelect = row.querySelector?.('select[aria-label="Piger dans la bibliothèque"]');
   return librarySelect ? { line: librarySelect.parentElement, librarySelect } : null;
 }
@@ -67,14 +65,14 @@ async function save(dayKey, dessert) {
 
 function styleDessertButton(button, hasDessert, open) {
   Object.assign(button.style, {
-    minWidth: hasDessert ? "auto" : "40px",
-    minHeight: "40px",
+    minWidth: hasDessert ? "auto" : "42px",
+    minHeight: "42px",
     border: `1px solid ${hasDessert || open ? "var(--honey)" : "var(--line)"}`,
-    borderRadius: "20px",
-    padding: hasDessert ? "7px 11px" : "7px",
+    borderRadius: "21px",
+    padding: hasDessert ? "8px 12px" : "8px",
     background: hasDessert || open ? "var(--honey-soft)" : "var(--card)",
     color: hasDessert || open ? "var(--honey)" : "var(--ink-soft)",
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: "700",
     cursor: "pointer",
     display: "inline-flex",
@@ -82,13 +80,13 @@ function styleDessertButton(button, hasDessert, open) {
     justifyContent: "center",
     gap: "6px",
     flexShrink: "0",
+    boxShadow: open ? "0 2px 8px rgba(42,36,30,0.08)" : "none",
   });
 }
 
 function updateDessertButton(group, dayKey) {
   const button = group.querySelector("[data-dessert-toggle]");
   if (!button) return;
-
   const dessert = (values[dayKey] || "").trim();
   const open = group.dataset.dessertOpen === "true";
   button.setAttribute("aria-expanded", String(open));
@@ -105,13 +103,12 @@ function buildDessertField(dayKey, value = "") {
   input.value = value;
   input.dataset.dessertDay = dayKey;
   input.setAttribute("aria-label", "Dessert");
-
   Object.assign(input.style, {
     flex: "1 1 180px",
-    minWidth: "0",
+    minWidth: "180px",
     minHeight: "40px",
     border: "1px solid var(--line)",
-    borderRadius: "6px",
+    borderRadius: "8px",
     padding: "8px 10px",
     background: "var(--card)",
     color: "var(--ink)",
@@ -123,7 +120,6 @@ function buildDessertField(dayKey, value = "") {
     const group = input.closest("[data-dessert-group]");
     if (group) updateDessertButton(group, dayKey);
   };
-
   input.addEventListener("change", commit);
   input.addEventListener("blur", commit);
   return input;
@@ -134,13 +130,11 @@ function buildDessertGroup(dayKey, value = "") {
   group.dataset.dessertGroup = dayKey;
   group.dataset.dessertOpen = "false";
   Object.assign(group.style, {
-    width: "100%",
-    minWidth: "0",
     display: "flex",
     alignItems: "center",
     gap: "6px",
-    marginTop: "2px",
-    marginBottom: "2px",
+    flexWrap: "wrap",
+    minWidth: "0",
   });
 
   const button = document.createElement("button");
@@ -172,26 +166,28 @@ function buildDessertGroup(dayKey, value = "") {
   return group;
 }
 
+function placeGroup(row, line, librarySelect, dayKey, group) {
+  const extras = row.querySelector(`[data-meal-extras-row="${dayKey}"]`);
+  if (extras) {
+    if (group.parentElement !== extras) extras.appendChild(group);
+    return;
+  }
+  if (group.parentElement !== line) line.insertBefore(group, librarySelect);
+}
+
 function mountFields() {
   document.querySelectorAll('input[placeholder="Nom du souper"]').forEach((mealInput) => {
     const row = getMealRow(mealInput);
     const day = getDay(row);
     if (!row || !day) return;
-
     const [, dayKey] = day;
-    if (row.querySelector(`[data-dessert-group="${dayKey}"]`)) return;
-
     const controls = getMealControls(row);
     if (!controls) return;
     const { line, librarySelect } = controls;
 
-    const group = buildDessertGroup(dayKey, values[dayKey] || "");
-    const accompaniment = row.querySelector(`[data-accompaniment-group="${dayKey}"]`);
-    if (accompaniment?.parentElement === line) {
-      accompaniment.insertAdjacentElement("afterend", group);
-    } else {
-      line.insertBefore(group, librarySelect);
-    }
+    let group = row.querySelector(`[data-dessert-group="${dayKey}"]`);
+    if (!group) group = buildDessertGroup(dayKey, values[dayKey] || "");
+    placeGroup(row, line, librarySelect, dayKey, group);
   });
 }
 
@@ -206,10 +202,7 @@ function applyValues() {
 
 async function loadWeek(weekId) {
   if (!weekId) return;
-  const { data, error } = await supabase
-    .from("week_desserts")
-    .select("day_key, dessert")
-    .eq("week_id", weekId);
+  const { data, error } = await supabase.from("week_desserts").select("day_key, dessert").eq("week_id", weekId);
   if (error) {
     console.error("fetch week_desserts", error);
     return;
@@ -224,11 +217,7 @@ function subscribe(weekId) {
   if (!weekId) return;
   channel = supabase
     .channel(`desserts-${weekId}`)
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "week_desserts", filter: `week_id=eq.${weekId}` },
-      () => loadWeek(weekId)
-    )
+    .on("postgres_changes", { event: "*", schema: "public", table: "week_desserts", filter: `week_id=eq.${weekId}` }, () => loadWeek(weekId))
     .subscribe();
 }
 
