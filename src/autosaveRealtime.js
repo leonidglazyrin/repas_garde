@@ -8,7 +8,8 @@ const DAY_KEYS = {
   Vendredi: "fri",
 };
 
-const timers = new WeakMap();
+const mealQueues = new WeakMap();
+let weekendQueue = Promise.resolve();
 let badgeTimer;
 
 function getWeekId() {
@@ -60,7 +61,7 @@ function showBadge(state, message) {
     badgeTimer = setTimeout(() => {
       badge.style.opacity = "0";
       badge.style.transform = "translateY(5px)";
-    }, 1800);
+    }, 1500);
   }
 }
 
@@ -95,61 +96,70 @@ function getStatus(row) {
   return "pending";
 }
 
-async function saveMealRow(row) {
-  if (!supabaseConfigured) return;
+function snapshotMealRow(row) {
   const weekId = getWeekId();
   const dayKey = getDayKey(row);
-  if (!weekId || !dayKey) return;
+  if (!weekId || !dayKey) return null;
 
-  const name = row.querySelector('input[placeholder="Nom du souper"]')?.value || "";
-  const ingredients = row.querySelector('textarea[placeholder^="Ingrédients"]')?.value || "";
-  const comment = row.querySelector('input[placeholder^="Commentaire du parent"]')?.value || "";
-  const status = getStatus(row);
-
-  showBadge("saving", "Enregistrement…");
-  const { error } = await supabase.from("week_meals").upsert({
+  return {
     week_id: weekId,
     day_key: dayKey,
-    name,
-    ingredients,
-    comment,
-    status,
+    name: row.querySelector('input[placeholder="Nom du souper"]')?.value || "",
+    ingredients: row.querySelector('textarea[placeholder^="Ingrédients"]')?.value || "",
+    comment: row.querySelector('input[placeholder^="Commentaire du parent"]')?.value || "",
+    status: getStatus(row),
     updated_at: new Date().toISOString(),
-  });
+  };
+}
+
+async function persistMeal(snapshot) {
+  if (!supabaseConfigured || !snapshot) return;
+  showBadge("saving", "Enregistrement…");
+  const { error } = await supabase.from("week_meals").upsert(snapshot);
 
   if (error) {
     console.error("autosave week_meals", error);
-    showBadge("error", "Erreur d’enregistrement");
-  } else {
-    showBadge("saved", "Enregistré et synchronisé");
+    showBadge("error", `Erreur: ${error.message || "enregistrement impossible"}`);
+    throw error;
   }
+
+  showBadge("saved", "Enregistré et synchronisé");
 }
 
-async function saveWeekend(textarea) {
+function queueMealSave(row) {
+  const snapshot = snapshotMealRow(row);
+  if (!snapshot) return;
+
+  const previous = mealQueues.get(row) || Promise.resolve();
+  const next = previous
+    .catch(() => {})
+    .then(() => persistMeal(snapshot));
+  mealQueues.set(row, next);
+}
+
+function queueWeekendSave(textarea) {
   if (!supabaseConfigured) return;
   const weekId = getWeekId();
   if (!weekId) return;
 
-  showBadge("saving", "Enregistrement…");
-  const { error } = await supabase.from("weekend_notes").upsert({
+  const snapshot = {
     week_id: weekId,
     note: textarea.value || "",
     updated_at: new Date().toISOString(),
-  });
+  };
 
-  if (error) {
-    console.error("autosave weekend_notes", error);
-    showBadge("error", "Erreur d’enregistrement");
-  } else {
-    showBadge("saved", "Enregistré et synchronisé");
-  }
-}
-
-function debounce(element, callback, delay = 450) {
-  const oldTimer = timers.get(element);
-  if (oldTimer) clearTimeout(oldTimer);
-  const timer = setTimeout(callback, delay);
-  timers.set(element, timer);
+  weekendQueue = weekendQueue
+    .catch(() => {})
+    .then(async () => {
+      showBadge("saving", "Enregistrement…");
+      const { error } = await supabase.from("weekend_notes").upsert(snapshot);
+      if (error) {
+        console.error("autosave weekend_notes", error);
+        showBadge("error", `Erreur: ${error.message || "enregistrement impossible"}`);
+        throw error;
+      }
+      showBadge("saved", "Enregistré et synchronisé");
+    });
 }
 
 function isMealField(target) {
@@ -187,20 +197,19 @@ function decorateActionButtons() {
   });
 }
 
+// Chaque frappe est mise en file et persistée dans l'ordre. Ainsi, même si la
+// personne tape vite, la dernière valeur finit toujours dans Supabase.
 document.addEventListener("input", (event) => {
   const target = event.target;
 
   if (isMealField(target)) {
     const row = findMealRow(target);
-    if (!row) return;
-    showBadge("saving", "Modification…");
-    debounce(target, () => saveMealRow(row));
+    if (row) queueMealSave(row);
     return;
   }
 
   if (isWeekendField(target)) {
-    showBadge("saving", "Modification…");
-    debounce(target, () => saveWeekend(target));
+    queueWeekendSave(target);
   }
 });
 
@@ -212,14 +221,14 @@ document.addEventListener("click", (event) => {
   if (text.includes("En attente") || text.includes("Approuvé") || text.includes("Refusé")) {
     const row = findMealRow(button);
     if (!row) return;
-    setTimeout(() => saveMealRow(row), 0);
+    setTimeout(() => queueMealSave(row), 0);
     return;
   }
 
   if (/Ajouter|Enregistrer|Copier la semaine/.test(text)) {
     showBadge("saving", "Synchronisation…");
     clearTimeout(badgeTimer);
-    badgeTimer = setTimeout(() => showBadge("saved", "Synchronisé"), 800);
+    badgeTimer = setTimeout(() => showBadge("saved", "Synchronisé"), 700);
   }
 });
 
@@ -227,6 +236,5 @@ const observer = new MutationObserver(() => decorateActionButtons());
 observer.observe(document.documentElement, { childList: true, subtree: true });
 queueMicrotask(decorateActionButtons);
 
-// Les abonnements Realtime de App.jsx rechargent déjà les données dès qu'un autre
-// appareil écrit dans Supabase. Ce module ajoute l'auto-enregistrement des champs
-// pendant la saisie, les icônes d'ajout et un indicateur visuel de synchronisation.
+// App.jsx est abonné à Supabase Realtime. Dès qu'une écriture arrive dans la
+// base, les autres appareils rechargent automatiquement les données concernées.
