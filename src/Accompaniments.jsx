@@ -100,9 +100,9 @@ function buildSelect(label, dayKey, customOptions, onChange) {
     fontSize: "16px",
     background: "var(--card)",
     color: "var(--ink)",
-    flex: "1 1 220px",
+    width: "100%",
     minWidth: "0",
-    minHeight: "40px",
+    minHeight: "42px",
     cursor: "pointer",
   });
   refillSelect(select, customOptions);
@@ -118,9 +118,9 @@ function buildEditButton(onClick) {
   button.setAttribute("aria-label", "Ajouter une idée d’accompagnement");
   button.title = "Ajouter une idée d’accompagnement";
   Object.assign(button.style, {
-    width: "40px",
-    height: "40px",
-    borderRadius: "20px",
+    width: "42px",
+    height: "42px",
+    borderRadius: "21px",
     border: "1px solid var(--line)",
     background: "var(--card)",
     color: "var(--ink-soft)",
@@ -136,38 +136,24 @@ function buildEditButton(onClick) {
   return button;
 }
 
-function styleToggle(button, selected, open) {
-  Object.assign(button.style, {
-    minWidth: selected ? "auto" : "42px",
-    minHeight: "42px",
+function buildIcon() {
+  const icon = document.createElement("div");
+  icon.dataset.accompanimentIcon = "true";
+  icon.textContent = "🥗";
+  icon.setAttribute("aria-hidden", "true");
+  Object.assign(icon.style, {
+    width: "42px",
+    height: "42px",
     borderRadius: "21px",
-    border: `1px solid ${selected || open ? "var(--herb)" : "var(--line)"}`,
-    background: selected || open ? "var(--herb-soft)" : "var(--card)",
-    color: selected || open ? "var(--herb)" : "var(--ink-soft)",
-    padding: selected ? "8px 12px" : "8px",
-    fontSize: "13px",
-    fontWeight: "700",
-    cursor: "pointer",
-    display: "inline-flex",
+    border: "1px solid var(--herb)",
+    background: "var(--herb-soft)",
+    display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "6px",
+    fontSize: "18px",
     flexShrink: "0",
-    boxShadow: open ? "0 2px 8px rgba(42,36,30,0.08)" : "none",
   });
-}
-
-function updateToggle(group) {
-  const button = group.querySelector("[data-accompaniment-toggle]");
-  const select = group.querySelector("select[data-accompaniment-day]");
-  if (!button || !select) return;
-  const selected = select.value || "";
-  const open = group.dataset.accompanimentOpen === "true";
-  button.setAttribute("aria-expanded", String(open));
-  button.setAttribute("aria-label", selected ? `Accompagnement : ${selected}` : "Choisir un accompagnement");
-  button.title = selected ? `Accompagnement : ${selected}` : "Choisir un accompagnement";
-  button.textContent = selected ? `🥗 ${selected}` : "🥗";
-  styleToggle(button, !!selected, open);
+  return icon;
 }
 
 function ensureExtrasRow(line, librarySelect, dayKey) {
@@ -177,15 +163,24 @@ function ensureExtrasRow(line, librarySelect, dayKey) {
     extras.dataset.mealExtrasRow = dayKey;
     Object.assign(extras.style, {
       display: "flex",
-      alignItems: "center",
+      flexDirection: "column",
+      alignItems: "stretch",
       gap: "8px",
-      flexWrap: "wrap",
       width: "100%",
       minWidth: "0",
-      marginTop: "2px",
-      marginBottom: "2px",
+      marginTop: "4px",
+      marginBottom: "4px",
     });
     line.insertBefore(extras, librarySelect);
+  } else {
+    Object.assign(extras.style, {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: "8px",
+      width: "100%",
+      minWidth: "0",
+    });
   }
   return extras;
 }
@@ -202,8 +197,6 @@ export default function Accompaniments() {
     const updateAllMenus = () => {
       document.querySelectorAll("select[data-accompaniment-day]").forEach((select) => {
         refillSelect(select, customOptions, select.value);
-        const group = select.closest("[data-accompaniment-group]");
-        if (group) updateToggle(group);
       });
     };
 
@@ -212,8 +205,6 @@ export default function Accompaniments() {
       document.querySelectorAll("select[data-accompaniment-day]").forEach((select) => {
         const value = values[select.dataset.accompanimentDay] || "";
         if (document.activeElement !== select) refillSelect(select, customOptions, value);
-        const group = select.closest("[data-accompaniment-group]");
-        if (group) updateToggle(group);
       });
     };
 
@@ -279,38 +270,20 @@ export default function Accompaniments() {
         const extras = ensureExtrasRow(line, librarySelect, dayKey);
         const group = document.createElement("div");
         group.dataset.accompanimentGroup = dayKey;
-        group.dataset.accompanimentOpen = "false";
-        Object.assign(group.style, { display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", minWidth: "0" });
-
-        const toggle = document.createElement("button");
-        toggle.type = "button";
-        toggle.dataset.accompanimentToggle = "true";
-        toggle.setAttribute("aria-controls", `accompaniment-menu-${dayKey}`);
-
-        const menu = document.createElement("div");
-        menu.id = `accompaniment-menu-${dayKey}`;
-        menu.dataset.accompanimentMenu = "true";
-        Object.assign(menu.style, { display: "none", alignItems: "center", gap: "6px", flex: "1 1 280px", minWidth: "220px" });
-
-        const select = buildSelect(label, dayKey, customOptions, async (key, value) => {
-          await save(key, value);
-          updateToggle(group);
-        });
-        menu.appendChild(select);
-        menu.appendChild(buildEditButton(addCustomOption));
-
-        toggle.addEventListener("click", () => {
-          const opening = group.dataset.accompanimentOpen !== "true";
-          group.dataset.accompanimentOpen = String(opening);
-          menu.style.display = opening ? "flex" : "none";
-          updateToggle(group);
-          if (opening) requestAnimationFrame(() => select.focus({ preventScroll: true }));
+        Object.assign(group.style, {
+          display: "grid",
+          gridTemplateColumns: "42px minmax(0, 1fr) 42px",
+          alignItems: "center",
+          gap: "8px",
+          width: "100%",
+          minWidth: "0",
         });
 
-        group.appendChild(toggle);
-        group.appendChild(menu);
+        const select = buildSelect(label, dayKey, customOptions, save);
+        group.appendChild(buildIcon());
+        group.appendChild(select);
+        group.appendChild(buildEditButton(addCustomOption));
         extras.appendChild(group);
-        updateToggle(group);
       });
     };
 
