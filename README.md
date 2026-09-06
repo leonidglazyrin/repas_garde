@@ -71,3 +71,5 @@ src/supabaseClient.js   → connexion à Supabase
 supabase_schema.sql     → schéma de base de données à exécuter une fois dans Supabase
 .env.example            → modèle pour tes clés Supabase (ne jamais commit le vrai .env)
 ```
+
+<!-- deploy-trigger: 2026-09-06T16:29:00Z -->
