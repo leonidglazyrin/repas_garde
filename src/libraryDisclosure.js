@@ -29,9 +29,38 @@ function getResultsBlocks(section) {
   return Array.from(content.children).filter((child) => {
     if (child === searchRow) return false;
     if (child.dataset.libraryTabs === "true") return false;
+    if (child.dataset.libraryAlphabet === "true") return false;
     if (child.querySelector?.('input[placeholder="Nom du plat"]')) return false;
     return true;
   });
+}
+
+function getDishCards(section) {
+  const cards = [];
+  const seen = new Set();
+  section.querySelectorAll('button[aria-label^="Supprimer "]').forEach((deleteButton) => {
+    const card = deleteButton.parentElement?.parentElement;
+    if (card && !seen.has(card)) {
+      seen.add(card);
+      cards.push(card);
+    }
+  });
+  return cards;
+}
+
+function getDishName(card) {
+  return card?.querySelector("[data-library-dish-name]")?.textContent?.trim() ||
+    card?.querySelector("span")?.textContent?.trim() || "";
+}
+
+function getInitial(name) {
+  const first = String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+  return /^[A-Z]$/.test(first) ? first : "#";
 }
 
 function isOpen(section) {
@@ -82,6 +111,65 @@ function ensureTabs(section) {
   styleTab(savedTab, isOpen(section));
 }
 
+function styleLetterButton(button, active) {
+  Object.assign(button.style, {
+    minWidth: "34px",
+    minHeight: "34px",
+    padding: "5px 9px",
+    borderRadius: "17px",
+    border: `1px solid ${active ? "var(--herb)" : "var(--line)"}`,
+    background: active ? "var(--herb)" : "var(--card)",
+    color: active ? "#fff" : "var(--ink-soft)",
+    fontSize: "12px",
+    fontWeight: "700",
+    cursor: "pointer",
+  });
+}
+
+function ensureAlphabet(section) {
+  const content = getLibraryContent(section);
+  const searchRow = getSearchRow(section);
+  if (!content || !searchRow) return;
+
+  let alphabet = content.querySelector("[data-library-alphabet]");
+  if (!alphabet) {
+    alphabet = document.createElement("div");
+    alphabet.dataset.libraryAlphabet = "true";
+    alphabet.setAttribute("aria-label", "Filtrer les plats par lettre");
+    Object.assign(alphabet.style, {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "6px",
+      marginBottom: "10px",
+    });
+    searchRow.insertAdjacentElement("afterend", alphabet);
+  }
+
+  const letters = Array.from(new Set(getDishCards(section).map((card) => getInitial(getDishName(card)))))
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, "fr"));
+  const wanted = ["ALL", ...letters];
+  const currentButtons = Array.from(alphabet.querySelectorAll("button[data-library-letter]"));
+  const current = currentButtons.map((button) => button.dataset.libraryLetter).join("|");
+  if (current !== wanted.join("|")) {
+    alphabet.replaceChildren();
+    wanted.forEach((letter) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.libraryLetter = letter;
+      button.textContent = letter === "ALL" ? "Tous" : letter;
+      button.setAttribute("aria-label", letter === "ALL" ? "Afficher tous les plats" : `Afficher les plats en ${letter}`);
+      alphabet.appendChild(button);
+    });
+  }
+
+  const selected = section.dataset.libraryLetter || "ALL";
+  alphabet.querySelectorAll("button[data-library-letter]").forEach((button) => {
+    styleLetterButton(button, button.dataset.libraryLetter === selected);
+  });
+  alphabet.style.display = isOpen(section) && letters.length ? "flex" : "none";
+}
+
 function setBlockVisible(block, visible) {
   block.dataset.libraryResultsBlock = "true";
   block.hidden = !visible;
@@ -100,6 +188,19 @@ function setBlockVisible(block, visible) {
   }
 }
 
+function applyLetterFilter(section) {
+  const selected = section.dataset.libraryLetter || "ALL";
+  getDishCards(section).forEach((card) => {
+    const matches = selected === "ALL" || getInitial(getDishName(card)) === selected;
+    card.style.setProperty("display", matches ? "" : "none", matches ? "" : "important");
+    if (matches) card.style.removeProperty("display");
+  });
+
+  section.querySelectorAll("button[data-library-letter]").forEach((button) => {
+    styleLetterButton(button, button.dataset.libraryLetter === selected);
+  });
+}
+
 function syncResults(section) {
   const search = getSearchInput(section);
   if (!search) return;
@@ -114,6 +215,8 @@ function syncResults(section) {
   const savedTab = section.querySelector("[data-library-mode-button='saved']");
   if (savedTab) styleTab(savedTab, open);
   section.querySelector("[data-library-toggle]")?.remove();
+  ensureAlphabet(section);
+  applyLetterFilter(section);
 }
 
 function toggleDish(card) {
@@ -161,11 +264,14 @@ function initLibraryDisclosure() {
 
   section.dataset.libraryDisclosureReady = "true";
   section.dataset.libraryOpen = "false";
+  section.dataset.libraryLetter = "ALL";
   ensureTabs(section);
   decorateLibrary(section);
+  ensureAlphabet(section);
   syncResults(section);
 
   search.addEventListener("input", () => {
+    section.dataset.libraryLetter = "ALL";
     requestAnimationFrame(() => {
       decorateLibrary(section);
       syncResults(section);
@@ -177,6 +283,13 @@ function initLibraryDisclosure() {
     if (savedTab) {
       section.dataset.libraryOpen = String(!isOpen(section));
       syncResults(section);
+      return;
+    }
+
+    const letterButton = event.target.closest?.("button[data-library-letter]");
+    if (letterButton) {
+      section.dataset.libraryLetter = letterButton.dataset.libraryLetter || "ALL";
+      applyLetterFilter(section);
       return;
     }
 
@@ -200,6 +313,7 @@ function initLibraryDisclosure() {
     requestAnimationFrame(() => {
       ensureTabs(section);
       decorateLibrary(section);
+      ensureAlphabet(section);
       syncResults(section);
       syncing = false;
     });
