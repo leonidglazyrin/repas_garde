@@ -6,12 +6,15 @@ function findLibrarySection() {
 
 function getLibraryContent(section) {
   return Array.from(section.children).find((child) =>
-    child.querySelector?.('input[placeholder="Chercher un plat ou un ingrédient..."]')
+    child.querySelector?.('input[placeholder="Chercher un plat ou un ingrédient..."]') ||
+    child.querySelector?.('input[placeholder="Filtrer les plats déjà faits ou un ingrédient..."]')
   ) || null;
 }
 
 function getSearchInput(section) {
-  return getLibraryContent(section)?.querySelector?.('input[placeholder="Chercher un plat ou un ingrédient..."]') || null;
+  return getLibraryContent(section)?.querySelector?.(
+    'input[placeholder="Chercher un plat ou un ingrédient..."], input[placeholder="Filtrer les plats déjà faits ou un ingrédient..."]'
+  ) || null;
 }
 
 function getResultsBlocks(section) {
@@ -90,17 +93,17 @@ function syncResults(section) {
 
   const mode = getMode(section);
   const hasQuery = search.value.trim().length > 0;
-  const visible = mode === "saved" || hasQuery;
 
+  // Les plats restent toujours cachés tant qu'aucune recherche n'est saisie,
+  // même dans l'onglet « Bibliothèque de plats déjà faits ».
   getResultsBlocks(section).forEach((block) => {
-    block.hidden = !visible;
+    block.hidden = !hasQuery;
     block.dataset.libraryResultsBlock = "true";
   });
 
-  const placeholder = mode === "saved"
+  search.placeholder = mode === "saved"
     ? "Filtrer les plats déjà faits ou un ingrédient..."
     : "Chercher un plat ou un ingrédient...";
-  search.placeholder = placeholder;
 
   section.querySelectorAll("[data-library-mode-button]").forEach((button) => {
     styleTab(button, button.dataset.libraryModeButton === mode);
@@ -170,7 +173,8 @@ function initLibraryDisclosure() {
     if (modeButton) {
       section.dataset.libraryMode = modeButton.dataset.libraryModeButton;
       syncResults(section);
-      if (section.dataset.libraryMode === "search") search.focus();
+      // Ne pas appeler focus() ici : sur téléphone, le clavier doit s'ouvrir
+      // uniquement lorsque l'utilisateur touche directement la barre de recherche.
       return;
     }
 
