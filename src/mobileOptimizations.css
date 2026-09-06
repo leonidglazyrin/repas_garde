@@ -61,4 +61,49 @@ button {
     width: 100% !important;
     max-width: 100% !important;
   }
+
+  /* Cartes de repas : sur téléphone, toutes les zones passent sur une seule colonne. */
+  input[placeholder="Nom du souper"] {
+    width: 100% !important;
+  }
+
+  input[placeholder="Nom du souper"] ~ select[aria-label="Piger dans la bibliothèque"] {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Les blocs statut et avis parent prennent la même largeur que ingrédients/accompagnement. */
+  input[placeholder^="Commentaire du parent"] {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  input[placeholder^="Commentaire du parent"]:first-child,
+  input[placeholder^="Commentaire du parent"]:only-child {
+    flex: 1 1 auto !important;
+  }
+
+  /* Le conteneur direct de l'avis parent devient pleine largeur. */
+  div:has(> input[placeholder^="Commentaire du parent"]) {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* Le bloc des boutons d'avis se place aussi sur toute la largeur, sans décaler la carte. */
+  div:has(> button[aria-pressed]) {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px !important;
+  }
+
+  div:has(> button[aria-pressed]) > button {
+    width: 100% !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+  }
 }
