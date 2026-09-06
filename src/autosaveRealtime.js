@@ -171,6 +171,11 @@ function applyAppTitle() {
   if (heading) heading.textContent = title;
 }
 
+function applyWeekendPlaceholder() {
+  const textarea = document.querySelector('textarea[placeholder^="Ce qui est déjà prêt"]');
+  if (textarea) textarea.setAttribute("placeholder", "Ce qui est déjà prêt pour vous");
+}
+
 function findMealRow(element) {
   let node = element?.parentElement;
   while (node && node !== document.body) {
@@ -292,6 +297,10 @@ document.addEventListener("input", (event) => {
 // Le rendu React se fait juste après l'import de ce module.
 queueMicrotask(() => {
   applyAppTitle();
+  applyWeekendPlaceholder();
   monitorRealtimeHealth();
 });
-setTimeout(applyAppTitle, 100);
+setTimeout(() => {
+  applyAppTitle();
+  applyWeekendPlaceholder();
+}, 100);
