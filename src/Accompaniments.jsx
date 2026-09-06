@@ -92,8 +92,8 @@ function buildSelect(label, dayKey, customOptions, onChange) {
     fontSize: "13px",
     background: "var(--card)",
     color: "var(--ink)",
-    maxWidth: "220px",
-    minWidth: "175px",
+    width: "100%",
+    minWidth: "0",
     cursor: "pointer",
   });
 
@@ -110,8 +110,8 @@ function buildEditButton(onClick) {
   button.setAttribute("aria-label", "Ajouter une idée d’accompagnement");
   button.title = "Ajouter une idée d’accompagnement";
   Object.assign(button.style, {
-    width: "30px",
-    height: "30px",
+    width: "34px",
+    height: "34px",
     borderRadius: "7px",
     border: "1px solid var(--line)",
     background: "var(--card)",
@@ -221,23 +221,33 @@ export default function Accompaniments() {
         const line = input.parentElement;
         if (!line) return;
 
-        const group = document.createElement("span");
+        const librarySelect = line.querySelector('select[aria-label="Piger dans la bibliothèque"]');
+        if (!librarySelect) return;
+
+        input.style.order = "0";
+        librarySelect.style.order = "2";
+        librarySelect.style.flex = "1 1 100%";
+        librarySelect.style.maxWidth = "none";
+        librarySelect.style.width = "100%";
+
+        const group = document.createElement("div");
         group.dataset.accompanimentGroup = dayKey;
         Object.assign(group.style, {
-          display: "inline-flex",
+          display: "flex",
           alignItems: "center",
-          gap: "5px",
-          flexWrap: "nowrap",
+          gap: "6px",
+          flex: "1 1 100%",
+          width: "100%",
           order: "1",
         });
 
-        group.appendChild(buildSelect(label, dayKey, customOptions, save));
+        const select = buildSelect(label, dayKey, customOptions, save);
+        select.style.flex = "1 1 auto";
+        group.appendChild(select);
         group.appendChild(buildEditButton(addCustomOption));
 
-        // Le menu doit apparaître immédiatement à côté du champ « Nom du souper »,
-        // avant le menu « Piger dans la bibliothèque ».
-        if (input.nextSibling) line.insertBefore(group, input.nextSibling);
-        else line.appendChild(group);
+        // Toujours entre le nom du souper et « Piger dans la bibliothèque ».
+        line.insertBefore(group, librarySelect);
       });
     };
 
