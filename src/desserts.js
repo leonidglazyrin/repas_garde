@@ -133,47 +133,14 @@ async function addCustomOption() {
   }
 }
 
-function styleDessertButton(button, hasDessert, open) {
-  Object.assign(button.style, {
-    minWidth: hasDessert ? "auto" : "42px",
-    minHeight: "42px",
-    border: `1px solid ${hasDessert || open ? "var(--honey)" : "var(--line)"}`,
-    borderRadius: "21px",
-    padding: hasDessert ? "8px 12px" : "8px",
-    background: hasDessert || open ? "var(--honey-soft)" : "var(--card)",
-    color: hasDessert || open ? "var(--honey)" : "var(--ink-soft)",
-    fontSize: "13px",
-    fontWeight: "700",
-    cursor: "pointer",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "6px",
-    flexShrink: "0",
-    boxShadow: open ? "0 2px 8px rgba(42,36,30,0.08)" : "none",
-  });
-}
-
-function updateDessertButton(group, dayKey) {
-  const button = group?.querySelector("[data-dessert-toggle]");
-  if (!button) return;
-  const dessert = (values[dayKey] || "").trim();
-  const open = group.dataset.dessertOpen === "true";
-  button.setAttribute("aria-expanded", String(open));
-  button.setAttribute("aria-label", dessert ? `Dessert : ${dessert}` : "Choisir un dessert");
-  button.title = dessert ? `Dessert : ${dessert}` : "Choisir un dessert";
-  button.textContent = dessert ? `🍰 ${dessert}` : "🍰";
-  styleDessertButton(button, !!dessert, open);
-}
-
 function buildDessertSelect(dayKey, value = "") {
   const select = document.createElement("select");
   select.dataset.dessertDay = dayKey;
   select.setAttribute("aria-label", "Dessert");
   Object.assign(select.style, {
-    flex: "1 1 180px",
-    minWidth: "180px",
-    minHeight: "40px",
+    width: "100%",
+    minWidth: "0",
+    minHeight: "42px",
     border: "1px solid var(--line)",
     borderRadius: "8px",
     padding: "8px 10px",
@@ -186,8 +153,6 @@ function buildDessertSelect(dayKey, value = "") {
   refillSelect(select, value);
   select.addEventListener("change", async () => {
     await save(dayKey, select.value);
-    const group = select.closest("[data-dessert-group]");
-    if (group) updateDessertButton(group, dayKey);
   });
   return select;
 }
@@ -200,9 +165,9 @@ function buildEditButton() {
   button.setAttribute("aria-label", "Ajouter un dessert");
   button.title = "Ajouter un dessert";
   Object.assign(button.style, {
-    width: "40px",
-    height: "40px",
-    borderRadius: "8px",
+    width: "42px",
+    height: "42px",
+    borderRadius: "21px",
     border: "1px solid var(--line)",
     background: "var(--card)",
     color: "var(--ink-soft)",
@@ -218,56 +183,56 @@ function buildEditButton() {
   return button;
 }
 
+function buildIcon() {
+  const icon = document.createElement("div");
+  icon.dataset.dessertIcon = "true";
+  icon.textContent = "🍰";
+  icon.setAttribute("aria-hidden", "true");
+  Object.assign(icon.style, {
+    width: "42px",
+    height: "42px",
+    borderRadius: "21px",
+    border: "1px solid var(--honey)",
+    background: "var(--honey-soft)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "18px",
+    flexShrink: "0",
+  });
+  return icon;
+}
+
 function buildDessertGroup(dayKey, value = "") {
   const group = document.createElement("div");
   group.dataset.dessertGroup = dayKey;
-  group.dataset.dessertOpen = "false";
   Object.assign(group.style, {
-    display: "flex",
+    display: "grid",
+    gridTemplateColumns: "42px minmax(0, 1fr) 42px",
     alignItems: "center",
-    gap: "6px",
-    flexWrap: "wrap",
-    minWidth: "0",
-  });
-
-  const button = document.createElement("button");
-  button.type = "button";
-  button.dataset.dessertToggle = "true";
-  button.setAttribute("aria-controls", `dessert-menu-${dayKey}`);
-
-  const menu = document.createElement("div");
-  menu.id = `dessert-menu-${dayKey}`;
-  menu.dataset.dessertMenu = "true";
-  Object.assign(menu.style, {
-    display: "none",
-    alignItems: "center",
-    gap: "6px",
-    flex: "1 1 240px",
+    gap: "8px",
+    width: "100%",
     minWidth: "0",
   });
 
   const select = buildDessertSelect(dayKey, value);
-  select.style.flex = "1 1 auto";
-  menu.appendChild(select);
-  menu.appendChild(buildEditButton());
-
-  button.addEventListener("click", () => {
-    const opening = group.dataset.dessertOpen !== "true";
-    group.dataset.dessertOpen = String(opening);
-    menu.style.display = opening ? "flex" : "none";
-    updateDessertButton(group, dayKey);
-    if (opening) requestAnimationFrame(() => select.focus({ preventScroll: true }));
-  });
-
-  group.appendChild(button);
-  group.appendChild(menu);
-  updateDessertButton(group, dayKey);
+  group.appendChild(buildIcon());
+  group.appendChild(select);
+  group.appendChild(buildEditButton());
   return group;
 }
 
 function placeGroup(row, line, librarySelect, dayKey, group) {
   const extras = row.querySelector(`[data-meal-extras-row="${dayKey}"]`);
   if (extras) {
+    Object.assign(extras.style, {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "stretch",
+      gap: "8px",
+      width: "100%",
+      minWidth: "0",
+    });
     if (group.parentElement !== extras) extras.appendChild(group);
     return;
   }
@@ -300,8 +265,6 @@ function applyValues() {
   document.querySelectorAll("select[data-dessert-day]").forEach((select) => {
     const dayKey = select.dataset.dessertDay;
     if (document.activeElement !== select) refillSelect(select, values[dayKey] || "");
-    const group = select.closest("[data-dessert-group]");
-    if (group) updateDessertButton(group, dayKey);
   });
 }
 
