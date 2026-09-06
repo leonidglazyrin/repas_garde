@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, HelpCircle, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { supabase } from "./supabaseClient";
 
@@ -27,18 +28,46 @@ function votesToMap(rows) {
   return map;
 }
 
-export default function DiscoverDishes({ profiles = [] }) {
+export default function DiscoverDishes() {
   const cached = useMemo(() => readCache(), []);
+  const [mountNode, setMountNode] = useState(null);
+  const [profiles, setProfiles] = useState([]);
   const [dishes, setDishes] = useState(() => cached?.dishes || []);
   const [votes, setVotes] = useState(() => cached?.votes || {});
   const [newName, setNewName] = useState("");
   const [newDetails, setNewDetails] = useState("");
   const [adding, setAdding] = useState(false);
 
+  useEffect(() => {
+    const placeSection = () => {
+      const librarySection = Array.from(document.querySelectorAll("main > section")).find((section) =>
+        (section.textContent || "").includes("Bibliothèque de plats déjà utilisés")
+      );
+      if (!librarySection) return false;
+
+      let slot = document.getElementById("discover-dishes-slot");
+      if (!slot) {
+        slot = document.createElement("div");
+        slot.id = "discover-dishes-slot";
+        librarySection.insertAdjacentElement("afterend", slot);
+      }
+      setMountNode(slot);
+      return true;
+    };
+
+    if (placeSection()) return;
+    const observer = new MutationObserver(() => {
+      if (placeSection()) observer.disconnect();
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   const reload = useCallback(async () => {
-    const [dishResult, voteResult] = await Promise.all([
+    const [dishResult, voteResult, profileResult] = await Promise.all([
       supabase.from("discovery_dishes").select("*").order("created_at", { ascending: false }),
       supabase.from("discovery_votes").select("dish_id, profile_id, choice"),
+      supabase.from("profiles").select("id, name, color").order("created_at", { ascending: true }),
     ]);
 
     if (!dishResult.error) setDishes(dishResult.data || []);
@@ -46,6 +75,9 @@ export default function DiscoverDishes({ profiles = [] }) {
 
     if (!voteResult.error) setVotes(votesToMap(voteResult.data));
     else console.error("fetch discovery_votes", voteResult.error);
+
+    if (!profileResult.error) setProfiles(profileResult.data || []);
+    else console.error("fetch discovery profiles", profileResult.error);
   }, []);
 
   useEffect(() => {
@@ -61,6 +93,7 @@ export default function DiscoverDishes({ profiles = [] }) {
       .channel("discovery")
       .on("postgres_changes", { event: "*", schema: "public", table: "discovery_dishes" }, reload)
       .on("postgres_changes", { event: "*", schema: "public", table: "discovery_votes" }, reload)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, reload)
       .subscribe();
 
     return () => {
@@ -121,7 +154,9 @@ export default function DiscoverDishes({ profiles = [] }) {
     }
   };
 
-  return (
+  if (!mountNode) return null;
+
+  return createPortal(
     <section style={{ marginBottom: 28 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <Sparkles size={16} color="var(--honey)" />
@@ -191,7 +226,8 @@ export default function DiscoverDishes({ profiles = [] }) {
           </div>
         )}
       </div>
-    </section>
+    </section>,
+    mountNode
   );
 }
 
