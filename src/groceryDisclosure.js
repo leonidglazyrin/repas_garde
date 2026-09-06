@@ -15,10 +15,43 @@ function getBody(section, header) {
   return Array.from(section.children).find((child) => child !== header) || null;
 }
 
+function styleHeader(header, open) {
+  Object.assign(header.style, {
+    cursor: "pointer",
+    userSelect: "none",
+    width: "100%",
+    minHeight: "52px",
+    padding: "12px 16px",
+    borderRadius: "10px",
+    border: `2px solid ${open ? "var(--herb)" : "var(--honey)"}`,
+    background: open ? "var(--herb-soft)" : "var(--honey-soft)",
+    boxShadow: open ? "0 2px 8px rgba(76,107,78,0.16)" : "0 2px 8px rgba(201,138,59,0.18)",
+    fontWeight: "700",
+    fontSize: "15px",
+    alignItems: "center",
+    marginBottom: open ? "10px" : "0",
+  });
+
+  Array.from(header.querySelectorAll("span")).forEach((span) => {
+    if (span.dataset.groceryDisclosureArrow === "true") return;
+    span.style.fontWeight = "700";
+    span.style.fontSize = "15px";
+    span.style.color = open ? "var(--herb)" : "var(--ink)";
+  });
+
+  const icon = header.querySelector("svg");
+  if (icon) {
+    icon.style.width = "20px";
+    icon.style.height = "20px";
+    icon.style.color = open ? "var(--herb)" : "var(--honey)";
+  }
+}
+
 function setOpen(section, header, body, open) {
   section.dataset.groceryOpen = String(open);
   header.setAttribute("aria-expanded", String(open));
   header.title = open ? "Masquer la liste de courses" : "Afficher la liste de courses";
+  styleHeader(header, open);
 
   let arrow = header.querySelector("[data-grocery-disclosure-arrow]");
   if (!arrow) {
@@ -27,13 +60,15 @@ function setOpen(section, header, body, open) {
     arrow.setAttribute("aria-hidden", "true");
     Object.assign(arrow.style, {
       marginLeft: "auto",
-      fontSize: "14px",
-      color: "var(--ink-soft)",
+      fontSize: "18px",
+      fontWeight: "800",
+      color: "var(--ink)",
       flexShrink: "0",
     });
     header.appendChild(arrow);
   }
   arrow.textContent = open ? "▴" : "▾";
+  arrow.style.color = open ? "var(--herb)" : "var(--honey)";
 
   body.hidden = !open;
   body.setAttribute("aria-hidden", String(!open));
@@ -59,11 +94,6 @@ function initGroceryDisclosure() {
   header.setAttribute("tabindex", "0");
   header.setAttribute("aria-controls", "grocery-list-content");
   body.id = "grocery-list-content";
-  Object.assign(header.style, {
-    cursor: "pointer",
-    userSelect: "none",
-    width: "100%",
-  });
 
   const toggle = () => {
     const open = section.dataset.groceryOpen === "true";
