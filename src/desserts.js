@@ -8,24 +8,11 @@ const DAYS = [
   ["Vendredi", "fri"],
 ];
 
-const DEFAULT_OPTIONS = [
-  "Fruits frais",
-  "Compote",
-  "Yogourt",
-  "Crème glacée",
-  "Biscuits",
-  "Brownies",
-  "Gâteau",
-  "Muffins",
-  "Pouding",
-  "Tarte",
-];
+const DESSERT_OPTIONS = ["Yogourt", "Fruits", "Salade de fruits", "Céréales"];
 
 let activeWeek = null;
 let values = {};
-let customOptions = [];
 let channel = null;
-let optionChannel = null;
 let frame = null;
 
 function getWeekId() {
@@ -65,21 +52,15 @@ function getMealControls(row) {
   return librarySelect ? { line: librarySelect.parentElement, librarySelect } : null;
 }
 
-function allOptions() {
-  const seen = new Set();
-  return [...DEFAULT_OPTIONS, ...customOptions]
-    .map((value) => String(value || "").trim())
-    .filter((value) => {
-      const key = value.toLocaleLowerCase("fr-CA");
-      if (!value || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-}
-
 function refillSelect(select, selectedValue = "") {
   if (!select) return;
-  const current = selectedValue || select.value || "";
+  const current = DESSERT_OPTIONS.includes(selectedValue || select.value)
+    ? (selectedValue || select.value)
+    : "";
+
+  const signature = `${current}|${DESSERT_OPTIONS.join("|")}`;
+  if (select.dataset.optionsSignature === signature) return;
+  select.dataset.optionsSignature = signature;
   select.replaceChildren();
 
   const placeholder = document.createElement("option");
@@ -87,16 +68,12 @@ function refillSelect(select, selectedValue = "") {
   placeholder.textContent = "Choisir un dessert";
   select.appendChild(placeholder);
 
-  const options = allOptions();
-  if (current && !options.includes(current)) options.push(current);
-
-  options.forEach((value) => {
+  DESSERT_OPTIONS.forEach((value) => {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = value;
     select.appendChild(option);
   });
-
   select.value = current;
 }
 
@@ -111,26 +88,6 @@ async function save(dayKey, dessert) {
     updated_at: new Date().toISOString(),
   });
   if (error) console.error("save week_desserts", error);
-}
-
-async function addCustomOption() {
-  const idea = window.prompt("Nouveau dessert :", "");
-  const name = String(idea || "").trim();
-  if (!name) return;
-
-  if (!allOptions().some((value) => value.toLocaleLowerCase("fr-CA") === name.toLocaleLowerCase("fr-CA"))) {
-    customOptions = [...customOptions, name];
-    updateAllMenus();
-  }
-
-  const { error } = await supabase
-    .from("dessert_options")
-    .upsert({ name, updated_at: new Date().toISOString() }, { onConflict: "name" });
-
-  if (error) {
-    console.error("save dessert option", error);
-    loadOptions();
-  }
 }
 
 function buildDessertSelect(dayKey, value = "") {
@@ -149,44 +106,15 @@ function buildDessertSelect(dayKey, value = "") {
     fontSize: "16px",
     cursor: "pointer",
   });
-
   refillSelect(select, value);
-  select.addEventListener("change", async () => {
-    await save(dayKey, select.value);
-  });
+  select.addEventListener("change", () => save(dayKey, select.value));
   return select;
-}
-
-function buildEditButton() {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.dataset.dessertEdit = "true";
-  button.textContent = "✎";
-  button.setAttribute("aria-label", "Ajouter un dessert");
-  button.title = "Ajouter un dessert";
-  Object.assign(button.style, {
-    width: "42px",
-    height: "42px",
-    borderRadius: "21px",
-    border: "1px solid var(--line)",
-    background: "var(--card)",
-    color: "var(--ink-soft)",
-    cursor: "pointer",
-    fontSize: "18px",
-    lineHeight: "1",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: "0",
-  });
-  button.addEventListener("click", addCustomOption);
-  return button;
 }
 
 function buildIcon() {
   const icon = document.createElement("div");
   icon.dataset.dessertIcon = "true";
-  icon.textContent = "🍰";
+  icon.textContent = "🍎";
   icon.setAttribute("aria-hidden", "true");
   Object.assign(icon.style, {
     width: "42px",
@@ -208,31 +136,19 @@ function buildDessertGroup(dayKey, value = "") {
   group.dataset.dessertGroup = dayKey;
   Object.assign(group.style, {
     display: "grid",
-    gridTemplateColumns: "42px minmax(0, 1fr) 42px",
+    gridTemplateColumns: "42px minmax(0, 1fr)",
     alignItems: "center",
     gap: "8px",
     width: "100%",
     minWidth: "0",
   });
-
-  const select = buildDessertSelect(dayKey, value);
-  group.appendChild(buildIcon());
-  group.appendChild(select);
-  group.appendChild(buildEditButton());
+  group.append(buildIcon(), buildDessertSelect(dayKey, value));
   return group;
 }
 
 function placeGroup(row, line, librarySelect, dayKey, group) {
   const extras = row.querySelector(`[data-meal-extras-row="${dayKey}"]`);
   if (extras) {
-    Object.assign(extras.style, {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "stretch",
-      gap: "8px",
-      width: "100%",
-      minWidth: "0",
-    });
     if (group.parentElement !== extras) extras.appendChild(group);
     return;
   }
@@ -255,40 +171,24 @@ function mountFields() {
   });
 }
 
-function updateAllMenus() {
-  document.querySelectorAll("select[data-dessert-day]").forEach((select) => {
-    refillSelect(select, values[select.dataset.dessertDay] || select.value);
-  });
-}
-
 function applyValues() {
   document.querySelectorAll("select[data-dessert-day]").forEach((select) => {
-    const dayKey = select.dataset.dessertDay;
-    if (document.activeElement !== select) refillSelect(select, values[dayKey] || "");
+    if (document.activeElement === select) return;
+    refillSelect(select, values[select.dataset.dessertDay] || "");
   });
-}
-
-async function loadOptions() {
-  const { data, error } = await supabase
-    .from("dessert_options")
-    .select("name")
-    .order("name", { ascending: true });
-  if (error) {
-    console.error("fetch dessert_options", error);
-    return;
-  }
-  customOptions = (data || []).map((row) => row.name).filter(Boolean);
-  updateAllMenus();
 }
 
 async function loadWeek(weekId) {
   if (!weekId) return;
-  const { data, error } = await supabase.from("week_desserts").select("day_key, dessert").eq("week_id", weekId);
+  const { data, error } = await supabase
+    .from("week_desserts")
+    .select("day_key,dessert")
+    .eq("week_id", weekId);
   if (error) {
     console.error("fetch week_desserts", error);
     return;
   }
-  values = Object.fromEntries((data || []).map((row) => [row.day_key, row.dessert || ""]));
+  values = Object.fromEntries((data || []).map((row) => [row.day_key, DESSERT_OPTIONS.includes(row.dessert) ? row.dessert : ""]));
   applyValues();
   mountFields();
 }
@@ -299,14 +199,6 @@ function subscribe(weekId) {
   channel = supabase
     .channel(`desserts-${weekId}`)
     .on("postgres_changes", { event: "*", schema: "public", table: "week_desserts", filter: `week_id=eq.${weekId}` }, () => loadWeek(weekId))
-    .subscribe();
-}
-
-function subscribeOptions() {
-  if (optionChannel) supabase.removeChannel(optionChannel);
-  optionChannel = supabase
-    .channel("dessert-options")
-    .on("postgres_changes", { event: "*", schema: "public", table: "dessert_options" }, loadOptions)
     .subscribe();
 }
 
@@ -329,9 +221,8 @@ function scheduleSync() {
   });
 }
 
-loadOptions();
-subscribeOptions();
-const root = document.getElementById("root") || document.body;
-const observer = new MutationObserver(scheduleSync);
-observer.observe(root, { childList: true, subtree: true });
-queueMicrotask(sync);
+// Pas de MutationObserver ici : le dessert ne reconstruit plus l'interface pendant le scroll.
+queueMicrotask(scheduleSync);
+setTimeout(scheduleSync, 120);
+setTimeout(scheduleSync, 500);
+document.addEventListener("meal-rating-changed", scheduleSync);
