@@ -18,7 +18,6 @@ function inventoryMatches(groceryLabel, inventoryKey) {
   const inventoryWords = words(inventoryKey);
   if (!inventoryWords.length) return false;
 
-  // "poulet" masque "escalopes de poulet", "jambon" masque "jambon blanc", etc.
   return inventoryWords.every((word) => groceryWords.has(word));
 }
 
@@ -34,7 +33,7 @@ function applyInventoryFilter() {
   const inventoryKeys = window.__fridgeIngredientKeys instanceof Set
     ? Array.from(window.__fridgeIngredientKeys)
     : [];
-  if (!section || !inventoryKeys.length) return;
+  if (!section) return;
 
   section.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
     const label = checkbox.closest("label");
@@ -60,8 +59,5 @@ function schedule() {
 }
 
 document.addEventListener("fridge-items-changed", schedule);
-document.addEventListener("input", schedule, true);
 document.addEventListener("change", schedule, true);
-document.addEventListener("blur", schedule, true);
-setInterval(schedule, 3000);
 queueMicrotask(schedule);
