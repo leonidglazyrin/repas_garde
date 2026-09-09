@@ -8,6 +8,7 @@ const DAYS = [
 
 let frame = null;
 let activeDay = null;
+let lastOverviewSignature = "";
 
 function findSection(text) {
   return Array.from(document.querySelectorAll("main > section")).find((section) =>
@@ -38,8 +39,7 @@ function getStatus(row) {
   for (const [label, status] of [["Approuvé", "approved"], ["Refusé", "refused"], ["En attente", "pending"]]) {
     const button = buttons.find((candidate) => (candidate.textContent || "").trim().includes(label));
     if (!button) continue;
-    const bg = button.style.background || "";
-    if (bg && !bg.includes("var(--card)")) return status;
+    if (button.getAttribute("aria-pressed") === "true") return status;
   }
   return "pending";
 }
@@ -73,7 +73,7 @@ function styleStatusButtons(rows) {
       if (text.includes("Refusé")) palette = { active: "#B24F35", soft: "#F7E8E3" };
       if (!palette) return;
 
-      const active = (button.style.background || "") && !(button.style.background || "").includes("var(--card)");
+      const active = button.getAttribute("aria-pressed") === "true";
       button.style.borderColor = active ? palette.active : "var(--line)";
       button.style.background = active ? palette.active : palette.soft;
       button.style.color = active ? "#fff" : palette.active;
@@ -88,8 +88,8 @@ function ensureQuickNav(main, rows) {
     nav = document.createElement("div");
     nav.id = "parent-quick-nav";
     Object.assign(nav.style, {
-      position: "sticky",
-      top: "8px",
+      position: window.innerWidth <= 700 ? "relative" : "sticky",
+      top: window.innerWidth <= 700 ? "auto" : "8px",
       zIndex: "9",
       display: "grid",
       gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
@@ -100,14 +100,9 @@ function ensureQuickNav(main, rows) {
       borderRadius: "12px",
       background: "rgba(250,247,240,.96)",
       boxShadow: "0 4px 14px rgba(42,36,30,.08)",
-      backdropFilter: "blur(8px)",
     });
 
-    [
-      ["Semaine", "📅"],
-      ["Épicerie", "🛒"],
-      ["Bibliothèque", "📚"],
-    ].forEach(([label, icon]) => {
+    [["Semaine", "📅"], ["Épicerie", "🛒"], ["Bibliothèque", "📚"]].forEach(([label, icon]) => {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = `${icon} ${label}`;
@@ -138,10 +133,17 @@ function ensureQuickNav(main, rows) {
     });
   }
 
+  nav.style.position = window.innerWidth <= 700 ? "relative" : "sticky";
+  nav.style.top = window.innerWidth <= 700 ? "auto" : "8px";
+
   const firstRow = rows[0]?.row;
   if (firstRow && nav.parentElement !== main) main.insertBefore(nav, firstRow);
-  else if (firstRow && nav.nextElementSibling !== firstRow) main.insertBefore(nav, firstRow);
+  else if (firstRow && nav.nextElementSibling !== firstRow && nav.nextElementSibling?.id !== "week-compact-overview") main.insertBefore(nav, firstRow);
   return nav;
+}
+
+function overviewSignature(rows) {
+  return `${activeDay}|${rows.map(({ row, input, day }) => `${day[1]}:${input.value}:${getStatus(row)}:${row.dataset.mealExpired || "false"}`).join("|")}`;
 }
 
 function ensureOverview(main, rows) {
@@ -160,20 +162,30 @@ function ensureOverview(main, rows) {
     });
   }
 
-  if (!activeDay || !rows.some(({ day }) => day[1] === activeDay)) {
+  const visibleRows = rows.filter(({ row }) => row.dataset.mealExpired !== "true");
+  const usableRows = visibleRows.length ? visibleRows : rows;
+  if (!activeDay || !usableRows.some(({ day }) => day[1] === activeDay)) {
     const today = new Date().toLocaleDateString("fr-CA", { weekday: "long" });
-    const todayMatch = rows.find(({ day }) => day[0].toLocaleLowerCase("fr-CA") === today.toLocaleLowerCase("fr-CA"));
-    activeDay = todayMatch?.day[1] || rows[0].day[1];
+    const todayMatch = usableRows.find(({ day }) => day[0].toLocaleLowerCase("fr-CA") === today.toLocaleLowerCase("fr-CA"));
+    activeDay = todayMatch?.day[1] || usableRows[0].day[1];
   }
 
-  const approved = rows.filter(({ row }) => getStatus(row) === "approved").length;
-  const pending = rows.filter(({ row }) => getStatus(row) === "pending").length;
+  const nav = document.getElementById("parent-quick-nav");
+  if (nav && overview.previousElementSibling !== nav) nav.insertAdjacentElement("afterend", overview);
+  else if (!overview.parentElement) main.insertBefore(overview, rows[0].row);
+
+  const signature = overviewSignature(rows);
+  if (signature === lastOverviewSignature && overview.childElementCount) return;
+  lastOverviewSignature = signature;
+
+  const approved = visibleRows.filter(({ row }) => getStatus(row) === "approved").length;
+  const pending = visibleRows.filter(({ row }) => getStatus(row) === "pending").length;
   overview.replaceChildren();
 
   const top = document.createElement("div");
   Object.assign(top.style, { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "10px" });
   const title = document.createElement("strong");
-  title.textContent = `Semaine en un coup d'œil · ${approved}/${rows.length} repas confirmés`;
+  title.textContent = `Semaine en un coup d'œil · ${approved}/${visibleRows.length} repas confirmés`;
   top.appendChild(title);
   const badge = document.createElement("span");
   badge.textContent = pending ? `${pending} en attente` : "Tout est décidé ✓";
@@ -184,13 +196,13 @@ function ensureOverview(main, rows) {
   const bar = document.createElement("div");
   Object.assign(bar.style, { height: "7px", borderRadius: "999px", background: "#E7E2D9", overflow: "hidden", marginBottom: "12px" });
   const fill = document.createElement("div");
-  Object.assign(fill.style, { height: "100%", width: `${rows.length ? (approved / rows.length) * 100 : 0}%`, background: "#4C6B4E", borderRadius: "inherit", transition: "width .2s ease" });
+  Object.assign(fill.style, { height: "100%", width: `${visibleRows.length ? (approved / visibleRows.length) * 100 : 0}%`, background: "#4C6B4E", borderRadius: "inherit", transition: "width .2s ease" });
   bar.appendChild(fill);
   overview.appendChild(bar);
 
   const grid = document.createElement("div");
-  Object.assign(grid.style, { display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: "8px" });
-  rows.forEach(({ row, input, day }) => {
+  Object.assign(grid.style, { display: "grid", gridTemplateColumns: `repeat(${Math.max(1, visibleRows.length)}, minmax(0, 1fr))`, gap: "8px" });
+  visibleRows.forEach(({ row, input, day }) => {
     const [label, key] = day;
     const status = getStatus(row);
     const meta = statusMeta(status);
@@ -200,37 +212,25 @@ function ensureOverview(main, rows) {
     const name = input.value.trim() || "À choisir";
     button.innerHTML = `<span style="font-size:20px">${mealEmoji(name)}</span><strong>${label.slice(0, 3)}</strong><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${name}</span><span style="font-size:11px;font-weight:800;color:${meta.dot}">● ${meta.label}</span>`;
     Object.assign(button.style, {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-start",
-      gap: "3px",
-      minWidth: "0",
-      minHeight: "88px",
-      padding: "9px",
-      borderRadius: "10px",
-      border: key === activeDay ? `2px solid ${meta.dot}` : "1px solid var(--line)",
-      background: key === activeDay ? meta.bg : "var(--paper)",
-      color: "var(--ink)",
-      cursor: "pointer",
-      textAlign: "left",
+      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "3px", minWidth: "0", minHeight: "88px",
+      padding: "9px", borderRadius: "10px", border: key === activeDay ? `2px solid ${meta.dot}` : "1px solid var(--line)",
+      background: key === activeDay ? meta.bg : "var(--paper)", color: "var(--ink)", cursor: "pointer", textAlign: "left",
     });
     button.addEventListener("click", () => {
       activeDay = key;
+      lastOverviewSignature = "";
       schedule();
       requestAnimationFrame(() => row.scrollIntoView({ behavior: "smooth", block: "center" }));
     });
     grid.appendChild(button);
   });
   overview.appendChild(grid);
-
-  const nav = document.getElementById("parent-quick-nav");
-  if (nav && overview.previousElementSibling !== nav) nav.insertAdjacentElement("afterend", overview);
-  else if (!overview.parentElement) main.insertBefore(overview, rows[0].row);
 }
 
 function applyCompactRows(rows) {
   rows.forEach(({ row, day }) => {
     row.dataset.quickDay = day[1];
+    if (row.dataset.mealExpired === "true") return;
     row.style.display = day[1] === activeDay ? "" : "none";
     if (day[1] === activeDay) {
       row.style.scrollMarginTop = "78px";
@@ -304,8 +304,21 @@ function schedule() {
 }
 
 document.addEventListener("click", schedule, true);
-document.addEventListener("input", schedule, true);
-document.addEventListener("change", schedule, true);
-const observer = new MutationObserver(schedule);
-observer.observe(document.documentElement, { childList: true, subtree: true });
+document.addEventListener("input", () => { lastOverviewSignature = ""; schedule(); }, true);
+document.addEventListener("change", () => { lastOverviewSignature = ""; schedule(); }, true);
+window.addEventListener("resize", schedule);
+
+const observer = new MutationObserver((mutations) => {
+  const relevant = mutations.some((mutation) => {
+    const target = mutation.target instanceof Element ? mutation.target : mutation.target.parentElement;
+    if (!target) return false;
+    if (target.closest?.("#parent-quick-nav, #week-compact-overview")) return false;
+    return true;
+  });
+  if (relevant) {
+    lastOverviewSignature = "";
+    schedule();
+  }
+});
+observer.observe(document.getElementById("root") || document.body, { childList: true, subtree: true });
 queueMicrotask(schedule);
