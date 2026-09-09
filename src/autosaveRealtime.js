@@ -8,9 +8,9 @@ const DAY_KEYS = {
   Vendredi: "fri",
 };
 
-// On attend une vraie pause de saisie avant d'écrire dans Supabase.
-// Cela évite qu'un retour Realtime arrive pendant que quelqu'un est encore en train de taper.
-const AUTOSAVE_DELAY_MS = 1500;
+// On attend 2 secondes complètes sans frappe avant d'écrire dans Supabase.
+// Cela laisse la personne finir son mot / sa modification avant toute synchronisation.
+const AUTOSAVE_DELAY_MS = 2000;
 const REALTIME_WARNING_DELAY_MS = 5000;
 
 const mealTimers = new Map();
@@ -129,9 +129,6 @@ function monitorRealtimeHealth() {
     return;
   }
 
-  // Ce canal ne transporte aucune donnée métier. Il sert uniquement à vérifier
-  // que la connexion Realtime est réellement active. Tant qu'elle fonctionne,
-  // le rappel d'actualisation reste caché.
   const channel = supabase.channel("realtime-ui-health").subscribe((status) => {
     if (status === "SUBSCRIBED") {
       markRealtimeHealthy();
@@ -149,8 +146,6 @@ function monitorRealtimeHealth() {
 
   window.addEventListener("offline", markRealtimeUnavailable);
   window.addEventListener("online", () => {
-    // On ne cache pas le rappel simplement parce qu'Internet revient :
-    // on attend la confirmation SUBSCRIBED du canal Realtime.
     if (!realtimeHealthy) {
       clearTimeout(realtimeWarningTimer);
       realtimeWarningTimer = setTimeout(() => {
@@ -243,7 +238,6 @@ function scheduleMealSave(row) {
     key,
     setTimeout(() => {
       mealTimers.delete(key);
-      // On relit la valeur au dernier moment pour enregistrer exactement ce qui est affiché.
       saveMeal(snapshotMeal(row));
     }, AUTOSAVE_DELAY_MS)
   );
@@ -278,8 +272,6 @@ function isWeekendField(target) {
   return target instanceof HTMLTextAreaElement && (target.getAttribute("placeholder") || "").startsWith("Ce qui est déjà prêt");
 }
 
-// Une seule écriture après 1,5 s sans frappe. Les événements IME/composition
-// (accents, claviers mobiles, prédiction) ne déclenchent pas de sauvegarde au milieu d'un mot.
 document.addEventListener("input", (event) => {
   if (event.isComposing) return;
   const target = event.target;
@@ -294,7 +286,6 @@ document.addEventListener("input", (event) => {
   }
 });
 
-// Le rendu React se fait juste après l'import de ce module.
 queueMicrotask(() => {
   applyAppTitle();
   applyWeekendPlaceholder();
