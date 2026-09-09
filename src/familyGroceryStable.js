@@ -5,6 +5,8 @@ let fridge = [];
 let pantry = [];
 let common = [];
 let mountedSection = null;
+let keepOpenUntil = 0;
+let refocusPlaceholder = "";
 
 function findSection() {
   return Array.from(document.querySelectorAll("main section")).find((section) => {
@@ -19,6 +21,13 @@ function findHeader(section) {
 
 function findBody(section, header) {
   return Array.from(section?.children || []).find((child) => child !== header) || null;
+}
+
+function keepPreparedListOpen() {
+  const section = findSection();
+  if (!section) return;
+  const header = findHeader(section);
+  if (section.dataset.groceryOpen !== "true") header?.click();
 }
 
 function publishExcluded() {
@@ -43,11 +52,31 @@ async function loadAll() {
   if (!commonResult.error) common = commonResult.data || [];
   publishExcluded();
   render();
+
+  if (Date.now() < keepOpenUntil) {
+    keepPreparedListOpen();
+    if (refocusPlaceholder) {
+      requestAnimationFrame(() => {
+        const input = Array.from(document.querySelectorAll("input")).find((node) => node.placeholder === refocusPlaceholder);
+        input?.focus({ preventScroll: true });
+      });
+    }
+  }
 }
 
-async function addItem(table, item) {
+async function addItem(table, item, placeholder = "") {
   const value = String(item || "").trim();
   if (!value) return;
+
+  keepOpenUntil = Date.now() + 10000;
+  refocusPlaceholder = placeholder;
+  keepPreparedListOpen();
+
+  if (table === "common_grocery_items") {
+    const wrapper = document.getElementById("common-grocery-wrapper-stable");
+    if (wrapper) wrapper.dataset.open = "true";
+  }
+
   const payload = table === "common_grocery_items" ? { item: value } : { item: value, updated_at: new Date().toISOString() };
   const query = supabase.from(table);
   const { error } = table === "common_grocery_items"
@@ -74,6 +103,7 @@ function inputRow(placeholder, onAdd) {
   Object.assign(row.style, { display: "grid", gridTemplateColumns: "minmax(0,1fr) 38px", gap: "6px", marginBottom: "8px" });
   const input = document.createElement("input");
   input.placeholder = placeholder;
+  input.autocomplete = "off";
   Object.assign(input.style, { minWidth: "0", minHeight: "38px", border: "1px solid var(--line)", borderRadius: "8px", padding: "7px 9px", fontSize: "16px" });
   const button = document.createElement("button");
   button.type = "button";
@@ -83,10 +113,14 @@ function inputRow(placeholder, onAdd) {
     const value = input.value.trim();
     if (!value) return;
     input.value = "";
-    onAdd(value);
+    onAdd(value, placeholder);
   };
   button.addEventListener("click", commit);
-  input.addEventListener("keydown", (event) => event.key === "Enter" && commit());
+  input.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    commit();
+  });
   row.append(input, button);
   return row;
 }
@@ -101,7 +135,7 @@ function inventoryPanel(title, hint, items, table, placeholder) {
   const help = document.createElement("div");
   help.textContent = hint;
   Object.assign(help.style, { fontSize: "12px", color: "var(--ink-soft)", marginBottom: "8px" });
-  panel.append(heading, help, inputRow(placeholder, (value) => addItem(table, value)));
+  panel.append(heading, help, inputRow(placeholder, (value, currentPlaceholder) => addItem(table, value, currentPlaceholder)));
   items.forEach((item) => {
     const row = document.createElement("div");
     Object.assign(row.style, { display: "grid", gridTemplateColumns: "minmax(0,1fr) 28px", gap: "5px", alignItems: "center", padding: "3px 0", fontSize: "13px" });
@@ -142,7 +176,7 @@ function renderCommon(section) {
   if (!open) return;
   const panel = document.createElement("div");
   Object.assign(panel.style, { marginTop: "7px", padding: "12px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--card)" });
-  panel.appendChild(inputRow("Ajouter manuellement", (value) => addItem("common_grocery_items", value)));
+  panel.appendChild(inputRow("Ajouter manuellement", (value, placeholder) => addItem("common_grocery_items", value, placeholder)));
   common.forEach((item) => {
     const row = document.createElement("label");
     Object.assign(row.style, { display: "grid", gridTemplateColumns: "28px minmax(0,1fr) 28px", gap: "6px", alignItems: "center", padding: "6px 0", borderTop: "1px solid var(--line)" });
@@ -201,6 +235,8 @@ function render() {
 
   renderCommon(section);
   mountedSection = section;
+
+  if (Date.now() < keepOpenUntil) keepPreparedListOpen();
 }
 
 window.addEventListener("resize", render);
