@@ -158,6 +158,10 @@ function ensureRatingPanel(main, weekId, rows) {
     return;
   }
 
+  const signature = candidates
+    .map(({ input, ingredients, day }) => `${day[1]}:${input.value.trim()}:${ingredients?.value?.trim() || ""}`)
+    .join("|");
+
   if (!panel) {
     panel = document.createElement("section");
     panel.id = "meal-rating-panel";
@@ -169,6 +173,13 @@ function ensureRatingPanel(main, weekId, rows) {
       background: "#FFF9EE",
     });
   }
+
+  const anchor = document.getElementById("parent-quick-nav") || main.firstElementChild;
+  if (anchor?.parentElement === main && panel.previousElementSibling !== anchor) anchor.insertAdjacentElement("afterend", panel);
+  else if (!panel.parentElement) main.insertBefore(panel, main.firstElementChild);
+
+  if (panel.dataset.signature === signature) return;
+  panel.dataset.signature = signature;
   panel.replaceChildren();
 
   const title = document.createElement("strong");
@@ -212,10 +223,6 @@ function ensureRatingPanel(main, weekId, rows) {
     wrap.appendChild(actions);
     panel.appendChild(wrap);
   });
-
-  const anchor = document.getElementById("parent-quick-nav") || main.firstElementChild;
-  if (anchor?.parentElement === main) anchor.insertAdjacentElement("afterend", panel);
-  else if (!panel.parentElement) main.insertBefore(panel, main.firstElementChild);
 }
 
 function applyExpiry(weekId, rows) {
@@ -259,7 +266,6 @@ function schedule() {
   });
 }
 
-// Les nouveaux plats ne restent pas dans la bibliothèque avant l'avis.
 document.addEventListener("focusout", (event) => {
   const input = event.target;
   if (!(input instanceof HTMLInputElement) || input.placeholder !== "Nom du souper") return;
