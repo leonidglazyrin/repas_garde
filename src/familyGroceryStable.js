@@ -7,6 +7,10 @@ let common = [];
 let mountedSection = null;
 let keepOpenUntil = 0;
 let refocusPlaceholder = "";
+const inventoryOpen = new Map([
+  ["fridge_items", false],
+  ["pantry_items", false],
+]);
 
 function findSection() {
   return Array.from(document.querySelectorAll("main section")).find((section) => {
@@ -100,15 +104,16 @@ async function toggleCommon(id, checked) {
 
 function inputRow(placeholder, onAdd) {
   const row = document.createElement("div");
-  Object.assign(row.style, { display: "grid", gridTemplateColumns: "minmax(0,1fr) 38px", gap: "6px", marginBottom: "8px" });
+  row.dataset.inventoryInputRow = "true";
+  Object.assign(row.style, { display: "grid", gridTemplateColumns: "minmax(0,1fr) 42px", gap: "7px", marginBottom: "8px" });
   const input = document.createElement("input");
   input.placeholder = placeholder;
   input.autocomplete = "off";
-  Object.assign(input.style, { minWidth: "0", minHeight: "38px", border: "1px solid var(--line)", borderRadius: "8px", padding: "7px 9px", fontSize: "16px" });
+  Object.assign(input.style, { minWidth: "0", minHeight: "42px", border: "1px solid var(--line)", borderRadius: "9px", padding: "8px 10px", fontSize: "16px", boxSizing: "border-box" });
   const button = document.createElement("button");
   button.type = "button";
   button.textContent = "+";
-  Object.assign(button.style, { minHeight: "38px", border: "1px solid var(--line)", borderRadius: "8px", background: "var(--card)", cursor: "pointer", fontSize: "20px" });
+  Object.assign(button.style, { minHeight: "42px", border: "1px solid var(--line)", borderRadius: "9px", background: "var(--card)", cursor: "pointer", fontSize: "20px" });
   const commit = () => {
     const value = input.value.trim();
     if (!value) return;
@@ -128,28 +133,68 @@ function inputRow(placeholder, onAdd) {
 function inventoryPanel(title, hint, items, table, placeholder) {
   const panel = document.createElement("aside");
   panel.dataset.inventoryPanel = table;
-  Object.assign(panel.style, { padding: "12px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--card)", minWidth: "0" });
+  Object.assign(panel.style, { padding: "12px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--card)", minWidth: "0", boxSizing: "border-box" });
+
   const heading = document.createElement("div");
   heading.textContent = title;
-  Object.assign(heading.style, { fontWeight: "800", marginBottom: "6px" });
+  Object.assign(heading.style, { fontWeight: "800", marginBottom: "5px" });
   const help = document.createElement("div");
   help.textContent = hint;
-  Object.assign(help.style, { fontSize: "12px", color: "var(--ink-soft)", marginBottom: "8px" });
+  Object.assign(help.style, { fontSize: "12px", color: "var(--ink-soft)", marginBottom: "8px", lineHeight: "1.35" });
   panel.append(heading, help, inputRow(placeholder, (value, currentPlaceholder) => addItem(table, value, currentPlaceholder)));
-  items.forEach((item) => {
-    const row = document.createElement("div");
-    Object.assign(row.style, { display: "grid", gridTemplateColumns: "minmax(0,1fr) 28px", gap: "5px", alignItems: "center", padding: "3px 0", fontSize: "13px" });
-    const label = document.createElement("span");
-    label.textContent = item.item;
-    const del = document.createElement("button");
-    del.type = "button";
-    del.textContent = "×";
-    del.setAttribute("aria-label", `Supprimer ${item.item}`);
-    Object.assign(del.style, { border: "none", background: "transparent", cursor: "pointer", fontSize: "18px" });
-    del.addEventListener("click", () => removeItem(table, item.id));
-    row.append(label, del);
-    panel.appendChild(row);
+
+  const open = inventoryOpen.get(table) === true;
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.dataset.inventoryListToggle = table;
+  toggle.setAttribute("aria-expanded", String(open));
+  toggle.textContent = `${open ? "▴" : "▾"} ${open ? "Masquer" : "Voir"} les éléments (${items.length})`;
+  Object.assign(toggle.style, {
+    width: "100%",
+    minHeight: "36px",
+    border: "1px solid var(--line)",
+    borderRadius: "8px",
+    background: "var(--paper)",
+    color: "var(--ink-soft)",
+    fontSize: "12px",
+    fontWeight: "800",
+    cursor: "pointer",
+    textAlign: "left",
+    padding: "7px 9px",
   });
+  toggle.addEventListener("click", () => {
+    inventoryOpen.set(table, !open);
+    const section = findSection();
+    if (section) {
+      const header = findHeader(section);
+      const body = findBody(section, header);
+      const inventory = body?.querySelector("[data-family-inventory-stable]");
+      if (inventory) inventory.dataset.signature = "";
+    }
+    render();
+  });
+  panel.appendChild(toggle);
+
+  if (open) {
+    const list = document.createElement("div");
+    list.dataset.inventoryItemsList = table;
+    Object.assign(list.style, { marginTop: "8px", paddingTop: "4px", borderTop: "1px solid var(--line)" });
+    items.forEach((item) => {
+      const row = document.createElement("div");
+      Object.assign(row.style, { display: "grid", gridTemplateColumns: "minmax(0,1fr) 32px", gap: "5px", alignItems: "center", padding: "4px 0", fontSize: "13px" });
+      const label = document.createElement("span");
+      label.textContent = item.item;
+      const del = document.createElement("button");
+      del.type = "button";
+      del.textContent = "×";
+      del.setAttribute("aria-label", `Supprimer ${item.item}`);
+      Object.assign(del.style, { minHeight: "32px", border: "none", background: "transparent", cursor: "pointer", fontSize: "18px" });
+      del.addEventListener("click", () => removeItem(table, item.id));
+      row.append(label, del);
+      list.appendChild(row);
+    });
+    panel.appendChild(list);
+  }
   return panel;
 }
 
@@ -159,7 +204,6 @@ function renderCommon(section) {
     wrapper = document.createElement("section");
     wrapper.id = "common-grocery-wrapper-stable";
     wrapper.dataset.open = "false";
-    wrapper.style.marginTop = "12px";
     section.insertAdjacentElement("afterend", wrapper);
   }
   const open = wrapper.dataset.open === "true";
@@ -170,16 +214,16 @@ function renderCommon(section) {
   const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.textContent = `✎ Épicerie commune ${open ? "▴" : "▾"}`;
-  Object.assign(toggle.style, { width: "100%", minHeight: "38px", border: "1px solid var(--line)", borderRadius: "9px", background: "transparent", color: "var(--ink-soft)", fontWeight: "700", cursor: "pointer", textAlign: "left", padding: "8px 11px" });
+  Object.assign(toggle.style, { width: "100%", minHeight: "40px", border: "1px solid var(--line)", borderRadius: "9px", background: "transparent", color: "var(--ink-soft)", fontWeight: "700", cursor: "pointer", textAlign: "left", padding: "8px 11px" });
   toggle.addEventListener("click", () => { wrapper.dataset.open = String(!open); renderCommon(section); });
   wrapper.appendChild(toggle);
   if (!open) return;
   const panel = document.createElement("div");
-  Object.assign(panel.style, { marginTop: "7px", padding: "12px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--card)" });
+  Object.assign(panel.style, { marginTop: "8px", padding: "12px", border: "1px solid var(--line)", borderRadius: "10px", background: "var(--card)" });
   panel.appendChild(inputRow("Ajouter manuellement", (value, placeholder) => addItem("common_grocery_items", value, placeholder)));
   common.forEach((item) => {
     const row = document.createElement("label");
-    Object.assign(row.style, { display: "grid", gridTemplateColumns: "28px minmax(0,1fr) 28px", gap: "6px", alignItems: "center", padding: "6px 0", borderTop: "1px solid var(--line)" });
+    Object.assign(row.style, { display: "grid", gridTemplateColumns: "30px minmax(0,1fr) 32px", gap: "6px", alignItems: "center", padding: "6px 0", borderTop: "1px solid var(--line)" });
     const check = document.createElement("input");
     check.type = "checkbox";
     check.checked = !!item.checked;
@@ -191,7 +235,7 @@ function renderCommon(section) {
     del.type = "button";
     del.textContent = "×";
     del.addEventListener("click", (event) => { event.preventDefault(); removeItem("common_grocery_items", item.id); });
-    Object.assign(del.style, { border: "none", background: "transparent", cursor: "pointer", fontSize: "18px" });
+    Object.assign(del.style, { minHeight: "32px", border: "none", background: "transparent", cursor: "pointer", fontSize: "18px" });
     row.append(check, text, del);
     panel.appendChild(row);
   });
@@ -208,7 +252,7 @@ function render() {
   const label = Array.from(header.querySelectorAll("span")).find((span) => (span.textContent || "").includes("Liste d'épicerie"));
   if (label) label.textContent = "Liste d'épicerie pour les repas préparés";
 
-  const signature = `${fridge.map((x) => `${x.id}:${x.item}`).join(";")}|${pantry.map((x) => `${x.id}:${x.item}`).join(";")}|${window.innerWidth <= 700}`;
+  const signature = `${fridge.map((x) => `${x.id}:${x.item}`).join(";")}|${pantry.map((x) => `${x.id}:${x.item}`).join(";")}|${inventoryOpen.get("fridge_items")}|${inventoryOpen.get("pantry_items")}|${window.innerWidth <= 700}`;
   let inventory = body.querySelector("[data-family-inventory-stable]");
   if (!inventory) {
     inventory = document.createElement("div");
@@ -222,16 +266,18 @@ function render() {
       inventoryPanel("🥫 Déjà dans les placards", "Ces ingrédients ne sont pas ajoutés à la liste.", pantry, "pantry_items", "Ajouter aux placards")
     );
   }
-  Object.assign(inventory.style, { display: "flex", flexDirection: "column", gap: "10px", minWidth: "0" });
+  Object.assign(inventory.style, { display: "flex", flexDirection: "column", gap: "12px", minWidth: "0" });
 
   const mobile = window.innerWidth <= 700;
   body.style.display = "grid";
   body.style.gridTemplateColumns = mobile ? "minmax(0,1fr)" : "minmax(0,1.65fr) minmax(230px,.75fr)";
-  body.style.columnGap = "14px";
+  body.style.columnGap = "16px";
+  body.style.rowGap = "12px";
   Array.from(body.children).forEach((child) => {
     child.style.gridColumn = child === inventory && !mobile ? "2" : "1";
   });
   if (!mobile) inventory.style.gridRow = "1 / span 30";
+  else inventory.style.gridRow = "auto";
 
   renderCommon(section);
   mountedSection = section;
