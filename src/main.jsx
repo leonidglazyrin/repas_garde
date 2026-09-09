@@ -21,6 +21,7 @@ import "./mealLifecycle.js";
 import "./libraryRatingHierarchy.js";
 import "./familyGroceryStable.js";
 import "./inventoryGroceryFilter.js";
+import "./inventoryEdit.js";
 import "./mobileOptimizations.css";
 import "./scrollStability.css";
 
