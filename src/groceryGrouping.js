@@ -129,6 +129,8 @@ function formatAggregate(entries) {
 function getApprovedMealIngredientLines() {
   const lines = [];
   document.querySelectorAll('textarea[placeholder^="Ingrédients"]').forEach((textarea) => {
+    if (textarea.closest?.('[data-meal-expired="true"]')) return;
+
     let card = textarea.parentElement;
     while (card && card !== document.body) {
       const approvedButton = Array.from(card.querySelectorAll('button[aria-pressed]')).find(
@@ -176,6 +178,7 @@ function groupGroceryItems() {
   if (!section) return;
 
   const approvedTotals = buildApprovedTotals();
+  const fridgeKeys = window.__fridgeIngredientKeys instanceof Set ? window.__fridgeIngredientKeys : new Set();
   const checkboxes = Array.from(section.querySelectorAll('input[type="checkbox"]'));
   const groups = new Map();
 
@@ -203,12 +206,30 @@ function groupGroceryItems() {
 
   groups.forEach((items, key) => {
     if (!items.length) return;
+
+    if (fridgeKeys.has(key)) {
+      items.forEach(({ row }) => {
+        row.dataset.groceryInFridge = "true";
+        row.style.setProperty("display", "none", "important");
+      });
+      return;
+    }
+
     const leader = items[0];
     const sourceEntries = approvedTotals.get(key) || items.map((item) => item.sourceLabel);
-    const aggregate = formatAggregate(sourceEntries);
 
+    // Si cet ingrédient vient des repas mais qu'aucun repas encore actif n'en a besoin,
+    // il disparaît de la liste. Les ajouts manuels restent affichés.
+    const mealDerived = items.some((item) => item.row.dataset.groceryOriginalLabel);
+    if (mealDerived && approvedTotals.size > 0 && !approvedTotals.has(key)) {
+      items.forEach(({ row }) => row.style.setProperty("display", "none", "important"));
+      return;
+    }
+
+    const aggregate = formatAggregate(sourceEntries);
     leader.row.dataset.groceryGroup = key;
     leader.row.dataset.groceryMergedCount = String(items.length);
+    delete leader.row.dataset.groceryInFridge;
 
     if (aggregate && sourceEntries.length > 0) {
       setIngredientName(leader.label, aggregate);
@@ -260,6 +281,7 @@ document.addEventListener(
 
 document.addEventListener("input", scheduleGrouping, true);
 document.addEventListener("blur", scheduleGrouping, true);
+document.addEventListener("fridge-items-changed", scheduleGrouping);
 
 const observer = new MutationObserver(scheduleGrouping);
 observer.observe(document.documentElement, {
