@@ -17,10 +17,8 @@ import "./libraryPlacement.js";
 import "./discoveryPlacement.js";
 import "./parentQuickView.js";
 import "./mealLifecycle.js";
-import "./libraryRatingCategories.js";
 import "./libraryRatingHierarchy.js";
-import "./groceryFamilyFeatures.js";
-import "./pantryFeatures.js";
+import "./familyGroceryStable.js";
 import "./mobileOptimizations.css";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
