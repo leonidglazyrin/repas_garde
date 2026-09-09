@@ -22,6 +22,7 @@ import "./libraryRatingHierarchy.js";
 import "./familyGroceryStable.js";
 import "./inventoryGroceryFilter.js";
 import "./inventoryEdit.js";
+import "./groceryExpiryCleanup.js";
 import "./mobileOptimizations.css";
 import "./scrollStability.css";
 
