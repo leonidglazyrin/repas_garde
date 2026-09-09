@@ -22,6 +22,7 @@ import "./libraryRatingHierarchy.js";
 import "./familyGroceryStable.js";
 import "./inventoryGroceryFilter.js";
 import "./mobileOptimizations.css";
+import "./scrollStability.css";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
 
