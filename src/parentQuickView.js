@@ -35,12 +35,10 @@ function getMealRows() {
 }
 
 function getStatus(row) {
-  const buttons = Array.from(row.querySelectorAll("button"));
-  for (const [label, status] of [["Approuvé", "approved"], ["Refusé", "refused"], ["En attente", "pending"]]) {
-    const button = buttons.find((candidate) => (candidate.textContent || "").trim().includes(label));
-    if (!button) continue;
-    if (button.getAttribute("aria-pressed") === "true") return status;
-  }
+  const active = Array.from(row.querySelectorAll('button[aria-pressed="true"]'))[0];
+  const text = active?.textContent || "";
+  if (text.includes("Approuvé")) return "approved";
+  if (text.includes("Refusé")) return "refused";
   return "pending";
 }
 
@@ -63,43 +61,20 @@ function mealEmoji(name) {
   return "🍽️";
 }
 
-function styleStatusButtons(rows) {
-  rows.forEach(({ row }) => {
-    Array.from(row.querySelectorAll("button")).forEach((button) => {
-      const text = (button.textContent || "").trim();
-      let palette = null;
-      if (text.includes("En attente")) palette = { active: "#77736C", soft: "#EEECE8" };
-      if (text.includes("Approuvé")) palette = { active: "#4C6B4E", soft: "#E8F0E7" };
-      if (text.includes("Refusé")) palette = { active: "#B24F35", soft: "#F7E8E3" };
-      if (!palette) return;
-
-      const active = button.getAttribute("aria-pressed") === "true";
-      button.style.borderColor = active ? palette.active : "var(--line)";
-      button.style.background = active ? palette.active : palette.soft;
-      button.style.color = active ? "#fff" : palette.active;
-      button.style.fontWeight = "700";
-    });
-  });
-}
-
 function ensureQuickNav(main, rows) {
   let nav = document.getElementById("parent-quick-nav");
   if (!nav) {
     nav = document.createElement("div");
     nav.id = "parent-quick-nav";
     Object.assign(nav.style, {
-      position: window.innerWidth <= 700 ? "relative" : "sticky",
-      top: window.innerWidth <= 700 ? "auto" : "8px",
-      zIndex: "9",
+      position: "static",
       display: "grid",
       gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-      gap: "6px",
-      padding: "6px",
-      margin: "0 0 14px",
+      gap: "5px",
+      padding: "5px",
       border: "1px solid var(--line)",
-      borderRadius: "12px",
-      background: "rgba(250,247,240,.96)",
-      boxShadow: "0 4px 14px rgba(42,36,30,.08)",
+      borderRadius: "10px",
+      background: "var(--paper)",
     });
 
     [["Semaine", "📅"], ["Épicerie", "🛒"], ["Bibliothèque", "📚"]].forEach(([label, icon]) => {
@@ -108,8 +83,8 @@ function ensureQuickNav(main, rows) {
       button.textContent = `${icon} ${label}`;
       button.dataset.quickTarget = label;
       Object.assign(button.style, {
-        minHeight: "40px",
-        borderRadius: "9px",
+        minHeight: "36px",
+        borderRadius: "8px",
         border: "1px solid var(--line)",
         background: "var(--card)",
         color: "var(--ink)",
@@ -118,7 +93,7 @@ function ensureQuickNav(main, rows) {
       });
       button.addEventListener("click", () => {
         if (label === "Semaine") {
-          document.getElementById("week-compact-overview")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          document.getElementById("week-compact-overview")?.scrollIntoView({ block: "start" });
           return;
         }
         const section = findSection(label === "Épicerie" ? "Liste d'épicerie" : "Bibliothèque de plats déjà utilisés");
@@ -127,18 +102,14 @@ function ensureQuickNav(main, rows) {
           const header = Array.from(section.children).find((child) => (child.textContent || "").includes("Liste d'épicerie"));
           header?.click();
         }
-        section.scrollIntoView({ behavior: "smooth", block: "start" });
+        section.scrollIntoView({ block: "start" });
       });
       nav.appendChild(button);
     });
   }
 
-  nav.style.position = window.innerWidth <= 700 ? "relative" : "sticky";
-  nav.style.top = window.innerWidth <= 700 ? "auto" : "8px";
-
   const firstRow = rows[0]?.row;
   if (firstRow && nav.parentElement !== main) main.insertBefore(nav, firstRow);
-  else if (firstRow && nav.nextElementSibling !== firstRow && nav.nextElementSibling?.id !== "week-compact-overview") main.insertBefore(nav, firstRow);
   return nav;
 }
 
@@ -153,12 +124,10 @@ function ensureOverview(main, rows) {
     overview = document.createElement("section");
     overview.id = "week-compact-overview";
     Object.assign(overview.style, {
-      marginBottom: "16px",
-      padding: "14px",
+      padding: "10px",
       border: "1px solid var(--line)",
-      borderRadius: "12px",
+      borderRadius: "10px",
       background: "var(--card)",
-      scrollMarginTop: "72px",
     });
   }
 
@@ -183,25 +152,17 @@ function ensureOverview(main, rows) {
   overview.replaceChildren();
 
   const top = document.createElement("div");
-  Object.assign(top.style, { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "10px" });
+  Object.assign(top.style, { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", flexWrap: "wrap", marginBottom: "7px" });
   const title = document.createElement("strong");
-  title.textContent = `Semaine en un coup d'œil · ${approved}/${visibleRows.length} repas confirmés`;
-  top.appendChild(title);
+  title.textContent = `${approved}/${visibleRows.length} repas confirmés`;
   const badge = document.createElement("span");
   badge.textContent = pending ? `${pending} en attente` : "Tout est décidé ✓";
-  Object.assign(badge.style, { padding: "5px 9px", borderRadius: "999px", fontSize: "12px", fontWeight: "800", background: pending ? "#EEECE8" : "#E8F0E7", color: pending ? "#5F5A54" : "#4C6B4E" });
-  top.appendChild(badge);
+  Object.assign(badge.style, { padding: "4px 7px", borderRadius: "999px", fontSize: "11px", fontWeight: "800", background: pending ? "#EEECE8" : "#E8F0E7", color: pending ? "#5F5A54" : "#4C6B4E" });
+  top.append(title, badge);
   overview.appendChild(top);
 
-  const bar = document.createElement("div");
-  Object.assign(bar.style, { height: "7px", borderRadius: "999px", background: "#E7E2D9", overflow: "hidden", marginBottom: "12px" });
-  const fill = document.createElement("div");
-  Object.assign(fill.style, { height: "100%", width: `${visibleRows.length ? (approved / visibleRows.length) * 100 : 0}%`, background: "#4C6B4E", borderRadius: "inherit", transition: "width .2s ease" });
-  bar.appendChild(fill);
-  overview.appendChild(bar);
-
   const grid = document.createElement("div");
-  Object.assign(grid.style, { display: "grid", gridTemplateColumns: `repeat(${Math.max(1, visibleRows.length)}, minmax(0, 1fr))`, gap: "8px" });
+  Object.assign(grid.style, { display: "grid", gridTemplateColumns: `repeat(${Math.max(1, visibleRows.length)}, minmax(0, 1fr))`, gap: "6px" });
   visibleRows.forEach(({ row, input, day }) => {
     const [label, key] = day;
     const status = getStatus(row);
@@ -210,17 +171,17 @@ function ensureOverview(main, rows) {
     button.type = "button";
     button.dataset.compactDay = key;
     const name = input.value.trim() || "À choisir";
-    button.innerHTML = `<span style="font-size:20px">${mealEmoji(name)}</span><strong>${label.slice(0, 3)}</strong><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%">${name}</span><span style="font-size:11px;font-weight:800;color:${meta.dot}">● ${meta.label}</span>`;
+    button.innerHTML = `<span style="font-size:16px">${mealEmoji(name)}</span><strong>${label.slice(0, 3)}</strong><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;font-size:12px">${name}</span><span style="font-size:10px;font-weight:800;color:${meta.dot}">● ${meta.label}</span>`;
     Object.assign(button.style, {
-      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "3px", minWidth: "0", minHeight: "88px",
-      padding: "9px", borderRadius: "10px", border: key === activeDay ? `2px solid ${meta.dot}` : "1px solid var(--line)",
+      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "2px", minWidth: "0", minHeight: "62px",
+      padding: "6px", borderRadius: "8px", border: key === activeDay ? `2px solid ${meta.dot}` : "1px solid var(--line)",
       background: key === activeDay ? meta.bg : "var(--paper)", color: "var(--ink)", cursor: "pointer", textAlign: "left",
     });
     button.addEventListener("click", () => {
       activeDay = key;
       lastOverviewSignature = "";
-      schedule();
-      requestAnimationFrame(() => row.scrollIntoView({ behavior: "smooth", block: "center" }));
+      sync();
+      row.scrollIntoView({ block: "center" });
     });
     grid.appendChild(button);
   });
@@ -231,53 +192,21 @@ function applyCompactRows(rows) {
   rows.forEach(({ row, day }) => {
     row.dataset.quickDay = day[1];
     if (row.dataset.mealExpired === "true") return;
-    row.style.display = day[1] === activeDay ? "" : "none";
-    if (day[1] === activeDay) {
-      row.style.scrollMarginTop = "78px";
-      row.style.borderRadius = "12px";
-    }
+    const shouldShow = day[1] === activeDay;
+    if ((row.style.display !== "none") !== shouldShow) row.style.display = shouldShow ? "" : "none";
   });
 }
 
-function dedupeDiscoveryMessages() {
-  const slot = document.getElementById("discover-dishes-slot");
-  if (!slot) return;
-  const messages = Array.from(slot.querySelectorAll("div,p")).filter((node) =>
-    (node.textContent || "").trim() === "Ajoute d'abord un profil pour pouvoir voter."
-  );
-  messages.forEach((node, index) => {
-    node.style.display = index === 0 ? "" : "none";
-    if (index === 0) {
-      node.textContent = "Ajoute un profil pour activer les votes sur tous les plats à découvrir.";
-      Object.assign(node.style, { padding: "8px 10px", borderRadius: "8px", background: "#EEECE8", marginBottom: "8px" });
-    }
-  });
-}
-
-function labelExtras() {
-  document.querySelectorAll("[data-accompaniment-icon]").forEach((icon) => {
-    icon.title = "Accompagnement";
-    icon.setAttribute("aria-label", "Accompagnement");
-    icon.removeAttribute("aria-hidden");
-  });
-  document.querySelectorAll("[data-dessert-icon]").forEach((icon) => {
-    icon.title = "Dessert";
-    icon.setAttribute("aria-label", "Dessert");
-    icon.removeAttribute("aria-hidden");
-  });
-}
-
-function improveFields() {
-  document.querySelectorAll('select[data-accompaniment-day], select[data-dessert-day]').forEach((select) => {
-    select.style.backgroundColor = "#FFFDF8";
-    select.style.borderStyle = "solid";
-    select.style.borderWidth = "1px";
-    select.style.boxShadow = "inset 0 0 0 1px rgba(42,36,30,.02)";
-    select.style.fontWeight = "600";
-  });
-  document.querySelectorAll('input[placeholder^="Commentaire du parent"]').forEach((input) => {
-    input.style.background = "#FAFAF8";
-    input.style.borderStyle = "dashed";
+function styleStatusButtons(rows) {
+  rows.forEach(({ row }) => {
+    row.querySelectorAll('button[aria-pressed]').forEach((button) => {
+      const text = button.textContent || "";
+      const active = button.getAttribute("aria-pressed") === "true";
+      const palette = text.includes("Approuvé") ? ["#4C6B4E", "#E8F0E7"] : text.includes("Refusé") ? ["#B24F35", "#F7E8E3"] : ["#77736C", "#EEECE8"];
+      button.style.borderColor = active ? palette[0] : "var(--line)";
+      button.style.background = active ? palette[0] : palette[1];
+      button.style.color = active ? "#fff" : palette[0];
+    });
   });
 }
 
@@ -290,9 +219,6 @@ function sync() {
   ensureOverview(main, rows);
   applyCompactRows(rows);
   styleStatusButtons(rows);
-  dedupeDiscoveryMessages();
-  labelExtras();
-  improveFields();
 }
 
 function schedule() {
@@ -306,19 +232,13 @@ function schedule() {
 document.addEventListener("click", schedule, true);
 document.addEventListener("input", () => { lastOverviewSignature = ""; schedule(); }, true);
 document.addEventListener("change", () => { lastOverviewSignature = ""; schedule(); }, true);
-window.addEventListener("resize", schedule);
+window.addEventListener("resize", () => { lastOverviewSignature = ""; schedule(); });
 
-const observer = new MutationObserver((mutations) => {
-  const relevant = mutations.some((mutation) => {
-    const target = mutation.target instanceof Element ? mutation.target : mutation.target.parentElement;
-    if (!target) return false;
-    if (target.closest?.("#parent-quick-nav, #week-compact-overview")) return false;
-    return true;
-  });
-  if (relevant) {
-    lastOverviewSignature = "";
-    schedule();
-  }
-});
-observer.observe(document.getElementById("root") || document.body, { childList: true, subtree: true });
+setInterval(() => {
+  const active = document.activeElement;
+  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement) return;
+  schedule();
+}, 2000);
+
 queueMicrotask(schedule);
+setTimeout(schedule, 250);
