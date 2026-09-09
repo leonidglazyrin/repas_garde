@@ -164,6 +164,20 @@ function buildApprovedTotals() {
   return groups;
 }
 
+function ingredientMatchesInventory(ingredientKey, inventoryKeys) {
+  if (!ingredientKey || !(inventoryKeys instanceof Set) || !inventoryKeys.size) return false;
+  const ingredientTokens = new Set(ingredientKey.split(/\s+/).filter(Boolean));
+
+  for (const inventoryKey of inventoryKeys) {
+    if (!inventoryKey) continue;
+    if (ingredientKey === inventoryKey) return true;
+
+    const wantedTokens = String(inventoryKey).split(/\s+/).filter(Boolean);
+    if (wantedTokens.length && wantedTokens.every((token) => ingredientTokens.has(token))) return true;
+  }
+  return false;
+}
+
 function getEquivalentCheckboxes(section, source) {
   const key = canonicalIngredientKey(getIngredientName(source));
   if (!key) return [];
@@ -207,7 +221,7 @@ function groupGroceryItems() {
   groups.forEach((items, key) => {
     if (!items.length) return;
 
-    if (fridgeKeys.has(key)) {
+    if (ingredientMatchesInventory(key, fridgeKeys)) {
       items.forEach(({ row }) => {
         row.dataset.groceryInFridge = "true";
         row.style.setProperty("display", "none", "important");
@@ -218,8 +232,6 @@ function groupGroceryItems() {
     const leader = items[0];
     const sourceEntries = approvedTotals.get(key) || items.map((item) => item.sourceLabel);
 
-    // Si cet ingrédient vient des repas mais qu'aucun repas encore actif n'en a besoin,
-    // il disparaît de la liste. Les ajouts manuels restent affichés.
     const mealDerived = items.some((item) => item.row.dataset.groceryOriginalLabel);
     if (mealDerived && approvedTotals.size > 0 && !approvedTotals.has(key)) {
       items.forEach(({ row }) => row.style.setProperty("display", "none", "important"));
