@@ -14,6 +14,20 @@ button {
   max-width: 100%;
 }
 
+/* Rythme visuel commun sur ordinateur et téléphone. */
+main {
+  --page-section-gap: 18px;
+}
+
+main > section,
+main > #discover-dishes-slot,
+main > #parent-quick-nav,
+main > #week-compact-overview,
+main > #common-grocery-wrapper-stable {
+  margin-top: 0 !important;
+  margin-bottom: var(--page-section-gap) !important;
+}
+
 /* Les deux rangées accompagnement/dessert utilisent exactement la même grille. */
 [data-meal-extras-row] {
   display: flex !important;
@@ -79,14 +93,20 @@ header > div > div {
   justify-content: center !important;
 }
 
-@media (min-width: 701px) {
-  main {
-    --desktop-section-gap: 22px;
-  }
+[data-family-inventory-stable] {
+  width: 100%;
+  min-width: 0;
+}
 
+[data-family-inventory-stable] > aside {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 701px) {
   main > section,
   main > #discover-dishes-slot {
-    margin-bottom: var(--desktop-section-gap) !important;
+    margin-bottom: var(--page-section-gap) !important;
   }
 
   div:has(> div > input[placeholder^="Commentaire du parent"]):has(input[placeholder="Nom du souper"]) {
@@ -194,6 +214,29 @@ header > div > div {
     margin-right: auto;
   }
 
+  #parent-quick-nav {
+    position: static !important;
+    top: auto !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  #week-compact-overview {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12px !important;
+  }
+
+  #week-compact-overview > div:last-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  #week-compact-overview button[data-compact-day] {
+    min-height: 78px !important;
+    padding: 8px !important;
+  }
+
   [data-meal-ingredients-toggle="true"],
   [data-meal-ingredients-panel="true"] {
     width: 100% !important;
@@ -239,5 +282,24 @@ header > div > div {
     width: 100% !important;
     justify-content: center !important;
     min-width: 0 !important;
+  }
+
+  [data-family-inventory-stable] {
+    grid-column: 1 !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+  }
+
+  [data-family-inventory-stable] > aside {
+    padding: 11px !important;
+  }
+
+  [data-inventory-input-row="true"] {
+    grid-template-columns: minmax(0, 1fr) 42px !important;
+  }
+
+  #common-grocery-wrapper-stable {
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 }
