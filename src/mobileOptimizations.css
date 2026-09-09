@@ -57,10 +57,20 @@ main section > div,
   min-width: 0 !important;
 }
 
-[data-accompaniment-group],
-[data-dessert-group] {
+[data-accompaniment-group] {
   display: grid !important;
   grid-template-columns: 36px minmax(0, 1fr) 36px !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+[data-dessert-group] {
+  display: grid !important;
+  grid-template-columns: 36px minmax(0, 1fr) !important;
   align-items: center !important;
   gap: 6px !important;
   width: 100% !important;
@@ -84,8 +94,7 @@ main section > div,
 
 [data-accompaniment-icon],
 [data-dessert-icon],
-[data-accompaniment-edit],
-[data-dessert-edit] {
+[data-accompaniment-edit] {
   width: 36px !important;
   min-width: 36px !important;
   max-width: 36px !important;
@@ -134,6 +143,16 @@ header > div > div {
 
 #common-grocery-wrapper-stable {
   margin-top: 0 !important;
+}
+
+/* Les zones historiquement reconstruites restent visuellement stables. */
+[data-library-results-block="true"],
+[data-library-disclosure="true"],
+[data-family-inventory-stable],
+[data-meal-extras-row],
+#week-compact-overview {
+  transition: none !important;
+  animation: none !important;
 }
 
 @media (min-width: 701px) {
