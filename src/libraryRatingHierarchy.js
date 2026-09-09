@@ -100,14 +100,14 @@ function applyHierarchy(section) {
   });
 
   genreFilters.style.display = selectedRating && section.dataset.libraryOpen === "true" ? "flex" : "none";
-  if (selectedRating && !genreFilters.previousElementSibling?.dataset.libraryGenreHint) {
-    const hint = document.createElement("div");
+  let hint = genreFilters.previousElementSibling?.dataset.libraryGenreHint ? genreFilters.previousElementSibling : null;
+  if (selectedRating && !hint) {
+    hint = document.createElement("div");
     hint.dataset.libraryGenreHint = "true";
     hint.textContent = "Puis choisis le type de plat :";
     Object.assign(hint.style, { fontSize: "12px", color: "var(--ink-soft)", marginBottom: "6px", fontWeight: "700" });
     genreFilters.parentElement?.insertBefore(hint, genreFilters);
   }
-  const hint = genreFilters.previousElementSibling?.dataset.libraryGenreHint ? genreFilters.previousElementSibling : null;
   if (hint) hint.style.display = selectedRating && section.dataset.libraryOpen === "true" ? "block" : "none";
 
   const selectedGenre = section.dataset.libraryGenre || "ALL";
@@ -115,17 +115,8 @@ function applyHierarchy(section) {
     const name = getDishName(card);
     const rating = ratingByName.get(normalize(name)) || "okay";
     const ratingMatches = !selectedRating || rating === selectedRating;
-
-    let genreMatches = true;
-    if (selectedRating && selectedGenre !== "ALL") {
-      const hiddenByGenre = card.style.getPropertyValue("display") === "none";
-      genreMatches = !hiddenByGenre;
-    }
-
     if (!ratingMatches) card.style.setProperty("display", "none", "important");
-    else if (selectedRating && selectedGenre === "ALL") card.style.removeProperty("display");
-    else if (!selectedRating) card.style.removeProperty("display");
-    else if (!genreMatches) card.style.setProperty("display", "none", "important");
+    else if (!selectedRating || selectedGenre === "ALL") card.style.removeProperty("display");
   });
 }
 
@@ -146,12 +137,15 @@ function schedule() {
   });
 }
 
-const observer = new MutationObserver(schedule);
-observer.observe(document.documentElement, { childList: true, subtree: true });
+// Pas de MutationObserver global : la bibliothèque ne se recalcule plus pendant le scroll.
 document.addEventListener("click", () => setTimeout(schedule, 0), true);
+document.addEventListener("meal-rating-changed", loadRatings);
 
 supabase.channel("library-rating-hierarchy")
   .on("postgres_changes", { event: "*", schema: "public", table: "meal_library" }, loadRatings)
   .subscribe();
+
 loadRatings();
 queueMicrotask(schedule);
+setTimeout(schedule, 150);
+setTimeout(schedule, 600);
