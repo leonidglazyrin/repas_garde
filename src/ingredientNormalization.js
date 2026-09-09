@@ -14,7 +14,7 @@ const INVARIANT_WORDS = new Set([
 
 const IRREGULAR = new Map([
   ["oeufs", "oeuf"],
-  ["œufs", "œuf"],
+  ["oeuf", "oeuf"],
   ["ail", "ail"],
   ["aulx", "ail"],
 ]);
@@ -83,6 +83,8 @@ function stripLeadingQuantity(words) {
 export function canonicalIngredientKey(value) {
   const normalized = String(value || "")
     .normalize("NFKC")
+    .replace(/œ/g, "oe")
+    .replace(/Œ/g, "oe")
     .toLocaleLowerCase("fr-CA")
     .replace(/[’']/g, "'")
     .replace(/^(\d+(?:[.,]\d+)?)(kg|mg|g|ml|cl|dl|l)\b/u, "$1 $2 ")
@@ -95,7 +97,7 @@ export function canonicalIngredientKey(value) {
   const words = stripLeadingQuantity(normalized.split(" "));
   return words
     .map((word) => {
-      const match = word.match(/^([^\p{L}]*)([\p{L}œŒ-]+)([^\p{L}]*)$/u);
+      const match = word.match(/^([^\p{L}]*)([\p{L}-]+)([^\p{L}]*)$/u);
       if (!match) return word;
       return `${match[1]}${singularizeWord(match[2])}${match[3]}`;
     })
