@@ -155,7 +155,11 @@ function renderFridgePanel(body) {
     body.appendChild(panel);
   }
 
+  const signature = fridgeItems.map((item) => `${item.id}:${item.item}`).join("|");
+  if (panel.dataset.signature === signature) return;
+  panel.dataset.signature = signature;
   panel.replaceChildren();
+
   const title = document.createElement("div");
   title.textContent = "🧊 Déjà dans le frigo";
   Object.assign(title.style, { fontWeight: "800", marginBottom: "8px", color: "var(--herb)" });
@@ -218,9 +222,14 @@ function renderCommonSection(section) {
     wrapper.id = "common-grocery-wrapper";
     wrapper.style.marginTop = "12px";
     section.insertAdjacentElement("afterend", wrapper);
+  } else if (wrapper.previousElementSibling !== section) {
+    section.insertAdjacentElement("afterend", wrapper);
   }
 
   const wasOpen = wrapper.dataset.open === "true";
+  const signature = `${wasOpen}|${commonItems.map((item) => `${item.id}:${item.item}:${item.checked}`).join("|")}`;
+  if (wrapper.dataset.signature === signature) return;
+  wrapper.dataset.signature = signature;
   wrapper.replaceChildren();
   wrapper.dataset.open = String(wasOpen);
 
@@ -241,6 +250,7 @@ function renderCommonSection(section) {
   });
   toggle.addEventListener("click", () => {
     wrapper.dataset.open = String(wrapper.dataset.open !== "true");
+    wrapper.dataset.signature = "";
     renderCommonSection(section);
   });
   wrapper.appendChild(toggle);
