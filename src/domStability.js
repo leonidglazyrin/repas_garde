@@ -1,20 +1,23 @@
-// Centralise les MutationObserver des modules historiques pour éviter les rafales
-// de recalculs qui faisaient "grésiller" la page pendant le défilement.
+// Centralise les MutationObserver historiques pour qu'aucun module ne puisse
+// reconstruire l'interface pendant un défilement en cours.
 const NativeMutationObserver = window.MutationObserver;
 
 let scrolling = false;
 let scrollTimer = null;
 const pendingObservers = new Set();
+const SCROLL_IDLE_MS = 650;
+
+function flushAfterScroll() {
+  scrolling = false;
+  const queued = Array.from(pendingObservers);
+  pendingObservers.clear();
+  requestAnimationFrame(() => queued.forEach((observer) => observer.__flush?.()));
+}
 
 function markScrolling() {
   scrolling = true;
   clearTimeout(scrollTimer);
-  scrollTimer = setTimeout(() => {
-    scrolling = false;
-    const queued = Array.from(pendingObservers);
-    pendingObservers.clear();
-    queued.forEach((observer) => observer.__flush?.());
-  }, 180);
+  scrollTimer = setTimeout(flushAfterScroll, SCROLL_IDLE_MS);
 }
 
 window.addEventListener("scroll", markScrolling, { passive: true, capture: true });
