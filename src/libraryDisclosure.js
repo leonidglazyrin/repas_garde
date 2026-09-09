@@ -25,11 +25,11 @@ function getResultsBlocks(section) {
   const content = getLibraryContent(section);
   const searchRow = getSearchRow(section);
   if (!content) return [];
-
   return Array.from(content.children).filter((child) => {
     if (child === searchRow) return false;
     if (child.dataset.libraryTabs === "true") return false;
     if (child.dataset.libraryGenres === "true") return false;
+    if (child.dataset.libraryRatingFilters === "true") return false;
     if (child.querySelector?.('input[placeholder="Nom du plat"]')) return false;
     return true;
   });
@@ -55,10 +55,6 @@ function normalize(value) {
     .toLocaleLowerCase("fr-CA");
 }
 
-function getDishText(card) {
-  return normalize(card?.textContent || "");
-}
-
 const GENRES = [
   { key: "poulet", label: "Poulet / volaille", words: ["poulet", "dinde", "volaille", "canard"] },
   { key: "boeuf", label: "Bœuf", words: ["boeuf", "bœuf", "steak", "boeuf hache", "bœuf haché"] },
@@ -71,7 +67,7 @@ const GENRES = [
 ];
 
 function getGenre(card) {
-  const text = getDishText(card);
+  const text = normalize(card?.textContent || "");
   for (const genre of GENRES) {
     if (genre.words.some((word) => text.includes(normalize(word)))) return genre.key;
   }
@@ -100,15 +96,12 @@ function styleTab(button, open) {
     cursor: "pointer",
   });
   button.setAttribute("aria-expanded", String(open));
-  button.textContent = open
-    ? "Bibliothèque de plats déjà faits ▴"
-    : "Bibliothèque de plats déjà faits ▾";
+  button.textContent = open ? "Bibliothèque de plats déjà faits ▴" : "Bibliothèque de plats déjà faits ▾";
 }
 
 function ensureTabs(section) {
   const content = getLibraryContent(section);
   if (!content) return;
-
   let tabs = content.querySelector("[data-library-tabs]");
   if (!tabs) {
     tabs = document.createElement("div");
@@ -116,7 +109,6 @@ function ensureTabs(section) {
     tabs.style.marginBottom = "10px";
     content.insertBefore(tabs, content.firstElementChild);
   }
-
   let savedTab = tabs.querySelector("[data-library-mode-button='saved']");
   if (!savedTab) {
     tabs.replaceChildren();
@@ -126,7 +118,6 @@ function ensureTabs(section) {
     savedTab.setAttribute("aria-controls", "library-saved-results");
     tabs.appendChild(savedTab);
   }
-
   styleTab(savedTab, isOpen(section));
 }
 
@@ -148,18 +139,11 @@ function ensureGenres(section) {
   const content = getLibraryContent(section);
   const searchRow = getSearchRow(section);
   if (!content || !searchRow) return;
-
   let filters = content.querySelector("[data-library-genres]");
   if (!filters) {
     filters = document.createElement("div");
     filters.dataset.libraryGenres = "true";
-    filters.setAttribute("aria-label", "Filtrer les plats par genre");
-    Object.assign(filters.style, {
-      display: "flex",
-      flexWrap: "wrap",
-      gap: "6px",
-      marginBottom: "10px",
-    });
+    Object.assign(filters.style, { display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "10px" });
     searchRow.insertAdjacentElement("afterend", filters);
   }
 
@@ -169,7 +153,6 @@ function ensureGenres(section) {
   const current = Array.from(filters.querySelectorAll("button[data-library-genre]"))
     .map((button) => button.dataset.libraryGenre)
     .join("|");
-
   if (current !== wanted.join("|")) {
     filters.replaceChildren();
     wanted.forEach((key) => {
@@ -190,9 +173,11 @@ function ensureGenres(section) {
 
 function setBlockVisible(block, visible) {
   block.dataset.libraryResultsBlock = "true";
-  block.hidden = !visible;
-  block.setAttribute("aria-hidden", String(!visible));
-
+  const hidden = !visible;
+  if (block.hidden === hidden && block.dataset.libraryVisibilityApplied === String(visible)) return;
+  block.hidden = hidden;
+  block.dataset.libraryVisibilityApplied = String(visible);
+  block.setAttribute("aria-hidden", String(hidden));
   if (visible) {
     block.style.removeProperty("display");
     block.style.removeProperty("visibility");
@@ -200,9 +185,6 @@ function setBlockVisible(block, visible) {
     block.style.removeProperty("overflow");
   } else {
     block.style.setProperty("display", "none", "important");
-    block.style.setProperty("visibility", "hidden", "important");
-    block.style.setProperty("height", "0", "important");
-    block.style.setProperty("overflow", "hidden", "important");
   }
 }
 
@@ -210,10 +192,10 @@ function applyGenreFilter(section) {
   const selected = section.dataset.libraryGenre || "ALL";
   getDishCards(section).forEach((card) => {
     const matches = selected === "ALL" || getGenre(card) === selected;
-    if (matches) card.style.removeProperty("display");
-    else card.style.setProperty("display", "none", "important");
+    const currentlyHidden = card.style.getPropertyValue("display") === "none";
+    if (matches && currentlyHidden) card.style.removeProperty("display");
+    if (!matches && !currentlyHidden) card.style.setProperty("display", "none", "important");
   });
-
   section.querySelectorAll("button[data-library-genre]").forEach((button) => {
     styleGenreButton(button, button.dataset.libraryGenre === selected);
   });
@@ -222,13 +204,11 @@ function applyGenreFilter(section) {
 function syncResults(section) {
   const search = getSearchInput(section);
   if (!search) return;
-
   const open = isOpen(section);
   getResultsBlocks(section).forEach((block, index) => {
     if (index === 0) block.id = "library-saved-results";
     setBlockVisible(block, open);
   });
-
   search.placeholder = "Filtrer les plats déjà faits ou un ingrédient...";
   const savedTab = section.querySelector("[data-library-mode-button='saved']");
   if (savedTab) styleTab(savedTab, open);
@@ -237,63 +217,58 @@ function syncResults(section) {
   applyGenreFilter(section);
 }
 
-function toggleDish(card) {
-  const ingredients = card?.querySelector("[data-library-ingredients]");
-  const name = card?.querySelector("[data-library-dish-name]");
-  if (!ingredients || !name) return;
-
-  const opening = ingredients.hidden;
-  ingredients.hidden = !opening;
-  name.setAttribute("aria-expanded", String(opening));
-}
-
 function decorateLibrary(section) {
   section.querySelectorAll('button[aria-label^="Supprimer "]').forEach((deleteButton) => {
     const header = deleteButton.parentElement;
     const card = header?.parentElement;
     if (!card || card.dataset.libraryDisclosure === "true") return;
-
     const name = header.querySelector("span");
     const ingredients = Array.from(card.children).find((child) => child !== header && child.textContent?.trim());
     if (!name || !ingredients) return;
-
     card.dataset.libraryDisclosure = "true";
     name.dataset.libraryDishName = "true";
     ingredients.dataset.libraryIngredients = "true";
     ingredients.hidden = true;
-
     name.setAttribute("role", "button");
     name.setAttribute("tabindex", "0");
     name.setAttribute("aria-expanded", "false");
-    name.setAttribute("title", "Afficher les ingrédients");
     name.style.cursor = "pointer";
-    name.style.textDecoration = "underline";
-    name.style.textDecorationStyle = "dotted";
+    name.style.textDecoration = "underline dotted";
     name.style.textUnderlineOffset = "3px";
   });
+}
+
+function toggleDish(card) {
+  const ingredients = card?.querySelector("[data-library-ingredients]");
+  const name = card?.querySelector("[data-library-dish-name]");
+  if (!ingredients || !name) return;
+  const opening = ingredients.hidden;
+  ingredients.hidden = !opening;
+  name.setAttribute("aria-expanded", String(opening));
+}
+
+function refreshLibrary(section) {
+  if (!section?.isConnected) return;
+  ensureTabs(section);
+  decorateLibrary(section);
+  ensureGenres(section);
+  syncResults(section);
 }
 
 function initLibraryDisclosure() {
   const section = findLibrarySection();
   if (!section || section.dataset.libraryDisclosureReady === "true") return false;
-
   const search = getSearchInput(section);
   if (!search) return false;
 
   section.dataset.libraryDisclosureReady = "true";
   section.dataset.libraryOpen = "false";
   section.dataset.libraryGenre = "ALL";
-  ensureTabs(section);
-  decorateLibrary(section);
-  ensureGenres(section);
-  syncResults(section);
+  refreshLibrary(section);
 
   search.addEventListener("input", () => {
     section.dataset.libraryGenre = "ALL";
-    requestAnimationFrame(() => {
-      decorateLibrary(section);
-      syncResults(section);
-    });
+    requestAnimationFrame(() => refreshLibrary(section));
   });
 
   section.addEventListener("click", (event) => {
@@ -303,18 +278,18 @@ function initLibraryDisclosure() {
       syncResults(section);
       return;
     }
-
     const genreButton = event.target.closest?.("button[data-library-genre]");
     if (genreButton) {
       section.dataset.libraryGenre = genreButton.dataset.libraryGenre || "ALL";
       applyGenreFilter(section);
       return;
     }
-
-    if (event.target.closest('button[aria-label^="Supprimer "]')) return;
+    if (event.target.closest('button[aria-label^="Supprimer "]')) {
+      setTimeout(() => refreshLibrary(section), 250);
+      return;
+    }
     const name = event.target.closest("[data-library-dish-name]");
-    if (!name) return;
-    toggleDish(name.closest("[data-library-disclosure='true']"));
+    if (name) toggleDish(name.closest("[data-library-disclosure='true']"));
   });
 
   section.addEventListener("keydown", (event) => {
@@ -324,19 +299,7 @@ function initLibraryDisclosure() {
     toggleDish(name.closest("[data-library-disclosure='true']"));
   });
 
-  let syncing = false;
-  const observer = new MutationObserver(() => {
-    if (syncing) return;
-    syncing = true;
-    requestAnimationFrame(() => {
-      ensureTabs(section);
-      decorateLibrary(section);
-      ensureGenres(section);
-      syncResults(section);
-      syncing = false;
-    });
-  });
-  observer.observe(section, { childList: true, subtree: true });
+  document.addEventListener("meal-rating-changed", () => setTimeout(() => refreshLibrary(section), 120));
   return true;
 }
 
