@@ -62,7 +62,6 @@ button {
   margin: 0 !important;
 }
 
-/* Centre la banderole du haut aussi sur ordinateur. */
 header {
   text-align: center;
 }
@@ -80,8 +79,6 @@ header > div > div {
   justify-content: center !important;
 }
 
-/* Version ordinateur : cartes des soupers mieux alignées et espacées.
-   La version téléphone reste inchangée plus bas. */
 @media (min-width: 701px) {
   main {
     --desktop-section-gap: 22px;
@@ -92,12 +89,11 @@ header > div > div {
     margin-bottom: var(--desktop-section-gap) !important;
   }
 
-  /* Une carte de souper contient : jour, plat, avis, commentaire parent. */
   div:has(> div > input[placeholder^="Commentaire du parent"]):has(input[placeholder="Nom du souper"]) {
     display: grid !important;
-    grid-template-columns: 92px minmax(280px, 2fr) 142px minmax(240px, 1.15fr);
-    column-gap: 18px !important;
-    row-gap: 10px !important;
+    grid-template-columns: 92px minmax(300px, 2.25fr) 136px minmax(150px, 190px);
+    column-gap: 14px !important;
+    row-gap: 9px !important;
     align-items: start !important;
   }
 
@@ -105,33 +101,35 @@ header > div > div {
     min-width: 0 !important;
   }
 
-  /* Avis des parents : même logique qu'avant, mais mieux posé sur ordinateur. */
   div:has(> input[placeholder^="Commentaire du parent"]) {
     width: 100% !important;
+    max-width: 190px !important;
     min-width: 0 !important;
-    align-self: stretch !important;
+    align-self: start !important;
     display: flex !important;
-    align-items: stretch !important;
+    align-items: flex-start !important;
   }
 
   input[placeholder^="Commentaire du parent"] {
     width: 100% !important;
-    min-height: 40px !important;
+    min-height: 34px !important;
+    height: 34px !important;
     border-radius: 8px !important;
-    padding: 8px 10px !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
   }
 
   div:has(> button[aria-pressed]) {
     width: 100% !important;
     display: grid !important;
     grid-template-columns: 1fr !important;
-    gap: 6px !important;
+    gap: 5px !important;
   }
 
   div:has(> button[aria-pressed]) > button {
     width: 100% !important;
     justify-content: center !important;
-    min-height: 34px !important;
+    min-height: 32px !important;
   }
 }
 
@@ -160,15 +158,12 @@ header > div > div {
     overflow-x: hidden;
   }
 
-  /* Sur téléphone, la grande banderole du haut défile avec la page
-     au lieu de rester collée à l'écran. */
   header {
     position: relative !important;
     top: auto !important;
     text-align: center !important;
   }
 
-  /* Centre tout le contenu de la banderole comme sur ordinateur. */
   header > div {
     width: 100%;
     max-width: 100% !important;
@@ -187,7 +182,6 @@ header > div > div {
     text-align: center !important;
   }
 
-  /* La ligne semaine + flèches reste centrée horizontalement. */
   header div:has(> button) {
     justify-content: center !important;
     align-items: center !important;
@@ -195,7 +189,6 @@ header > div > div {
     margin-right: auto !important;
   }
 
-  /* Le bouton Aujourd'hui reste centré sous la date. */
   header button {
     margin-left: auto;
     margin-right: auto;
