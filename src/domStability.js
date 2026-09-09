@@ -1,17 +1,19 @@
 // Centralise les MutationObserver historiques pour qu'aucun module ne puisse
-// reconstruire l'interface pendant un défilement en cours.
+// reconstruire l'interface pendant un défilement en cours ni entrer dans une
+// cascade de rendus juste après une modification du DOM.
 const NativeMutationObserver = window.MutationObserver;
 
 let scrolling = false;
 let scrollTimer = null;
 const pendingObservers = new Set();
 const SCROLL_IDLE_MS = 650;
+const OBSERVER_COOLDOWN_MS = 160;
 
 function flushAfterScroll() {
   scrolling = false;
   const queued = Array.from(pendingObservers);
   pendingObservers.clear();
-  requestAnimationFrame(() => queued.forEach((observer) => observer.__flush?.()));
+  requestAnimationFrame(() => queued.forEach((observer) => observer.__schedule?.()));
 }
 
 function markScrolling() {
@@ -30,18 +32,28 @@ if (NativeMutationObserver) {
       this.__callback = callback;
       this.__records = [];
       this.__scheduled = false;
-      this.__native = new NativeMutationObserver((records, nativeObserver) => {
+      this.__lastFlush = 0;
+      this.__cooldownTimer = null;
+      this.__native = new NativeMutationObserver((records) => {
         this.__records.push(...records);
         if (scrolling) {
           pendingObservers.add(this);
           return;
         }
-        this.__schedule(nativeObserver);
+        this.__schedule();
       });
     }
 
-    __schedule(nativeObserver = this.__native) {
-      if (this.__scheduled) return;
+    __schedule() {
+      if (this.__scheduled || !this.__records.length) return;
+
+      const elapsed = performance.now() - this.__lastFlush;
+      if (elapsed < OBSERVER_COOLDOWN_MS) {
+        clearTimeout(this.__cooldownTimer);
+        this.__cooldownTimer = setTimeout(() => this.__schedule(), OBSERVER_COOLDOWN_MS - elapsed);
+        return;
+      }
+
       this.__scheduled = true;
       requestAnimationFrame(() => {
         this.__scheduled = false;
@@ -49,14 +61,19 @@ if (NativeMutationObserver) {
           pendingObservers.add(this);
           return;
         }
-        this.__flush(nativeObserver);
+        this.__flush();
       });
     }
 
-    __flush(nativeObserver = this.__native) {
-      if (!this.__records.length) return;
+    __flush() {
+      if (!this.__records.length || scrolling) return;
       const records = this.__records.splice(0);
-      this.__callback(records, nativeObserver);
+      this.__lastFlush = performance.now();
+      this.__callback(records, this.__native);
+
+      // Si le callback a lui-même provoqué d'autres mutations, elles sont regroupées
+      // et traitées plus tard au lieu de relancer une boucle visuelle immédiatement.
+      if (this.__records.length) this.__schedule();
     }
 
     observe(target, options) {
@@ -65,6 +82,7 @@ if (NativeMutationObserver) {
 
     disconnect() {
       pendingObservers.delete(this);
+      clearTimeout(this.__cooldownTimer);
       this.__records.length = 0;
       return this.__native.disconnect();
     }
