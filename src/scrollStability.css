@@ -1,0 +1,23 @@
+html,
+body,
+#root,
+main {
+  overflow-anchor: none;
+}
+
+#parent-quick-nav,
+#week-compact-overview,
+[data-family-inventory-stable],
+#common-grocery-wrapper-stable {
+  overflow-anchor: none;
+}
+
+#week-compact-overview,
+[data-family-inventory-stable] {
+  contain: layout style;
+}
+
+#week-compact-overview *,
+[data-family-inventory-stable] * {
+  transition-property: none !important;
+}
