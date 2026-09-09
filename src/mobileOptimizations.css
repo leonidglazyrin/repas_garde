@@ -14,9 +14,8 @@ button {
   max-width: 100%;
 }
 
-/* Rythme visuel commun sur ordinateur et téléphone. */
 main {
-  --page-section-gap: 18px;
+  --page-section-gap: 14px;
 }
 
 main > section,
@@ -28,12 +27,16 @@ main > #common-grocery-wrapper-stable {
   margin-bottom: var(--page-section-gap) !important;
 }
 
-/* Les deux rangées accompagnement/dessert utilisent exactement la même grille. */
+main section > div,
+#discover-dishes-slot > div {
+  box-sizing: border-box;
+}
+
 [data-meal-extras-row] {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
-  gap: 8px !important;
+  gap: 6px !important;
   width: 100% !important;
   min-width: 0 !important;
 }
@@ -41,9 +44,9 @@ main > #common-grocery-wrapper-stable {
 [data-accompaniment-group],
 [data-dessert-group] {
   display: grid !important;
-  grid-template-columns: 42px minmax(0, 1fr) 42px !important;
+  grid-template-columns: 38px minmax(0, 1fr) 38px !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 7px !important;
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
@@ -55,23 +58,23 @@ main > #common-grocery-wrapper-stable {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  height: 42px !important;
-  min-height: 42px !important;
+  height: 38px !important;
+  min-height: 38px !important;
   box-sizing: border-box !important;
   border-radius: 8px !important;
-  padding: 8px 10px !important;
-  font-size: 16px !important;
+  padding: 6px 9px !important;
+  font-size: 15px !important;
 }
 
 [data-accompaniment-icon],
 [data-dessert-icon],
 [data-accompaniment-edit],
 [data-dessert-edit] {
-  width: 42px !important;
-  min-width: 42px !important;
-  max-width: 42px !important;
-  height: 42px !important;
-  min-height: 42px !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
   box-sizing: border-box !important;
   margin: 0 !important;
 }
@@ -82,6 +85,7 @@ header {
 
 header h1 {
   text-align: center;
+  margin-bottom: 10px !important;
 }
 
 header > div {
@@ -103,18 +107,27 @@ header > div > div {
   box-sizing: border-box;
 }
 
-@media (min-width: 701px) {
-  main > section,
-  main > #discover-dishes-slot {
-    margin-bottom: var(--page-section-gap) !important;
-  }
+[data-family-inventory-stable] [data-inventory-input-row="true"] {
+  margin-bottom: 6px !important;
+}
 
+[data-family-inventory-stable] [data-inventory-list-toggle] {
+  min-height: 34px !important;
+}
+
+#common-grocery-wrapper-stable {
+  margin-top: 0 !important;
+}
+
+@media (min-width: 701px) {
   div:has(> div > input[placeholder^="Commentaire du parent"]):has(input[placeholder="Nom du souper"]) {
     display: grid !important;
-    grid-template-columns: 92px minmax(300px, 2.25fr) 136px minmax(150px, 190px);
-    column-gap: 14px !important;
-    row-gap: 9px !important;
+    grid-template-columns: 82px minmax(260px, 2.25fr) 128px minmax(140px, 175px);
+    column-gap: 12px !important;
+    row-gap: 7px !important;
     align-items: start !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
   }
 
   div:has(> div > input[placeholder^="Commentaire du parent"]):has(input[placeholder="Nom du souper"]) > div {
@@ -123,7 +136,7 @@ header > div > div {
 
   div:has(> input[placeholder^="Commentaire du parent"]) {
     width: 100% !important;
-    max-width: 190px !important;
+    max-width: 175px !important;
     min-width: 0 !important;
     align-self: start !important;
     display: flex !important;
@@ -132,10 +145,10 @@ header > div > div {
 
   input[placeholder^="Commentaire du parent"] {
     width: 100% !important;
-    min-height: 34px !important;
-    height: 34px !important;
+    min-height: 32px !important;
+    height: 32px !important;
     border-radius: 8px !important;
-    padding: 6px 8px !important;
+    padding: 5px 8px !important;
     font-size: 12px !important;
   }
 
@@ -143,17 +156,37 @@ header > div > div {
     width: 100% !important;
     display: grid !important;
     grid-template-columns: 1fr !important;
-    gap: 5px !important;
+    gap: 4px !important;
   }
 
   div:has(> button[aria-pressed]) > button {
     width: 100% !important;
     justify-content: center !important;
-    min-height: 32px !important;
+    min-height: 30px !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+
+  #week-compact-overview {
+    padding: 12px !important;
+  }
+
+  #week-compact-overview button[data-compact-day] {
+    min-height: 72px !important;
+    padding: 7px !important;
   }
 }
 
 @media (max-width: 700px) {
+  main {
+    --page-section-gap: 12px;
+    width: 100%;
+    max-width: 100% !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    overflow-x: hidden;
+  }
+
   input,
   textarea,
   select {
@@ -163,25 +196,19 @@ header > div > div {
   input,
   select,
   button {
-    min-height: 42px;
+    min-height: 40px;
   }
 
   textarea {
-    line-height: 1.4;
-  }
-
-  main {
-    width: 100%;
-    max-width: 100% !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    overflow-x: hidden;
+    line-height: 1.35;
   }
 
   header {
     position: relative !important;
     top: auto !important;
     text-align: center !important;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
   }
 
   header > div {
@@ -207,6 +234,7 @@ header > div > div {
     align-items: center !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    gap: 8px !important;
   }
 
   header button {
@@ -219,22 +247,31 @@ header > div > div {
     top: auto !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    padding: 5px !important;
+    gap: 5px !important;
+  }
+
+  #parent-quick-nav button {
+    min-height: 38px !important;
+    padding: 6px 7px !important;
+    font-size: 12px !important;
   }
 
   #week-compact-overview {
     width: 100% !important;
     box-sizing: border-box !important;
-    padding: 12px !important;
+    padding: 10px !important;
   }
 
   #week-compact-overview > div:last-child {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
 
   #week-compact-overview button[data-compact-day] {
-    min-height: 78px !important;
-    padding: 8px !important;
+    min-height: 68px !important;
+    padding: 7px !important;
+    gap: 2px !important;
   }
 
   [data-meal-ingredients-toggle="true"],
@@ -255,11 +292,7 @@ header > div > div {
   input[placeholder^="Commentaire du parent"] {
     width: 100% !important;
     min-width: 0 !important;
-  }
-
-  input[placeholder^="Commentaire du parent"]:first-child,
-  input[placeholder^="Commentaire du parent"]:only-child {
-    flex: 1 1 auto !important;
+    min-height: 36px !important;
   }
 
   div:has(> input[placeholder^="Commentaire du parent"]) {
@@ -275,13 +308,16 @@ header > div > div {
     max-width: 100% !important;
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px !important;
+    gap: 5px !important;
   }
 
   div:has(> button[aria-pressed]) > button {
     width: 100% !important;
     justify-content: center !important;
     min-width: 0 !important;
+    min-height: 38px !important;
+    padding: 6px 4px !important;
+    font-size: 12px !important;
   }
 
   [data-family-inventory-stable] {
@@ -291,11 +327,17 @@ header > div > div {
   }
 
   [data-family-inventory-stable] > aside {
-    padding: 11px !important;
+    padding: 9px !important;
   }
 
   [data-inventory-input-row="true"] {
-    grid-template-columns: minmax(0, 1fr) 42px !important;
+    grid-template-columns: minmax(0, 1fr) 40px !important;
+    gap: 6px !important;
+  }
+
+  [data-family-inventory-stable] input,
+  [data-family-inventory-stable] button {
+    min-height: 38px !important;
   }
 
   #common-grocery-wrapper-stable {
