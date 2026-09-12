@@ -1,39 +1,50 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, HelpCircle, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { supabase } from "./supabaseClient";
 
-const CACHE_KEY = "repasgarde:discovery";
+const CACHE_KEY = "repasgarde:discovery:dishes";
 
 function readCache() {
   try {
-    return JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+    return JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
   } catch {
-    return null;
+    return [];
   }
 }
 
-function writeCache(dishes, votes) {
+function writeCache(dishes) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ dishes, votes }));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(dishes));
   } catch {}
 }
 
-function votesToMap(rows) {
-  const map = {};
-  (rows || []).forEach((row) => {
-    if (!map[row.dish_id]) map[row.dish_id] = {};
-    map[row.dish_id][row.profile_id] = row.choice;
-  });
-  return map;
+function findLibrarySection() {
+  return Array.from(document.querySelectorAll("main > section")).find((section) =>
+    (section.textContent || "").includes("Bibliothèque de plats déjà utilisés")
+  ) || null;
+}
+
+function ensureMountNode() {
+  const main = document.querySelector("main");
+  const library = findLibrarySection();
+  if (!main || !library) return null;
+
+  let slot = document.getElementById("discover-dishes-slot");
+  if (!slot) {
+    slot = document.createElement("div");
+    slot.id = "discover-dishes-slot";
+  }
+  if (slot.parentElement !== main || library.nextElementSibling !== slot) {
+    library.insertAdjacentElement("afterend", slot);
+  }
+  return slot;
 }
 
 export default function DiscoverDishes() {
   const cached = useMemo(() => readCache(), []);
   const [mountNode, setMountNode] = useState(null);
-  const [profiles, setProfiles] = useState([]);
-  const [dishes, setDishes] = useState(() => cached?.dishes || []);
-  const [votes, setVotes] = useState(() => cached?.votes || {});
+  const [dishes, setDishes] = useState(cached);
   const [newName, setNewName] = useState("");
   const [newDetails, setNewDetails] = useState("");
   const [adding, setAdding] = useState(false);
@@ -41,70 +52,53 @@ export default function DiscoverDishes() {
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editDetails, setEditDetails] = useState("");
-  const [savingEdit, setSavingEdit] = useState(false);
+  const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
-    const placeSection = () => {
-      const librarySection = Array.from(document.querySelectorAll("main > section")).find((section) =>
-        (section.textContent || "").includes("Bibliothèque de plats déjà utilisés")
-      );
-      if (!librarySection) return false;
-
-      let slot = document.getElementById("discover-dishes-slot");
-      if (!slot) {
-        slot = document.createElement("div");
-        slot.id = "discover-dishes-slot";
-        librarySection.insertAdjacentElement("afterend", slot);
+    let cancelled = false;
+    let attempts = 0;
+    const place = () => {
+      if (cancelled) return;
+      const slot = ensureMountNode();
+      if (slot) {
+        setMountNode(slot);
+        return;
       }
-      setMountNode(slot);
-      return true;
+      attempts += 1;
+      if (attempts < 20) setTimeout(place, 100);
     };
-
-    if (placeSection()) return;
-    const observer = new MutationObserver(() => {
-      if (placeSection()) observer.disconnect();
-    });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    place();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const reload = useCallback(async () => {
-    const [dishResult, voteResult, profileResult] = await Promise.all([
-      supabase.from("discovery_dishes").select("*").order("created_at", { ascending: false }),
-      supabase.from("discovery_votes").select("dish_id, profile_id, choice"),
-      supabase.from("profiles").select("id, name, color").order("created_at", { ascending: true }),
-    ]);
-
-    if (!dishResult.error) setDishes(dishResult.data || []);
-    else console.error("fetch discovery_dishes", dishResult.error);
-
-    if (!voteResult.error) setVotes(votesToMap(voteResult.data));
-    else console.error("fetch discovery_votes", voteResult.error);
-
-    if (!profileResult.error) setProfiles(profileResult.data || []);
-    else console.error("fetch discovery profiles", profileResult.error);
+    const { data, error } = await supabase
+      .from("discovery_dishes")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.error("fetch discovery_dishes", error);
+      return;
+    }
+    setDishes(data || []);
   }, []);
 
   useEffect(() => {
     reload();
-  }, [reload]);
-
-  useEffect(() => {
-    writeCache(dishes, votes);
-  }, [dishes, votes]);
-
-  useEffect(() => {
     const channel = supabase
-      .channel("discovery")
+      .channel("discovery-dishes-stable")
       .on("postgres_changes", { event: "*", schema: "public", table: "discovery_dishes" }, reload)
-      .on("postgres_changes", { event: "*", schema: "public", table: "discovery_votes" }, reload)
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, reload)
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, [reload]);
+
+  useEffect(() => {
+    writeCache(dishes);
+  }, [dishes]);
 
   const addDish = async () => {
     const name = newName.trim();
@@ -115,11 +109,9 @@ export default function DiscoverDishes() {
       .insert({ name, details: newDetails.trim(), updated_at: new Date().toISOString() })
       .select()
       .single();
-
-    if (error) {
-      console.error("add discovery dish", error);
-    } else if (data) {
-      setDishes((prev) => [data, ...prev]);
+    if (error) console.error("add discovery dish", error);
+    else if (data) {
+      setDishes((prev) => [data, ...prev.filter((dish) => dish.id !== data.id)]);
       setNewName("");
       setNewDetails("");
       setShowAddForm(false);
@@ -133,214 +125,155 @@ export default function DiscoverDishes() {
     setEditDetails(dish.details || "");
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditName("");
-    setEditDetails("");
-  };
-
   const saveEdit = async () => {
     const name = editName.trim();
-    if (!editingId || !name || savingEdit) return;
-
-    setSavingEdit(true);
-    const updates = {
-      name,
-      details: editDetails.trim(),
-      updated_at: new Date().toISOString(),
-    };
-
+    if (!editingId || !name) return;
     const { data, error } = await supabase
       .from("discovery_dishes")
-      .update(updates)
+      .update({ name, details: editDetails.trim(), updated_at: new Date().toISOString() })
       .eq("id", editingId)
       .select()
       .single();
-
-    if (error) {
-      console.error("update discovery dish", error);
-    } else if (data) {
+    if (error) console.error("update discovery dish", error);
+    else if (data) {
       setDishes((prev) => prev.map((dish) => (dish.id === data.id ? data : dish)));
-      cancelEdit();
+      setEditingId(null);
     }
-    setSavingEdit(false);
   };
 
-  const deleteDish = async (id) => {
-    if (editingId === id) cancelEdit();
-    setDishes((prev) => prev.filter((dish) => dish.id !== id));
-    setVotes((prev) => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
-    });
-    const { error } = await supabase.from("discovery_dishes").delete().eq("id", id);
+  const removeDish = async (dish) => {
+    if (busyId) return;
+    setBusyId(dish.id);
+    const previous = dishes;
+    setDishes((prev) => prev.filter((item) => item.id !== dish.id));
+    const { error } = await supabase.from("discovery_dishes").delete().eq("id", dish.id);
     if (error) {
       console.error("delete discovery dish", error);
-      reload();
+      setDishes(previous);
     }
+    setBusyId(null);
   };
 
-  const setVote = async (dishId, profileId, choice) => {
-    setVotes((prev) => ({
-      ...prev,
-      [dishId]: { ...(prev[dishId] || {}), [profileId]: choice },
-    }));
+  const keepDish = async (dish) => {
+    if (busyId) return;
+    setBusyId(dish.id);
 
-    const { error } = await supabase.from("discovery_votes").upsert({
-      dish_id: dishId,
-      profile_id: profileId,
-      choice,
-      updated_at: new Date().toISOString(),
-    });
+    const name = String(dish.name || "").trim();
+    const ingredients = String(dish.details || "").trim();
+    const { data: existing, error: lookupError } = await supabase
+      .from("meal_library")
+      .select("id")
+      .ilike("name", name)
+      .limit(1);
 
-    if (error) {
-      console.error("save discovery vote", error);
-      reload();
+    if (lookupError) {
+      console.error("lookup library dish", lookupError);
+      setBusyId(null);
+      return;
     }
+
+    let libraryError = null;
+    if (existing?.length) {
+      const result = await supabase
+        .from("meal_library")
+        .update({ ingredients })
+        .eq("id", existing[0].id);
+      libraryError = result.error;
+    } else {
+      const result = await supabase.from("meal_library").insert({ name, ingredients });
+      libraryError = result.error;
+    }
+
+    if (libraryError) {
+      console.error("save discovery dish to library", libraryError);
+      setBusyId(null);
+      return;
+    }
+
+    const previous = dishes;
+    setDishes((prev) => prev.filter((item) => item.id !== dish.id));
+    const { error: deleteError } = await supabase.from("discovery_dishes").delete().eq("id", dish.id);
+    if (deleteError) {
+      console.error("remove accepted discovery dish", deleteError);
+      setDishes(previous);
+    }
+    setBusyId(null);
   };
 
   if (!mountNode) return null;
 
   return createPortal(
-    <section style={{ marginBottom: 28 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+    <section data-discovery-stable="true">
+      <div className="discover-header">
         <Sparkles size={16} color="var(--honey)" />
-        <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 600, flex: 1 }}>Plats à découvrir</span>
+        <span>Plats à découvrir</span>
         <button
           type="button"
           onClick={() => setShowAddForm((visible) => !visible)}
-          aria-label={showAddForm ? "Fermer l’ajout d’un plat" : "Ajouter un plat à découvrir"}
-          aria-expanded={showAddForm}
-          title={showAddForm ? "Fermer" : "Ajouter un plat"}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            border: "1px solid var(--honey)",
-            background: showAddForm ? "var(--honey-soft)" : "var(--card)",
-            color: "var(--honey)",
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 0,
-            flexShrink: 0,
-          }}
+          aria-label={showAddForm ? "Fermer l’ajout" : "Ajouter un plat à découvrir"}
+          className="discover-add-toggle"
         >
           {showAddForm ? <X size={16} /> : <Plus size={16} />}
         </button>
       </div>
 
-      <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
+      <div className="discover-card-shell">
         {showAddForm && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: dishes.length ? 14 : 0 }}>
+          <div className="discover-add-form">
             <input
               placeholder="Nom du plat à découvrir"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addDish()}
-              style={{ ...inputStyle, flex: "1 1 190px", fontWeight: 600 }}
             />
             <input
-              placeholder="Petit détail (facultatif)"
+              placeholder="Ingrédients ou détail (facultatif)"
               value={newDetails}
               onChange={(e) => setNewDetails(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addDish()}
-              style={{ ...inputStyle, flex: "2 1 240px" }}
             />
-            <button onClick={addDish} disabled={adding || !newName.trim()} style={{ ...pillBtnStyle, background: "var(--honey)", color: "#fff", opacity: adding || !newName.trim() ? 0.55 : 1 }}>
-              <Plus size={14} style={{ marginRight: 6 }} />
-              Ajouter
-            </button>
+            <button type="button" onClick={addDish} disabled={adding || !newName.trim()} className="discover-primary">Ajouter</button>
           </div>
         )}
 
         {dishes.length === 0 ? (
-          <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: "10px 0 0" }}>
-            Ajoute une idée de plat. Chaque profil pourra dire s'il a envie d'y goûter.
-          </p>
+          <p className="discover-empty">Aucun plat à décider pour le moment.</p>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="discover-list">
             {dishes.map((dish) => {
-              const isEditing = editingId === dish.id;
+              const editing = editingId === dish.id;
+              const busy = busyId === dish.id;
               return (
-                <div key={dish.id} style={{ border: "1px solid var(--line)", borderRadius: 9, padding: 11, background: "var(--paper)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "flex-start" }}>
-                    {isEditing ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 0 }}>
-                        <input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-                          placeholder="Nom du plat"
-                          autoFocus
-                          style={{ ...inputStyle, width: "100%", fontWeight: 700 }}
-                        />
-                        <input
-                          value={editDetails}
-                          onChange={(e) => setEditDetails(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && saveEdit()}
-                          placeholder="Petit détail (facultatif)"
-                          style={{ ...inputStyle, width: "100%" }}
-                        />
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                          <button
-                            onClick={saveEdit}
-                            disabled={savingEdit || !editName.trim()}
-                            style={{ ...pillBtnStyle, padding: "6px 10px", background: "var(--herb)", color: "#fff", opacity: savingEdit || !editName.trim() ? 0.55 : 1 }}
-                          >
-                            <Check size={13} style={{ marginRight: 5 }} />
-                            Enregistrer
-                          </button>
-                          <button onClick={cancelEdit} style={{ ...pillBtnStyle, padding: "6px 10px", background: "transparent", border: "1px solid var(--line)", color: "var(--ink-soft)" }}>
-                            Annuler
-                          </button>
+                <article key={dish.id} className="discover-item">
+                  {editing ? (
+                    <div className="discover-edit-form">
+                      <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Nom du plat" autoFocus />
+                      <input value={editDetails} onChange={(e) => setEditDetails(e.target.value)} placeholder="Ingrédients ou détail" />
+                      <div className="discover-edit-actions">
+                        <button type="button" onClick={saveEdit} className="discover-primary">Enregistrer</button>
+                        <button type="button" onClick={() => setEditingId(null)} className="discover-secondary">Annuler</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="discover-item-top">
+                        <div className="discover-copy">
+                          <strong>{dish.name}</strong>
+                          {dish.details && <span>{dish.details}</span>}
+                        </div>
+                        <div className="discover-item-tools">
+                          <button type="button" onClick={() => startEdit(dish)} aria-label={`Modifier ${dish.name}`}><Pencil size={14} /></button>
+                          <button type="button" onClick={() => removeDish(dish)} aria-label={`Supprimer ${dish.name}`}><Trash2 size={14} /></button>
                         </div>
                       </div>
-                    ) : (
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14 }}>{dish.name}</div>
-                        {dish.details && <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 3 }}>{dish.details}</div>}
+                      <div className="discover-decision-row">
+                        <span>On garde ce plat ?</span>
+                        <button type="button" disabled={busy} onClick={() => keepDish(dish)} className="discover-yes">Oui</button>
+                        <button type="button" disabled={busy} onClick={() => removeDish(dish)} className="discover-no">Non</button>
                       </div>
-                    )}
-
-                    {!isEditing && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                        <button
-                          onClick={() => startEdit(dish)}
-                          aria-label={`Modifier ${dish.name}`}
-                          title="Modifier"
-                          style={{ border: "none", background: "transparent", color: "var(--ink-soft)", cursor: "pointer", padding: 4, display: "flex" }}
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        <button onClick={() => deleteDish(dish.id)} aria-label={`Supprimer ${dish.name}`} style={{ border: "none", background: "transparent", color: "var(--ink-soft)", cursor: "pointer", padding: 4, display: "flex" }}>
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {profiles.length === 0 ? (
-                    <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 9 }}>Ajoute d'abord un profil pour pouvoir voter.</div>
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 10 }}>
-                      {profiles.map((profile) => {
-                        const choice = votes[dish.id]?.[profile.id] || null;
-                        return (
-                          <div key={profile.id} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                            <span style={{ width: 9, height: 9, borderRadius: "50%", background: profile.color || "var(--ink-soft)" }} />
-                            <span style={{ minWidth: 82, fontSize: 13, fontWeight: 600 }}>{profile.name}</span>
-                            <VoteButton active={choice === "want"} onClick={() => setVote(dish.id, profile.id, "want")} icon={<Check size={12} />} label="Oui, à goûter" color="var(--herb)" />
-                            <VoteButton active={choice === "maybe"} onClick={() => setVote(dish.id, profile.id, "maybe")} icon={<HelpCircle size={12} />} label="Peut-être" color="var(--honey)" />
-                            <VoteButton active={choice === "no"} onClick={() => setVote(dish.id, profile.id, "no")} icon={<X size={12} />} label="Non merci" color="var(--paprika)" />
-                          </div>
-                        );
-                      })}
-                    </div>
+                    </>
                   )}
-                </div>
+                </article>
               );
             })}
           </div>
@@ -350,46 +283,3 @@ export default function DiscoverDishes() {
     mountNode
   );
 }
-
-function VoteButton({ active, onClick, icon, label, color }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 5,
-        borderRadius: 16,
-        border: `1px solid ${active ? color : "var(--line)"}`,
-        background: active ? color : "var(--card)",
-        color: active ? "#fff" : "var(--ink-soft)",
-        padding: "5px 9px",
-        fontSize: 12,
-        cursor: "pointer",
-      }}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-}
-
-const pillBtnStyle = {
-  border: "1px solid transparent",
-  borderRadius: 20,
-  padding: "8px 14px",
-  fontSize: 13,
-  fontWeight: 500,
-  cursor: "pointer",
-  display: "inline-flex",
-  alignItems: "center",
-};
-
-const inputStyle = {
-  border: "1px solid var(--line)",
-  borderRadius: 6,
-  padding: "6px 10px",
-  fontSize: 13,
-  background: "var(--card)",
-};
