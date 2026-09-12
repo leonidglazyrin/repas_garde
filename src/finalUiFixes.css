@@ -82,7 +82,7 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
   .discover-decision-row > span { grid-column:1/-1; width:100%; margin:0; }
   .discover-yes,.discover-no { width:100%; min-height:40px; border-radius:8px; font-size:14px; }
 
-  /* Gardiennes sur une même ligne visuelle, avec retour propre si l'écran est trop étroit. */
+  /* Gardiennes sur une seule ligne autant que possible : bulles légèrement réduites. */
   [data-caregiver-picker="true"][data-mobile="true"] {
     display:block !important;
     grid-column:1 / -1 !important;
@@ -100,38 +100,43 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
   [data-caregiver-picker="true"][data-mobile="true"] [data-caregiver-label="true"] {
     display:block !important;
     width:100% !important;
-    margin:0 0 5px 0 !important;
+    margin:0 0 4px 0 !important;
     font-size:10px !important;
   }
   [data-caregiver-picker="true"][data-mobile="true"] [data-caregiver-choices="true"] {
     display:flex !important;
     flex-direction:row !important;
-    flex-wrap:wrap !important;
+    flex-wrap:nowrap !important;
     align-items:center !important;
     justify-content:flex-start !important;
-    gap:6px !important;
+    gap:4px !important;
     width:100% !important;
     max-width:100% !important;
     min-width:0 !important;
     margin:0 !important;
     padding:0 !important;
-    overflow:visible !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
     box-sizing:border-box !important;
+    scrollbar-width:none !important;
+  }
+  [data-caregiver-picker="true"][data-mobile="true"] [data-caregiver-choices="true"]::-webkit-scrollbar {
+    display:none !important;
   }
   [data-caregiver-picker="true"][data-mobile="true"] [data-caregiver-choices="true"] > button[aria-pressed] {
     display:inline-flex !important;
-    flex:0 0 74px !important;
-    width:74px !important;
-    min-width:74px !important;
-    max-width:74px !important;
-    height:36px !important;
-    min-height:36px !important;
-    padding:0 8px !important;
+    flex:0 0 62px !important;
+    width:62px !important;
+    min-width:62px !important;
+    max-width:62px !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 6px !important;
     margin:0 !important;
-    border-radius:18px !important;
+    border-radius:17px !important;
     justify-content:center !important;
     align-items:center !important;
-    font-size:12px !important;
+    font-size:11px !important;
     font-weight:900 !important;
     line-height:1 !important;
     white-space:nowrap !important;
@@ -144,12 +149,12 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
   }
   [data-caregiver-picker="true"][data-mobile="true"] [data-caregiver-choices="true"] > button[aria-label="Ajouter une gardienne"] {
     display:inline-flex !important;
-    flex:0 0 36px !important;
-    width:36px !important;
-    min-width:36px !important;
-    max-width:36px !important;
-    height:36px !important;
-    min-height:36px !important;
+    flex:0 0 32px !important;
+    width:32px !important;
+    min-width:32px !important;
+    max-width:32px !important;
+    height:32px !important;
+    min-height:32px !important;
     margin:0 !important;
     position:static !important;
     transform:none !important;
