@@ -22,6 +22,14 @@ function currentWeekId() {
   return document.body?.innerText?.match(/Semaine\s+(\d{4}-S\d{2})/)?.[1] || null;
 }
 
+function isMobile() {
+  return window.matchMedia?.("(max-width: 700px)")?.matches ?? false;
+}
+
+function shortName(name) {
+  return String(name || "").trim().slice(0, 3).toLocaleUpperCase("fr-CA");
+}
+
 function findMealRows() {
   const rows = [];
   const seen = new Set();
@@ -60,9 +68,11 @@ function chip(caregiver, selected, dayKey) {
   const button = document.createElement("button");
   button.type = "button";
   button.dataset.caregiverId = String(caregiver.id);
+  button.dataset.fullName = caregiver.name;
   button.setAttribute("aria-pressed", String(selected));
-  button.textContent = caregiver.name;
-  button.title = selected ? `Retirer ${caregiver.name} de ce soir` : `Assigner ${caregiver.name} à ce soir`;
+  button.setAttribute("aria-label", `${caregiver.name}${selected ? " sélectionnée" : ""}`);
+  button.textContent = isMobile() ? shortName(caregiver.name) : caregiver.name;
+  button.title = caregiver.name;
   Object.assign(button.style, {
     borderRadius: "999px",
     border: `1px solid ${caregiver.color}`,
@@ -81,13 +91,6 @@ function chip(caregiver, selected, dayKey) {
     await toggleAssignment(dayKey, caregiver.id, selected);
   });
   return button;
-}
-
-function caregiverLine(caregiver, selected, dayKey) {
-  const line = document.createElement("div");
-  line.dataset.caregiverLine = "true";
-  line.appendChild(chip(caregiver, selected, dayKey));
-  return line;
 }
 
 function addButton(dayKey) {
@@ -141,33 +144,25 @@ function renderDay(row, dayKey) {
   if (!wrap) {
     wrap = document.createElement("div");
     wrap.dataset.caregiverPicker = "true";
-    Object.assign(wrap.style, {
-      display: "flex",
-      alignItems: "center",
-      flexWrap: "wrap",
-      gap: "4px",
-      marginTop: "6px",
-      minWidth: "0",
-    });
     dayColumn.appendChild(wrap);
   }
 
   const selected = selectedFor(dayKey);
-  const signature = `${activeWeek}|${caregivers.map((c) => `${c.id}:${c.name}:${c.color}`).join("|")}/${Array.from(selected).sort().join(",")}`;
+  const signature = `${activeWeek}|${isMobile() ? "m" : "d"}|${caregivers.map((c) => `${c.id}:${c.name}:${c.color}`).join("|")}/${Array.from(selected).sort().join(",")}`;
   if (wrap.dataset.signature === signature) return;
   wrap.dataset.signature = signature;
   wrap.replaceChildren();
 
   const label = document.createElement("span");
-  label.textContent = "Gardienne :";
-  Object.assign(label.style, { width: "100%", fontSize: "10px", color: "var(--ink-soft)", fontWeight: "800" });
+  label.textContent = "Gardienne";
+  label.dataset.caregiverLabel = "true";
   wrap.appendChild(label);
-  caregivers.forEach((caregiver) => wrap.appendChild(caregiverLine(caregiver, selected.has(caregiver.id), dayKey)));
 
-  const addLine = document.createElement("div");
-  addLine.dataset.caregiverAddLine = "true";
-  addLine.appendChild(addButton(dayKey));
-  wrap.appendChild(addLine);
+  const choices = document.createElement("div");
+  choices.dataset.caregiverChoices = "true";
+  caregivers.forEach((caregiver) => choices.appendChild(chip(caregiver, selected.has(caregiver.id), dayKey)));
+  choices.appendChild(addButton(dayKey));
+  wrap.appendChild(choices);
 }
 
 function render() {
@@ -264,6 +259,11 @@ document.addEventListener("click", (event) => {
   const isToday = button.textContent?.trim() === "Aujourd'hui";
   if (isWeekNav || isToday) setTimeout(schedule, 180);
 }, true);
+
+window.matchMedia?.("(max-width: 700px)")?.addEventListener?.("change", () => {
+  document.querySelectorAll('[data-caregiver-picker="true"]').forEach((node) => { node.dataset.signature = ""; });
+  schedule();
+});
 
 loadCaregivers();
 activeWeek = currentWeekId();
