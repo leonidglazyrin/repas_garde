@@ -25,7 +25,6 @@ import "./inventoryEdit.js";
 import "./groceryExpiryCleanup.js";
 import "./weekResponsibility.js";
 import "./caregiverAssignments.js";
-import "./discoveryDecision.js";
 import "./weekPageStability.js";
 import "./mobileOptimizations.css";
 import "./scrollStability.css";
