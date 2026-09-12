@@ -5,37 +5,48 @@ function findProfilesSection(main) {
   }) || null;
 }
 
-function placeProfilesThenDiscovery() {
+function findLibrarySection(main) {
+  return Array.from(main.children).find((child) =>
+    (child.textContent || "").includes("Bibliothèque de plats déjà utilisés")
+  ) || null;
+}
+
+function stabilizePageSections() {
   const main = document.querySelector("main");
   if (!main) return false;
 
   const profiles = findProfilesSection(main);
-  if (!profiles) return false;
-
-  if (main.firstElementChild !== profiles) {
-    main.insertBefore(profiles, main.firstElementChild);
+  if (profiles) {
+    profiles.dataset.familyProfilesHidden = "true";
+    profiles.setAttribute("aria-hidden", "true");
+    profiles.style.setProperty("display", "none", "important");
   }
 
+  const library = findLibrarySection(main);
   const slot = document.getElementById("discover-dishes-slot");
-  if (slot && profiles.nextElementSibling !== slot) {
-    main.insertBefore(slot, profiles.nextElementSibling);
+  if (library && slot && library.nextElementSibling !== slot) {
+    library.insertAdjacentElement("afterend", slot);
   }
-
-  return true;
+  return !!library;
 }
 
 let frame = null;
-function scheduleMove() {
+function schedule() {
   if (frame !== null) return;
   frame = requestAnimationFrame(() => {
     frame = null;
-    placeProfilesThenDiscovery();
+    stabilizePageSections();
   });
 }
 
-const observer = new MutationObserver(scheduleMove);
-observer.observe(document.documentElement, { childList: true, subtree: true });
+// Quelques passes seulement au démarrage : aucun observer permanent qui fait sauter la page.
+queueMicrotask(schedule);
+setTimeout(schedule, 120);
+setTimeout(schedule, 450);
+setTimeout(schedule, 1000);
 
-queueMicrotask(scheduleMove);
-setTimeout(scheduleMove, 250);
-setTimeout(scheduleMove, 1000);
+document.addEventListener("click", (event) => {
+  if (event.target?.closest?.('button[aria-label="Semaine précédente"], button[aria-label="Semaine suivante"], button')) {
+    setTimeout(schedule, 80);
+  }
+}, true);
