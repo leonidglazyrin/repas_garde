@@ -39,9 +39,29 @@ section[data-library-disclosure-ready="true"] > div:first-child { margin-bottom:
 .discover-secondary { border:1px solid var(--line); background:transparent; color:var(--ink-soft); }
 .discover-edit-actions { display:flex; gap:6px; }
 
-[data-caregiver-picker="true"] { display:flex !important; flex-wrap:wrap !important; align-items:center !important; gap:4px !important; }
-[data-caregiver-line="true"] { display:block !important; min-width:0 !important; }
-[data-caregiver-line="true"] > button[aria-pressed] { width:auto !important; min-width:0 !important; min-height:28px !important; display:inline-flex !important; padding:4px 8px !important; }
+[data-caregiver-picker="true"] {
+  width:100%;
+  min-width:0;
+  margin-top:6px;
+}
+[data-caregiver-label="true"] {
+  display:block;
+  width:100%;
+  margin-bottom:4px;
+  font-size:10px;
+  font-weight:800;
+  color:var(--ink-soft);
+}
+[data-caregiver-choices="true"] {
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  align-items:center;
+}
+[data-caregiver-choices="true"] > button {
+  width:auto !important;
+  min-width:0 !important;
+}
 
 html.section-interacting,html.section-interacting body,html.section-interacting main { overflow-anchor:none !important; scroll-behavior:auto !important; }
 html.section-interacting main *,html.section-interacting #discover-dishes-slot * { transition:none !important; animation:none !important; }
@@ -62,46 +82,42 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
   .discover-decision-row > span { grid-column:1/-1; width:100%; margin:0; }
   .discover-yes,.discover-no { width:100%; min-height:40px; border-radius:8px; font-size:14px; }
 
-  /* Une vraie ligne DOM par gardienne : aucun partage de ligne possible. */
+  /* Gardiennes compactes : 3 lettres, jamais de chevauchement. */
   [data-caregiver-picker="true"] {
-    width:100% !important;
-    margin-top:5px !important;
-    display:block !important;
+    margin-top:4px !important;
   }
-  [data-caregiver-picker="true"] > span {
-    display:block !important;
-    width:100% !important;
-    margin-bottom:5px !important;
+  [data-caregiver-label="true"] {
+    margin-bottom:4px !important;
+    font-size:10px !important;
   }
-  [data-caregiver-line="true"] {
-    display:block !important;
+  [data-caregiver-choices="true"] {
+    display:grid !important;
+    grid-template-columns:repeat(4, minmax(0, 1fr)) !important;
+    gap:5px !important;
     width:100% !important;
-    max-width:100% !important;
-    margin:0 0 6px 0 !important;
-    clear:both !important;
   }
-  [data-caregiver-line="true"] > button[aria-pressed] {
-    display:flex !important;
+  [data-caregiver-choices="true"] > button[aria-pressed] {
     width:100% !important;
-    max-width:100% !important;
     min-width:0 !important;
-    min-height:38px !important;
-    justify-content:flex-start !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 4px !important;
+    border-radius:10px !important;
+    justify-content:center !important;
     align-items:center !important;
-    font-size:13px !important;
-    line-height:1.2 !important;
-    padding:8px 10px !important;
-    white-space:normal !important;
-    overflow-wrap:anywhere !important;
-    word-break:break-word !important;
+    font-size:11px !important;
+    font-weight:900 !important;
+    line-height:1 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:clip !important;
     box-sizing:border-box !important;
   }
-  [data-caregiver-add-line="true"] { display:block !important; width:100% !important; clear:both !important; }
-  [data-caregiver-add-line="true"] button[aria-label="Ajouter une gardienne"] {
-    display:inline-flex !important;
+  [data-caregiver-choices="true"] > button[aria-label="Ajouter une gardienne"] {
     width:34px !important;
     min-width:34px !important;
     height:34px !important;
     min-height:34px !important;
+    justify-self:start !important;
   }
 }
