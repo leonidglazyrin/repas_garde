@@ -140,15 +140,19 @@ function renderDay(row, dayKey) {
   const dayColumn = row.firstElementChild;
   if (!dayColumn) return;
 
-  let wrap = dayColumn.querySelector(':scope > [data-caregiver-picker="true"]');
+  const mobile = isMobile();
+  const host = mobile ? row : dayColumn;
+  let wrap = row.querySelector(':scope > [data-caregiver-picker="true"]') || dayColumn.querySelector(':scope > [data-caregiver-picker="true"]');
+
   if (!wrap) {
     wrap = document.createElement("div");
     wrap.dataset.caregiverPicker = "true";
-    dayColumn.appendChild(wrap);
   }
+  if (wrap.parentElement !== host) host.appendChild(wrap);
+  wrap.dataset.mobile = mobile ? "true" : "false";
 
   const selected = selectedFor(dayKey);
-  const signature = `${activeWeek}|${isMobile() ? "m" : "d"}|${caregivers.map((c) => `${c.id}:${c.name}:${c.color}`).join("|")}/${Array.from(selected).sort().join(",")}`;
+  const signature = `${activeWeek}|${mobile ? "m" : "d"}|${caregivers.map((c) => `${c.id}:${c.name}:${c.color}`).join("|")}/${Array.from(selected).sort().join(",")}`;
   if (wrap.dataset.signature === signature) return;
   wrap.dataset.signature = signature;
   wrap.replaceChildren();
