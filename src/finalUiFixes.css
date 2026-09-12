@@ -219,6 +219,21 @@ section[data-library-disclosure-ready="true"] > div:first-child {
   padding: 4px 8px !important;
 }
 
+/* Pendant l'ouverture/fermeture d'une section, aucun effet visuel ne doit faire
+   sauter la page. */
+html.section-interacting,
+html.section-interacting body,
+html.section-interacting main {
+  overflow-anchor: none !important;
+  scroll-behavior: auto !important;
+}
+
+html.section-interacting main *,
+html.section-interacting #discover-dishes-slot * {
+  transition: none !important;
+  animation: none !important;
+}
+
 @media (max-width: 700px) {
   main {
     padding-left: 7px !important;
@@ -295,13 +310,38 @@ section[data-library-disclosure-ready="true"] > div:first-child {
     font-size: 14px;
   }
 
+  /* Sur téléphone, chaque gardienne occupe sa propre ligne. */
   [data-caregiver-picker="true"] {
     width: 100% !important;
-    margin-top: 4px !important;
+    margin-top: 5px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+  }
+
+  [data-caregiver-picker="true"] > span {
+    width: 100% !important;
   }
 
   [data-caregiver-picker="true"] button[aria-pressed] {
-    min-height: 32px !important;
-    font-size: 12px !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 36px !important;
+    justify-content: flex-start !important;
+    font-size: 13px !important;
+    padding: 7px 10px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  [data-caregiver-picker="true"] button[aria-label="Ajouter une gardienne"] {
+    align-self: flex-start !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
   }
 }
