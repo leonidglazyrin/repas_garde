@@ -82,27 +82,36 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
   .discover-decision-row > span { grid-column:1/-1; width:100%; margin:0; }
   .discover-yes,.discover-no { width:100%; min-height:40px; border-radius:8px; font-size:14px; }
 
-  /* Gardiennes compactes : 3 lettres lisibles, sans chevauchement. */
+  /* Gardiennes : une bulle compacte par ligne, jamais de chevauchement. */
   [data-caregiver-picker="true"] {
     margin-top:4px !important;
+    overflow:visible !important;
   }
   [data-caregiver-label="true"] {
-    margin-bottom:4px !important;
+    margin-bottom:5px !important;
     font-size:10px !important;
   }
   [data-caregiver-choices="true"] {
-    display:grid !important;
-    grid-template-columns:repeat(3, minmax(64px, 1fr)) !important;
+    display:flex !important;
+    flex-direction:column !important;
+    flex-wrap:nowrap !important;
+    align-items:flex-start !important;
     gap:6px !important;
     width:100% !important;
+    min-width:0 !important;
+    overflow:visible !important;
   }
   [data-caregiver-choices="true"] > button[aria-pressed] {
-    width:100% !important;
-    min-width:64px !important;
+    display:inline-flex !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    min-width:74px !important;
+    max-width:100% !important;
     height:36px !important;
     min-height:36px !important;
-    padding:0 8px !important;
-    border-radius:12px !important;
+    padding:0 12px !important;
+    margin:0 !important;
+    border-radius:18px !important;
     justify-content:center !important;
     align-items:center !important;
     font-size:12px !important;
@@ -112,13 +121,18 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
     overflow:visible !important;
     text-overflow:clip !important;
     box-sizing:border-box !important;
-    letter-spacing:.3px !important;
+    letter-spacing:.4px !important;
+    position:relative !important;
+    inset:auto !important;
   }
   [data-caregiver-choices="true"] > button[aria-label="Ajouter une gardienne"] {
+    display:inline-flex !important;
+    flex:0 0 auto !important;
     width:36px !important;
     min-width:36px !important;
     height:36px !important;
     min-height:36px !important;
-    justify-self:start !important;
+    margin-top:1px !important;
+    align-self:flex-start !important;
   }
 }
