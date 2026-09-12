@@ -29,6 +29,7 @@ import "./weekPageStability.js";
 import "./mobileOptimizations.css";
 import "./scrollStability.css";
 import "./weekResponsibility.css";
+import "./finalUiFixes.css";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
 
