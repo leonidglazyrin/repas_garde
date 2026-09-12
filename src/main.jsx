@@ -26,6 +26,7 @@ import "./groceryExpiryCleanup.js";
 import "./weekResponsibility.js";
 import "./mobileOptimizations.css";
 import "./scrollStability.css";
+import "./weekResponsibility.css";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
 
