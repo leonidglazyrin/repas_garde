@@ -27,12 +27,14 @@ function keepWeekendOpen() {
   let node = textarea.parentElement;
   while (node && node !== document.body) {
     if ((node.textContent || "").includes("Fin de semaine")) {
-      node.dataset.weekendAlwaysOpen = "true";
-      node.style.setProperty("display", "flex", "important");
+      if (node.dataset.weekendAlwaysOpen !== "true") node.dataset.weekendAlwaysOpen = "true";
+      if (node.style.display !== "flex" || node.style.getPropertyPriority("display") !== "important") {
+        node.style.setProperty("display", "flex", "important");
+      }
       node.style.removeProperty("height");
       node.style.removeProperty("visibility");
       textarea.style.removeProperty("display");
-      break;
+      return;
     }
     node = node.parentElement;
   }
@@ -61,11 +63,13 @@ function maybeAdvancePastFinishedWeek() {
 }
 
 document.addEventListener("click", (event) => {
-  const nav = event.target?.closest?.('button[aria-label="Semaine précédente"], button[aria-label="Semaine suivante"]');
-  if (nav) setTimeout(keepWeekendOpen, 180);
-});
+  const nav = event.target?.closest?.('button[aria-label="Semaine précédente"], button[aria-label="Semaine suivante"], button');
+  if (!nav) return;
 
-document.addEventListener("input", () => setTimeout(keepWeekendOpen, 0), true);
+  const isWeekNav = nav.matches?.('button[aria-label="Semaine précédente"], button[aria-label="Semaine suivante"]');
+  const isToday = nav.textContent?.trim() === "Aujourd'hui";
+  if (isWeekNav || isToday) setTimeout(keepWeekendOpen, 180);
+});
 
 setTimeout(() => {
   keepWeekendOpen();
