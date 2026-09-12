@@ -14,6 +14,29 @@
   height: auto !important;
 }
 
+/* La section profils famille n'est plus utilisée : les gardiennes sont gérées à côté de chaque jour. */
+main > section:has(button[aria-label^="Retirer "]) {
+  display: none !important;
+}
+
+html.week-page-switching,
+html.week-page-switching body,
+html.week-page-switching #root,
+html.week-page-switching main {
+  overflow-anchor: none !important;
+  scroll-behavior: auto !important;
+}
+
+html.week-page-switching main *,
+html.week-page-switching #discover-dishes-slot * {
+  animation: none !important;
+  transition: none !important;
+}
+
+#discover-dishes-slot [data-discovery-decision-actions="true"] {
+  display: flex !important;
+}
+
 @media (min-width: 701px) {
   div:has(> div > input[placeholder^="Commentaire du parent"]):has(input[placeholder="Nom du souper"]) {
     grid-template-columns: 150px minmax(250px, 2.3fr) 122px minmax(135px, 165px) !important;
@@ -29,5 +52,10 @@
     min-height: 28px !important;
     padding: 4px 8px !important;
     font-size: 11px !important;
+  }
+
+  #discover-dishes-slot [data-discovery-decision-actions="true"] button {
+    flex: 1 1 135px;
+    min-height: 38px !important;
   }
 }
