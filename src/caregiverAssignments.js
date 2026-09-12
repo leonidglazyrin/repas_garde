@@ -83,6 +83,13 @@ function chip(caregiver, selected, dayKey) {
   return button;
 }
 
+function caregiverLine(caregiver, selected, dayKey) {
+  const line = document.createElement("div");
+  line.dataset.caregiverLine = "true";
+  line.appendChild(chip(caregiver, selected, dayKey));
+  return line;
+}
+
 function addButton(dayKey) {
   const button = document.createElement("button");
   button.type = "button";
@@ -155,8 +162,12 @@ function renderDay(row, dayKey) {
   label.textContent = "Gardienne :";
   Object.assign(label.style, { width: "100%", fontSize: "10px", color: "var(--ink-soft)", fontWeight: "800" });
   wrap.appendChild(label);
-  caregivers.forEach((caregiver) => wrap.appendChild(chip(caregiver, selected.has(caregiver.id), dayKey)));
-  wrap.appendChild(addButton(dayKey));
+  caregivers.forEach((caregiver) => wrap.appendChild(caregiverLine(caregiver, selected.has(caregiver.id), dayKey)));
+
+  const addLine = document.createElement("div");
+  addLine.dataset.caregiverAddLine = "true";
+  addLine.appendChild(addButton(dayKey));
+  wrap.appendChild(addLine);
 }
 
 function render() {
@@ -246,8 +257,6 @@ function startupSync() {
   }
 }
 
-// On ne recalcule plus sur chaque frappe. Les lignes sont remontées au démarrage,
-// lors des changements de semaine et après les mises à jour Realtime.
 document.addEventListener("click", (event) => {
   const button = event.target?.closest?.("button");
   if (!button) return;
