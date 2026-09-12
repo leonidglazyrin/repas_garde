@@ -1,18 +1,12 @@
 /* Dernière couche visuelle : règles ciblées, sans observer ni animation. */
 
-[data-family-profiles-hidden="true"] {
-  display: none !important;
-}
+[data-family-profiles-hidden="true"] { display: none !important; }
 
-/* La bibliothèque garde un vrai espace avec la carte juste au-dessus. */
 section[data-library-disclosure-ready="true"] {
   margin-top: 18px !important;
   margin-bottom: 14px !important;
 }
-
-section[data-library-disclosure-ready="true"] > div:first-child {
-  margin-bottom: 10px !important;
-}
+section[data-library-disclosure-ready="true"] > div:first-child { margin-bottom: 10px !important; }
 
 #discover-dishes-slot {
   width: 100%;
@@ -20,328 +14,94 @@ section[data-library-disclosure-ready="true"] > div:first-child {
   contain: layout style;
   overflow-anchor: none;
 }
+[data-discovery-stable="true"] { margin: 4px 0 14px !important; transition: none !important; animation: none !important; }
 
-[data-discovery-stable="true"] {
-  margin: 4px 0 14px !important;
-  transition: none !important;
-  animation: none !important;
-}
+.discover-header { display:flex; align-items:center; gap:8px; min-height:34px; margin-bottom:8px; color:var(--ink-soft); font-size:13px; font-weight:700; }
+.discover-header > span { flex:1; }
+.discover-add-toggle { width:32px; min-width:32px; height:32px; min-height:32px; padding:0; border:1px solid var(--honey); border-radius:50%; background:var(--card); color:var(--honey); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+.discover-card-shell { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; }
+.discover-add-form,.discover-edit-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) auto; gap:7px; align-items:center; margin-bottom:10px; }
+.discover-add-form input,.discover-edit-form input { width:100%; min-width:0; min-height:38px; border:1px solid var(--line); border-radius:7px; padding:7px 9px; background:var(--card); color:var(--ink); }
+.discover-list { display:flex; flex-direction:column; gap:7px; }
+.discover-item { border:1px solid var(--line); border-radius:9px; padding:9px 10px; background:var(--paper); transition:none !important; animation:none !important; }
+.discover-item-top { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+.discover-copy { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.discover-copy strong { font-size:14px; }
+.discover-copy span,.discover-empty { color:var(--ink-soft); font-size:12px; }
+.discover-empty { margin:0; }
+.discover-item-tools { display:flex; gap:2px; flex-shrink:0; }
+.discover-item-tools button { width:30px; min-width:30px; height:30px; min-height:30px; padding:0; border:0; background:transparent; color:var(--ink-soft); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+.discover-decision-row { display:flex; align-items:center; gap:7px; margin-top:8px; padding-top:8px; border-top:1px solid var(--line); }
+.discover-decision-row > span { margin-right:auto; font-size:12px; font-weight:700; color:var(--ink-soft); }
+.discover-yes,.discover-no,.discover-primary,.discover-secondary { min-height:34px; padding:6px 13px; border-radius:17px; font-size:12px; font-weight:800; cursor:pointer; }
+.discover-yes,.discover-primary { border:1px solid var(--herb); background:var(--herb); color:#fff; }
+.discover-no { border:1px solid var(--paprika); background:var(--card); color:var(--paprika); }
+.discover-secondary { border:1px solid var(--line); background:transparent; color:var(--ink-soft); }
+.discover-edit-actions { display:flex; gap:6px; }
 
-.discover-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 34px;
-  margin-bottom: 8px;
-  color: var(--ink-soft);
-  font-size: 13px;
-  font-weight: 700;
-}
+[data-caregiver-picker="true"] { display:flex !important; flex-wrap:wrap !important; align-items:center !important; gap:4px !important; }
+[data-caregiver-line="true"] { display:block !important; min-width:0 !important; }
+[data-caregiver-line="true"] > button[aria-pressed] { width:auto !important; min-width:0 !important; min-height:28px !important; display:inline-flex !important; padding:4px 8px !important; }
 
-.discover-header > span {
-  flex: 1;
-}
+html.section-interacting,html.section-interacting body,html.section-interacting main { overflow-anchor:none !important; scroll-behavior:auto !important; }
+html.section-interacting main *,html.section-interacting #discover-dishes-slot * { transition:none !important; animation:none !important; }
 
-.discover-add-toggle {
-  width: 32px;
-  min-width: 32px;
-  height: 32px;
-  min-height: 32px;
-  padding: 0;
-  border: 1px solid var(--honey);
-  border-radius: 50%;
-  background: var(--card);
-  color: var(--honey);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
+@media (max-width:700px) {
+  main { padding-left:7px !important; padding-right:7px !important; padding-bottom:34px !important; }
+  main > * { max-width:100%; min-width:0; }
+  section[data-library-disclosure-ready="true"] { margin-top:14px !important; margin-bottom:10px !important; }
+  section[data-library-disclosure-ready="true"] > div:last-child { padding:9px !important; }
+  #discover-dishes-slot { margin-bottom:8px !important; }
+  .discover-card-shell { padding:8px; }
+  .discover-add-form,.discover-edit-form { grid-template-columns:minmax(0,1fr); gap:6px; }
+  .discover-add-form input,.discover-edit-form input { min-height:40px; font-size:16px; }
+  .discover-primary,.discover-secondary { width:100%; justify-content:center; }
+  .discover-edit-actions { display:grid; grid-template-columns:1fr 1fr; }
+  .discover-item { padding:8px; }
+  .discover-decision-row { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .discover-decision-row > span { grid-column:1/-1; width:100%; margin:0; }
+  .discover-yes,.discover-no { width:100%; min-height:40px; border-radius:8px; font-size:14px; }
 
-.discover-card-shell {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px;
-}
-
-.discover-add-form,
-.discover-edit-form {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) auto;
-  gap: 7px;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.discover-add-form input,
-.discover-edit-form input {
-  width: 100%;
-  min-width: 0;
-  min-height: 38px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 7px 9px;
-  background: var(--card);
-  color: var(--ink);
-}
-
-.discover-list {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.discover-item {
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 9px 10px;
-  background: var(--paper);
-  transition: none !important;
-  animation: none !important;
-}
-
-.discover-item-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.discover-copy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.discover-copy strong {
-  font-size: 14px;
-}
-
-.discover-copy span,
-.discover-empty {
-  color: var(--ink-soft);
-  font-size: 12px;
-}
-
-.discover-empty {
-  margin: 0;
-}
-
-.discover-item-tools {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.discover-item-tools button {
-  width: 30px;
-  min-width: 30px;
-  height: 30px;
-  min-height: 30px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink-soft);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.discover-decision-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
-}
-
-.discover-decision-row > span {
-  margin-right: auto;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--ink-soft);
-}
-
-.discover-yes,
-.discover-no,
-.discover-primary,
-.discover-secondary {
-  min-height: 34px;
-  padding: 6px 13px;
-  border-radius: 17px;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.discover-yes,
-.discover-primary {
-  border: 1px solid var(--herb);
-  background: var(--herb);
-  color: #fff;
-}
-
-.discover-no {
-  border: 1px solid var(--paprika);
-  background: var(--card);
-  color: var(--paprika);
-}
-
-.discover-secondary {
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--ink-soft);
-}
-
-.discover-edit-actions {
-  display: flex;
-  gap: 6px;
-}
-
-/* Les boutons des gardiennes ont aria-pressed eux aussi : on annule les règles
-   globales de statut qui les transformaient parfois en grandes colonnes. */
-[data-caregiver-picker="true"] {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  gap: 4px !important;
-}
-
-[data-caregiver-picker="true"] button[aria-pressed] {
-  width: auto !important;
-  min-width: 0 !important;
-  min-height: 28px !important;
-  display: inline-flex !important;
-  padding: 4px 8px !important;
-}
-
-/* Pendant l'ouverture/fermeture d'une section, aucun effet visuel ne doit faire
-   sauter la page. */
-html.section-interacting,
-html.section-interacting body,
-html.section-interacting main {
-  overflow-anchor: none !important;
-  scroll-behavior: auto !important;
-}
-
-html.section-interacting main *,
-html.section-interacting #discover-dishes-slot * {
-  transition: none !important;
-  animation: none !important;
-}
-
-@media (max-width: 700px) {
-  main {
-    padding-left: 7px !important;
-    padding-right: 7px !important;
-    padding-bottom: 34px !important;
-  }
-
-  main > * {
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  section[data-library-disclosure-ready="true"] {
-    margin-top: 14px !important;
-    margin-bottom: 10px !important;
-  }
-
-  section[data-library-disclosure-ready="true"] > div:last-child {
-    padding: 9px !important;
-  }
-
-  #discover-dishes-slot {
-    margin-bottom: 8px !important;
-  }
-
-  .discover-card-shell {
-    padding: 8px;
-  }
-
-  .discover-add-form,
-  .discover-edit-form {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 6px;
-  }
-
-  .discover-add-form input,
-  .discover-edit-form input {
-    min-height: 40px;
-    font-size: 16px;
-  }
-
-  .discover-primary,
-  .discover-secondary {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .discover-edit-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .discover-item {
-    padding: 8px;
-  }
-
-  .discover-decision-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
-
-  .discover-decision-row > span {
-    grid-column: 1 / -1;
-    width: 100%;
-    margin: 0;
-  }
-
-  .discover-yes,
-  .discover-no {
-    width: 100%;
-    min-height: 40px;
-    border-radius: 8px;
-    font-size: 14px;
-  }
-
-  /* Sur téléphone, chaque gardienne occupe sa propre ligne. */
+  /* Une vraie ligne DOM par gardienne : aucun partage de ligne possible. */
   [data-caregiver-picker="true"] {
-    width: 100% !important;
-    margin-top: 5px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    flex-wrap: nowrap !important;
-    gap: 5px !important;
+    width:100% !important;
+    margin-top:5px !important;
+    display:block !important;
   }
-
   [data-caregiver-picker="true"] > span {
-    width: 100% !important;
+    display:block !important;
+    width:100% !important;
+    margin-bottom:5px !important;
   }
-
-  [data-caregiver-picker="true"] button[aria-pressed] {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 36px !important;
-    justify-content: flex-start !important;
-    font-size: 13px !important;
-    padding: 7px 10px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+  [data-caregiver-line="true"] {
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 0 6px 0 !important;
+    clear:both !important;
   }
-
-  [data-caregiver-picker="true"] button[aria-label="Ajouter une gardienne"] {
-    align-self: flex-start !important;
-    width: 34px !important;
-    min-width: 34px !important;
-    height: 34px !important;
-    min-height: 34px !important;
+  [data-caregiver-line="true"] > button[aria-pressed] {
+    display:flex !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    min-height:38px !important;
+    justify-content:flex-start !important;
+    align-items:center !important;
+    font-size:13px !important;
+    line-height:1.2 !important;
+    padding:8px 10px !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+    word-break:break-word !important;
+    box-sizing:border-box !important;
+  }
+  [data-caregiver-add-line="true"] { display:block !important; width:100% !important; clear:both !important; }
+  [data-caregiver-add-line="true"] button[aria-label="Ajouter une gardienne"] {
+    display:inline-flex !important;
+    width:34px !important;
+    min-width:34px !important;
+    height:34px !important;
+    min-height:34px !important;
   }
 }
