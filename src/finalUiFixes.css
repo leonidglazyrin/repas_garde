@@ -82,7 +82,7 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
   .discover-decision-row > span { grid-column:1/-1; width:100%; margin:0; }
   .discover-yes,.discover-no { width:100%; min-height:40px; border-radius:8px; font-size:14px; }
 
-  /* Le bloc gardiennes est sorti de la petite colonne du jour et prend toute la ligne repas. */
+  /* Gardiennes sur une même ligne visuelle, avec retour propre si l'écran est trop étroit. */
   [data-caregiver-picker="true"][data-mobile="true"] {
     display:block !important;
     grid-column:1 / -1 !important;
@@ -105,9 +105,10 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
   }
   [data-caregiver-picker="true"][data-mobile="true"] [data-caregiver-choices="true"] {
     display:flex !important;
-    flex-direction:column !important;
-    flex-wrap:nowrap !important;
-    align-items:flex-start !important;
+    flex-direction:row !important;
+    flex-wrap:wrap !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
     gap:6px !important;
     width:100% !important;
     max-width:100% !important;
@@ -119,13 +120,13 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
   }
   [data-caregiver-picker="true"][data-mobile="true"] [data-caregiver-choices="true"] > button[aria-pressed] {
     display:inline-flex !important;
-    flex:0 0 36px !important;
-    width:82px !important;
-    min-width:82px !important;
-    max-width:82px !important;
+    flex:0 0 74px !important;
+    width:74px !important;
+    min-width:74px !important;
+    max-width:74px !important;
     height:36px !important;
     min-height:36px !important;
-    padding:0 10px !important;
+    padding:0 8px !important;
     margin:0 !important;
     border-radius:18px !important;
     justify-content:center !important;
@@ -149,7 +150,7 @@ html.section-interacting main *,html.section-interacting #discover-dishes-slot *
     max-width:36px !important;
     height:36px !important;
     min-height:36px !important;
-    margin:1px 0 0 0 !important;
+    margin:0 !important;
     position:static !important;
     transform:none !important;
     float:none !important;
