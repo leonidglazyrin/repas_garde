@@ -18,6 +18,7 @@ import "./discoveryPlacement.js";
 import "./parentQuickView.js";
 import "./parentCommentVisibility.js";
 import "./mealLifecycle.js";
+import "./ratingLibraryGuarantee.js";
 import "./libraryRatingHierarchy.js";
 import "./familyGroceryStable.js";
 import "./inventoryGroceryFilter.js";
