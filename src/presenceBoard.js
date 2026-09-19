@@ -233,3 +233,5 @@ document.addEventListener("click", (event) => {
 load();
 subscribe();
 queueMicrotask(schedule);
+setTimeout(load, 200);
+setTimeout(load, 800);
