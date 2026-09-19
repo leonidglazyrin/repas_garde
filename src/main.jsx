@@ -25,13 +25,15 @@ import "./inventoryGroceryFilter.js";
 import "./inventoryEdit.js";
 import "./groceryExpiryCleanup.js";
 import "./weekResponsibility.js";
-import "./caregiverAssignments.js";
 import "./weekPageStability.js";
+import "./workspaceTabs.js";
+import "./presenceBoard.js";
 import "./sectionInteractionStability.js";
 import "./mobileOptimizations.css";
 import "./scrollStability.css";
 import "./weekResponsibility.css";
 import "./finalUiFixes.css";
+import "./workspaceTabs.css";
 
 const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
 
