@@ -1,0 +1,174 @@
+#app-section-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+
+#app-section-tabs button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+#app-section-tabs button[aria-selected="true"] {
+  background: var(--herb);
+  border-color: var(--herb);
+  color: #fff;
+}
+
+main[data-workspace-ready="true"] > [data-workspace-hidden="true"] {
+  display: none !important;
+}
+
+body[data-app-tab="meals"] main[data-workspace-ready="true"] > * {
+  display: none !important;
+}
+body[data-app-tab="meals"] main[data-workspace-ready="true"] > [data-workspace-meals="true"],
+body[data-app-tab="meals"] main[data-workspace-ready="true"] > #discover-dishes-slot,
+body[data-app-tab="meals"] main[data-workspace-ready="true"] > #meal-rating-panel,
+body[data-app-tab="meals"] main[data-workspace-ready="true"] > #parent-quick-nav,
+body[data-app-tab="meals"] main[data-workspace-ready="true"] > #week-compact-overview {
+  display: block !important;
+}
+
+body[data-app-tab="grocery"] main[data-workspace-ready="true"] > * {
+  display: none !important;
+}
+body[data-app-tab="grocery"] main[data-workspace-ready="true"] > [data-workspace-grocery="true"],
+body[data-app-tab="grocery"] main[data-workspace-ready="true"] > #common-grocery-wrapper-stable {
+  display: block !important;
+}
+
+body[data-app-tab="presence"] main[data-workspace-ready="true"] > * {
+  display: none !important;
+}
+body[data-app-tab="presence"] main[data-workspace-ready="true"] > #presence-board-slot,
+body[data-app-tab="presence"] main[data-workspace-ready="true"] > [data-workspace-presence="true"] {
+  display: block !important;
+}
+
+#presence-board-slot {
+  margin: 0 0 24px;
+}
+
+.presence-board-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.presence-board-header strong {
+  font-size: 18px;
+}
+.presence-board-header span {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.presence-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.presence-day-card {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+.presence-day-card h3 {
+  margin: 0 0 9px;
+  font-size: 15px;
+}
+.presence-caregivers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.presence-caregiver {
+  min-height: 36px;
+  padding: 6px 11px;
+  border: 1px solid;
+  border-radius: 18px;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.presence-field {
+  display: block;
+  margin-top: 8px;
+}
+.presence-field > span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 800;
+}
+.presence-field textarea {
+  width: 100%;
+  min-height: 68px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  resize: vertical;
+}
+.presence-add-caregiver {
+  margin-top: 12px;
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 9px;
+  background: var(--card);
+  color: var(--ink-soft);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  #app-section-tabs {
+    top: 0;
+    gap: 4px;
+    padding: 7px;
+  }
+  #app-section-tabs button {
+    min-height: 44px;
+    padding: 5px 4px;
+    font-size: 11px;
+    line-height: 1.1;
+  }
+  .presence-grid {
+    grid-template-columns: 1fr;
+  }
+  .presence-day-card {
+    padding: 10px;
+  }
+  .presence-caregivers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .presence-caregiver {
+    width: 100%;
+    min-width: 0;
+    padding: 5px 4px;
+  }
+}
