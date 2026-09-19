@@ -126,35 +126,35 @@ function formatAggregate(entries) {
   return `${formatNumber(total)} ${pluralize(baseItem, total)}`;
 }
 
-function getApprovedMealIngredientLines() {
+function getMealIngredientLines() {
   const lines = [];
   document.querySelectorAll('textarea[placeholder^="Ingrédients"]').forEach((textarea) => {
     if (textarea.closest?.('[data-meal-expired="true"]')) return;
 
     let card = textarea.parentElement;
+    let mealName = "";
     while (card && card !== document.body) {
-      const approvedButton = Array.from(card.querySelectorAll('button[aria-pressed]')).find(
-        (button) => (button.textContent || "").includes("Approuvé")
-      );
-      if (approvedButton) {
-        if (approvedButton.getAttribute("aria-pressed") === "true") {
-          String(textarea.value || "")
-            .split(/[,;\n]+/)
-            .map((item) => item.trim())
-            .filter(Boolean)
-            .forEach((item) => lines.push(item));
-        }
+      const input = card.querySelector?.('input[placeholder="Nom du souper"]');
+      if (input) {
+        mealName = String(input.value || "").trim();
         break;
       }
       card = card.parentElement;
     }
+    if (!mealName) return;
+
+    String(textarea.value || "")
+      .split(/[,;\n]+/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .forEach((item) => lines.push(item));
   });
   return lines;
 }
 
-function buildApprovedTotals() {
+function buildMealTotals() {
   const groups = new Map();
-  getApprovedMealIngredientLines().forEach((line) => {
+  getMealIngredientLines().forEach((line) => {
     const parsed = parseIngredient(line);
     const key = parsed?.key || canonicalIngredientKey(line);
     if (!key) return;
@@ -191,7 +191,7 @@ function groupGroceryItems() {
   const section = findGrocerySection();
   if (!section) return;
 
-  const approvedTotals = buildApprovedTotals();
+  const mealTotals = buildMealTotals();
   const fridgeKeys = window.__fridgeIngredientKeys instanceof Set ? window.__fridgeIngredientKeys : new Set();
   const checkboxes = Array.from(section.querySelectorAll('input[type="checkbox"]'));
   const groups = new Map();
@@ -230,10 +230,10 @@ function groupGroceryItems() {
     }
 
     const leader = items[0];
-    const sourceEntries = approvedTotals.get(key) || items.map((item) => item.sourceLabel);
+    const sourceEntries = mealTotals.get(key) || items.map((item) => item.sourceLabel);
 
     const mealDerived = items.some((item) => item.row.dataset.groceryOriginalLabel);
-    if (mealDerived && approvedTotals.size > 0 && !approvedTotals.has(key)) {
+    if (mealDerived && mealTotals.size > 0 && !mealTotals.has(key)) {
       items.forEach(({ row }) => row.style.setProperty("display", "none", "important"));
       return;
     }
