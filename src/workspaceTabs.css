@@ -31,31 +31,16 @@ main[data-workspace-ready="true"] > [data-workspace-hidden="true"] {
   display: none !important;
 }
 
-body[data-app-tab="meals"] main[data-workspace-ready="true"] > * {
+body[data-app-tab="meals"] main[data-workspace-ready="true"] > :not([data-workspace-meals="true"]):not(#discover-dishes-slot):not(#meal-rating-panel):not(#parent-quick-nav):not(#week-compact-overview) {
   display: none !important;
-}
-body[data-app-tab="meals"] main[data-workspace-ready="true"] > [data-workspace-meals="true"],
-body[data-app-tab="meals"] main[data-workspace-ready="true"] > #discover-dishes-slot,
-body[data-app-tab="meals"] main[data-workspace-ready="true"] > #meal-rating-panel,
-body[data-app-tab="meals"] main[data-workspace-ready="true"] > #parent-quick-nav,
-body[data-app-tab="meals"] main[data-workspace-ready="true"] > #week-compact-overview {
-  display: block !important;
 }
 
-body[data-app-tab="grocery"] main[data-workspace-ready="true"] > * {
+body[data-app-tab="grocery"] main[data-workspace-ready="true"] > :not([data-workspace-grocery="true"]):not(#common-grocery-wrapper-stable) {
   display: none !important;
-}
-body[data-app-tab="grocery"] main[data-workspace-ready="true"] > [data-workspace-grocery="true"],
-body[data-app-tab="grocery"] main[data-workspace-ready="true"] > #common-grocery-wrapper-stable {
-  display: block !important;
 }
 
-body[data-app-tab="presence"] main[data-workspace-ready="true"] > * {
+body[data-app-tab="presence"] main[data-workspace-ready="true"] > :not(#presence-board-slot):not([data-workspace-presence="true"]) {
   display: none !important;
-}
-body[data-app-tab="presence"] main[data-workspace-ready="true"] > #presence-board-slot,
-body[data-app-tab="presence"] main[data-workspace-ready="true"] > [data-workspace-presence="true"] {
-  display: block !important;
 }
 
 #presence-board-slot {
