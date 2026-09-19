@@ -1,7 +1,5 @@
 #app-section-tabs {
-  position: sticky;
-  top: 0;
-  z-index: 9;
+  position: static;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
@@ -146,7 +144,6 @@ body[data-app-tab="presence"] main[data-workspace-ready="true"] > [data-workspac
 
 @media (max-width: 700px) {
   #app-section-tabs {
-    top: 0;
     gap: 4px;
     padding: 7px;
   }
