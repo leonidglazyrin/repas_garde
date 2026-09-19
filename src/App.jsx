@@ -386,7 +386,7 @@ export default function App() {
     const seen = new Map();
     WEEKDAYS.forEach((d) => {
       const meal = meals[d.key] || emptyMeal();
-      if (meal.status === "approved" && meal.ingredients.trim()) {
+      if (meal.name.trim() && meal.ingredients.trim()) {
         meal.ingredients.split(",").forEach((raw) => {
           const item = raw.trim();
           if (!item) return;
