@@ -299,7 +299,7 @@ function renderCommon(section) {
 
   const toggle = document.createElement("button");
   toggle.type = "button";
-  toggle.textContent = `✎ Épicerie commune ${open ? "▴" : "▾"}`;
+  toggle.textContent = `✎ Épicerie quotidienne ${open ? "▴" : "▾"}`;
   Object.assign(toggle.style, {
     width: "100%",
     minHeight: "38px",
@@ -384,7 +384,7 @@ function render() {
   const label = Array.from(header.querySelectorAll("span")).find((span) =>
     (span.textContent || "").includes("Liste d'épicerie")
   );
-  if (label) label.textContent = "Liste d'épicerie pour les repas préparés";
+  if (label) label.textContent = "Épicerie des repas de la semaine";
 
   const mobile = window.matchMedia("(max-width: 700px)").matches;
   const signature = `${fridge.map((x) => `${x.id}:${x.item}`).join(";")}|${pantry.map((x) => `${x.id}:${x.item}`).join(";")}|${inventoryOpen.get("fridge_items")}|${inventoryOpen.get("pantry_items")}|${mobile}`;
