@@ -242,11 +242,23 @@ export default function App() {
   const [newGroceryItem, setNewGroceryItem] = useState("");
 
   const reloadWeek = useCallback(() => {
-    // Chaque morceau est chargé indépendamment : aucune requête lente ne bloque toute la semaine.
-    fetchWeekMeals(weekId).then((value) => value && setMeals(value));
-    fetchWeekendNote(weekId).then((value) => value !== null && setWeekendNote(value));
-    fetchGroceryChecked(weekId).then((value) => value && setGrocery(value));
-    fetchGroceryExtra(weekId).then((value) => value && setGroceryExtra(value));
+    const run = () => {
+      const active = document.activeElement;
+      const editing =
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        active instanceof HTMLSelectElement;
+      if (editing) {
+        window.setTimeout(run, 500);
+        return;
+      }
+      // Chaque morceau est chargé indépendamment : aucune requête lente ne bloque toute la semaine.
+      fetchWeekMeals(weekId).then((value) => value && setMeals(value));
+      fetchWeekendNote(weekId).then((value) => value !== null && setWeekendNote(value));
+      fetchGroceryChecked(weekId).then((value) => value && setGrocery(value));
+      fetchGroceryExtra(weekId).then((value) => value && setGroceryExtra(value));
+    };
+    run();
   }, [weekId]);
 
   const reloadGlobals = useCallback(() => {
@@ -738,6 +750,7 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
             }}
             style={{ ...inputStyle, flex: "1 1 180px", fontWeight: 600, background: "var(--card)" }}
           />
+          <div className="meal-name-preview">{name || "Souper à définir"}</div>
           <select onChange={handlePickFromLibrary} defaultValue="" style={{ ...inputStyle, background: "var(--card)", maxWidth: 220 }} aria-label="Piger dans la bibliothèque">
             <option value="">Piger dans la bibliothèque</option>
             {library.map((m) => (
