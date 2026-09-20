@@ -741,16 +741,29 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
       <div className="meal-main-block" style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 6 }}>
         <div className="meal-name-line" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <input
+            className="meal-name-input"
             placeholder="Nom du souper"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onBlur={() => {
+            onBlur={(e) => {
               onChange({ name });
               onLibraryUpsert(name, ingredients);
+              e.currentTarget.closest(".meal-name-line")?.removeAttribute("data-editing");
             }}
             style={{ ...inputStyle, flex: "1 1 180px", fontWeight: 600, background: "var(--card)" }}
           />
-          <div className="meal-name-preview">{name || "Souper à définir"}</div>
+          <button
+            type="button"
+            className="meal-name-preview"
+            onClick={(e) => {
+              const line = e.currentTarget.closest(".meal-name-line");
+              if (!line) return;
+              line.dataset.editing = "true";
+              requestAnimationFrame(() => line.querySelector('input[placeholder="Nom du souper"]')?.focus({ preventScroll: true }));
+            }}
+          >
+            {name || "Souper à définir"}
+          </button>
           <select onChange={handlePickFromLibrary} defaultValue="" style={{ ...inputStyle, background: "var(--card)", maxWidth: 220 }} aria-label="Piger dans la bibliothèque">
             <option value="">Piger dans la bibliothèque</option>
             {library.map((m) => (
