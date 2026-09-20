@@ -82,6 +82,9 @@ function selectTab(key) {
     button.setAttribute("aria-selected", String(active));
   });
   scheduleMark();
+  if (key === "grocery") {
+    document.dispatchEvent(new CustomEvent("grocery-tab-opened"));
+  }
   window.scrollTo({ top: 0, behavior: "auto" });
 }
 
