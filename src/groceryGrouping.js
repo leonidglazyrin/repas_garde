@@ -4,9 +4,7 @@ let scheduled = false;
 let propagating = false;
 
 function findGrocerySection() {
-  return Array.from(document.querySelectorAll("main section")).find((section) =>
-    ((section.textContent || "").includes("Liste d'épicerie") || ((section.textContent || "").includes("Épicerie des repas") || (section.textContent || "").includes("repas préparés")))
-  );
+  return document.querySelector('main > section[data-weekly-grocery="true"]');
 }
 
 function getIngredientRow(checkbox) {
