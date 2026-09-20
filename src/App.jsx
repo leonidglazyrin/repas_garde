@@ -608,12 +608,6 @@ export default function App() {
               onLibraryUpsert={upsertLibrary}
             />
           ))}
-          <WeekendCard
-            key={`weekend-${weekId}`}
-            dateLabel={`${formatShort(weekendStart)} – ${formatShort(weekendEnd)}`}
-            note={weekendNote}
-            onChange={updateWeekendNote}
-          />
         </div>
 
         <section style={{ marginTop: 32 }}>
@@ -757,7 +751,9 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
             onLibraryUpsert(name, ingredients);
           }}
           rows={2}
-          style={{ ...inputStyle, fontSize: 12, color: "var(--ink-soft)", background: "var(--card)" }}
+          aria-hidden="true"
+          tabIndex={-1}
+          style={{ ...inputStyle, display: "none", fontSize: 12, color: "var(--ink-soft)", background: "var(--card)" }}
         />
       </div>
 
@@ -767,12 +763,13 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
         <StatusButton active={meal.status === "refused"} onClick={() => onChange({ status: "refused" })} icon={<X size={12} />} label="Refusé" color="var(--paprika)" />
       </div>
 
-      <div style={{ flex: "1 1 220px" }}>
+      <div style={{ display: "none" }} aria-hidden="true">
         <input
           placeholder="Commentaire du parent (ex. « pas de noix », « il n'aime pas le poisson »)"
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           onBlur={() => onChange({ comment })}
+          tabIndex={-1}
           style={{ ...inputStyle, width: "100%", background: "var(--card)", fontSize: 13 }}
         />
       </div>
