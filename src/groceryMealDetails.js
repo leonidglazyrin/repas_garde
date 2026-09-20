@@ -1,9 +1,9 @@
 import { supabase } from "./supabaseClient.js";
 
 const DAYS = [
-  ["Lundi", "mon", 0, "#4C6B4E", "#E6EEE2"],
+  ["Lundi", "mon", 0, "#1F7A3D", "#E2F2E7"],
   ["Mardi", "tue", 1, "#C98A3B", "#F6E9D3"],
-  ["Mercredi", "wed", 2, "#3E6E8E", "#E5EEF4"],
+  ["Mercredi", "wed", 2, "#2457C5", "#E5ECFF"],
   ["Jeudi", "thu", 3, "#7A5AA3", "#EEE8F5"],
   ["Vendredi", "fri", 4, "#B24F35", "#F5E1D9"],
 ];
