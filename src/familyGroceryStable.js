@@ -300,7 +300,25 @@ function renderCommon(section) {
 
   const toggle = document.createElement("button");
   toggle.type = "button";
-  toggle.textContent = `Épicerie quotidienne ${open ? "▲" : "▼"}`;
+  toggle.replaceChildren();
+  const toggleLabel = document.createElement("span");
+  toggleLabel.textContent = "Liste d’épicerie quotidienne";
+  const toggleArrow = document.createElement("span");
+  toggleArrow.textContent = open ? "▲" : "▼";
+  Object.assign(toggleArrow.style, {
+    marginLeft: "auto",
+    width: "34px",
+    height: "34px",
+    borderRadius: "50%",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "2px solid currentColor",
+    background: "var(--card)",
+    fontSize: "18px",
+    flexShrink: "0",
+  });
+  toggle.append(toggleLabel, toggleArrow);
   Object.assign(toggle.style, {
     width: "100%",
     minHeight: "56px",
@@ -312,7 +330,10 @@ function renderCommon(section) {
     fontSize: "15px",
     cursor: "pointer",
     textAlign: "left",
-    padding: "12px 16px",
+    padding: "10px 12px 10px 16px",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
     boxShadow: open ? "0 2px 8px rgba(76,107,78,0.16)" : "0 2px 8px rgba(201,138,59,0.18)",
   });
   toggle.addEventListener("click", () => {
@@ -387,7 +408,7 @@ function render() {
   const label = Array.from(header.querySelectorAll("span")).find((span) =>
     (span.textContent || "").includes("Liste d'épicerie")
   );
-  if (label) label.textContent = "Épicerie des repas de la semaine";
+  if (label) label.textContent = "Liste d’épicerie pour les repas préparés";
 
   // Le frigo et les placards restent une source de filtrage, mais ne sont plus affichés.
   const inventory = body.querySelector("[data-family-inventory-stable]");
