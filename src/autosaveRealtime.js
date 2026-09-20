@@ -8,9 +8,9 @@ const DAY_KEYS = {
   Vendredi: "fri",
 };
 
-// On attend 2 secondes complètes sans frappe avant d'écrire dans Supabase.
+// On attend 1,5 seconde sans frappe avant d'écrire dans Supabase.
 // Cela laisse la personne finir son mot / sa modification avant toute synchronisation.
-const AUTOSAVE_DELAY_MS = 2000;
+const AUTOSAVE_DELAY_MS = 1500;
 const REALTIME_WARNING_DELAY_MS = 5000;
 
 const mealTimers = new Map();
