@@ -142,3 +142,13 @@ setTimeout(() => {
   }, 250);
   setTimeout(() => clearInterval(retry), 5000);
 }, 0);
+
+
+document.addEventListener("grocery-tab-opened", () => {
+  const section = findGrocerySection();
+  if (!section) return;
+  const header = getHeader(section);
+  const body = getBody(section, header);
+  if (!header || !body) return;
+  setOpen(section, header, body, false);
+});
