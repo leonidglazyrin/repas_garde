@@ -3,11 +3,11 @@ import { ChevronLeft, ChevronRight, Check, X, Clock, Plus, Trash2, CookingPot, U
 import { supabase } from "./supabaseClient";
 
 const WEEKDAYS = [
-  { key: "mon", label: "Lundi", color: "#1F7A3D" },
-  { key: "tue", label: "Mardi", color: "#C98A3B" },
-  { key: "wed", label: "Mercredi", color: "#2457C5" },
-  { key: "thu", label: "Jeudi", color: "#7A5AA3" },
-  { key: "fri", label: "Vendredi", color: "#B24F35" },
+  { key: "mon", label: "Lundi", color: "#4B4FBF" },
+  { key: "tue", label: "Mardi", color: "#C23B78" },
+  { key: "wed", label: "Mercredi", color: "#1E6FB9" },
+  { key: "thu", label: "Jeudi", color: "#7A4FA3" },
+  { key: "fri", label: "Vendredi", color: "#B23A48" },
 ];
 
 const PROFILE_COLORS = ["#4C6B4E", "#C98A3B", "#B24F35", "#3E6E8E", "#7A5AA3", "#2F8F82", "#8A5A3E"];
