@@ -44,20 +44,14 @@ function formatDate(weekId, offset) {
 }
 
 function findGrocerySection() {
-  return Array.from(document.querySelectorAll("main > section")).find((section) => {
-    const text = section.textContent || "";
-    return text.includes("Liste d'épicerie") || text.includes("Liste d’épicerie") || text.includes("repas de la semaine");
-  }) || null;
+  return document.querySelector('main > section[data-weekly-grocery="true"]');
 }
 
 function ensureSlot() {
   const section = findGrocerySection();
   if (!section) return null;
 
-  const header = Array.from(section.children).find((child) => {
-    const text = child.textContent || "";
-    return text.includes("Liste d'épicerie") || text.includes("Liste d’épicerie") || text.includes("repas de la semaine");
-  });
+  const header = section.querySelector(':scope > [data-weekly-grocery-header="true"]');
   const body = Array.from(section.children).find((child) => child !== header);
   if (!body) return null;
 
