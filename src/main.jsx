@@ -5,6 +5,7 @@ import App from "./App.jsx";
 import Accompaniments from "./Accompaniments.jsx";
 import "./autosaveRealtime.js";
 import "./groceryGrouping.js";
+import "./groceryMealDetails.js";
 import "./groceryCategories.js";
 import "./groceryDisclosure.js";
 import "./mealIngredientDisclosure.js";
