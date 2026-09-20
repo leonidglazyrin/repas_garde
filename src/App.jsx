@@ -3,11 +3,11 @@ import { ChevronLeft, ChevronRight, Check, X, Clock, Plus, Trash2, CookingPot, U
 import { supabase } from "./supabaseClient";
 
 const WEEKDAYS = [
-  { key: "mon", label: "Lundi", color: "#4B4FBF" },
-  { key: "tue", label: "Mardi", color: "#C23B78" },
-  { key: "wed", label: "Mercredi", color: "#1E6FB9" },
-  { key: "thu", label: "Jeudi", color: "#7A4FA3" },
-  { key: "fri", label: "Vendredi", color: "#B23A48" },
+  { key: "mon", label: "Lundi", color: "#1D4ED8" },
+  { key: "tue", label: "Mardi", color: "#C026D3" },
+  { key: "wed", label: "Mercredi", color: "#0891B2" },
+  { key: "thu", label: "Jeudi", color: "#7C3AED" },
+  { key: "fri", label: "Vendredi", color: "#E11D48" },
 ];
 
 const PROFILE_COLORS = ["#4C6B4E", "#C98A3B", "#B24F35", "#3E6E8E", "#7A5AA3", "#2F8F82", "#8A5A3E"];
@@ -708,6 +708,7 @@ function WeekendCard({ dateLabel, note, onChange }) {
 function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUpsert }) {
   const [name, setName] = useState(meal.name);
   const [ingredients, setIngredients] = useState(meal.ingredients);
+  const [prepMenuOpen, setPrepMenuOpen] = useState(false);
 
   useEffect(() => setName(meal.name), [meal.name]);
   useEffect(() => setIngredients(meal.ingredients), [meal.ingredients]);
@@ -793,6 +794,7 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
           <>
             <div className="meal-approved-actions" style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <select
+                className="meal-prep-native-select"
                 aria-label="Préparation du repas"
                 value={meal.prep_mode || "prepare"}
                 onChange={(e) => onChange({ prep_mode: e.target.value, prep_note: e.target.value === "info" ? meal.prep_note || "" : "" })}
@@ -801,8 +803,47 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
                 <option value="prepare">À préparer</option>
                 <option value="reheat">À réchauffer</option>
                 <option value="ready">Prêt à servir</option>
-                <option value="info">Informations supplémentaires</option>
+                <option value="info">Infos supplémentaires</option>
               </select>
+              <div className="meal-prep-mobile-menu">
+                <button
+                  type="button"
+                  className="meal-prep-mobile-trigger"
+                  aria-haspopup="listbox"
+                  aria-expanded={prepMenuOpen}
+                  onClick={() => setPrepMenuOpen((open) => !open)}
+                >
+                  {{
+                    prepare: "À préparer",
+                    reheat: "À réchauffer",
+                    ready: "Prêt à servir",
+                    info: "Infos supplémentaires",
+                  }[meal.prep_mode || "prepare"]} <span aria-hidden="true">▾</span>
+                </button>
+                {prepMenuOpen && (
+                  <div className="meal-prep-mobile-options" role="listbox" aria-label="Préparation du repas">
+                    {[
+                      ["prepare", "À préparer"],
+                      ["reheat", "À réchauffer"],
+                      ["ready", "Prêt à servir"],
+                      ["info", "Infos supplémentaires"],
+                    ].map(([value, label]) => (
+                      <button
+                        type="button"
+                        key={value}
+                        role="option"
+                        aria-selected={(meal.prep_mode || "prepare") === value}
+                        onClick={() => {
+                          onChange({ prep_mode: value, prep_note: value === "info" ? meal.prep_note || "" : "" });
+                          setPrepMenuOpen(false);
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => onChange({ status: "pending", prep_mode: "prepare", prep_note: "" })}
