@@ -623,7 +623,7 @@ export default function App() {
           ))}
         </div>
 
-        <section style={{ marginTop: 32 }}>
+        <section data-weekly-grocery="true" style={{ marginTop: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <CookingPot size={17} color="var(--ink-soft)" />
             <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Liste d'épicerie pour les repas de la semaine</span>
