@@ -47,6 +47,8 @@ function ensureSlot() {
     slot = document.createElement("section");
     slot.id = "grocery-meal-details";
     slot.dataset.workspaceGrocery = "true";
+    slot.hidden = true;
+    slot.style.display = "none";
     const grocery = Array.from(main.children).find((child) =>
       (child.textContent || "").includes("Liste d'épicerie") ||
       (child.textContent || "").includes("Épicerie des repas")
@@ -107,7 +109,7 @@ function render() {
 
   const title = document.createElement("div");
   title.className = "grocery-meals-title";
-  title.innerHTML = "<strong>Plats de la semaine et ingrédients</strong><span>Les ingrédients inscrits ici alimentent automatiquement la liste d’épicerie.</span>";
+  title.innerHTML = "<strong>Ingrédient pour les plats de la semaine</strong>";
   slot.appendChild(title);
 
   const grid = document.createElement("div");
