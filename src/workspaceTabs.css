@@ -1782,3 +1782,93 @@ textarea {
 .grocery-recipe-card[style*="#1E6FB9"] .grocery-recipe-title strong { color: #185B98 !important; }
 .grocery-recipe-card[style*="#7A4FA3"] .grocery-recipe-title strong { color: #654087 !important; }
 .grocery-recipe-card[style*="#B23A48"] .grocery-recipe-title strong { color: #96303C !important; }
+
+
+/* Menu de préparation mobile robuste : choix visibles dans la carte, sans dépendre du select natif. */
+.meal-prep-mobile-menu {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .meal-prep-native-select {
+    display: none !important;
+  }
+
+  .meal-approved-actions {
+    grid-template-columns: minmax(0, 1fr) 40px !important;
+    align-items: start !important;
+    overflow: visible !important;
+  }
+
+  .meal-prep-mobile-menu {
+    display: block !important;
+    position: relative;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .meal-prep-mobile-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 42px !important;
+    padding: 7px 10px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 8px !important;
+    background: var(--card) !important;
+    color: var(--ink) !important;
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  .meal-prep-mobile-options {
+    margin-top: 5px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    box-shadow: 0 6px 18px rgba(42,36,30,.12);
+    position: relative;
+    z-index: 4;
+  }
+
+  .meal-prep-mobile-options button {
+    width: 100% !important;
+    min-height: 38px !important;
+    padding: 7px 9px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 7px !important;
+    background: var(--paper) !important;
+    color: var(--ink) !important;
+    font-family: inherit !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  .meal-prep-mobile-options button[aria-selected="true"] {
+    border-color: #4B5563 !important;
+    background: #EEF2F7 !important;
+    box-shadow: inset 0 0 0 1px #4B5563;
+  }
+}
+
+/* Palette repas approuvés : aucune couleur verte ou orange. */
+.grocery-recipe-card[style*="#1D4ED8"] .grocery-recipe-title strong { color: #173FAF !important; }
+.grocery-recipe-card[style*="#C026D3"] .grocery-recipe-title strong { color: #9D1EAF !important; }
+.grocery-recipe-card[style*="#0891B2"] .grocery-recipe-title strong { color: #08728C !important; }
+.grocery-recipe-card[style*="#7C3AED"] .grocery-recipe-title strong { color: #632CC5 !important; }
+.grocery-recipe-card[style*="#E11D48"] .grocery-recipe-title strong { color: #B61639 !important; }
