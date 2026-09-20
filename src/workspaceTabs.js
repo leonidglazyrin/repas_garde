@@ -1,7 +1,7 @@
 const TABS = [
   ["meals", "Repas de la semaine"],
   ["grocery", "Épicerie"],
-  ["presence", "Présences"],
+  ["presence", "Présence et infos"],
 ];
 
 let activeTab = localStorage.getItem("repasgarde:active-tab") || "meals";
@@ -41,7 +41,7 @@ function markSections() {
     if (text.includes("en attente d'approbation") || text.includes("Tous les soupers saisis")) {
       child.dataset.workspaceMeals = "true";
     }
-    if (text.includes("Liste d'épicerie")) child.dataset.workspaceGrocery = "true";
+    if (text.includes("Liste d'épicerie") || text.includes("Épicerie des repas")) child.dataset.workspaceGrocery = "true";
   });
 
   const common = document.getElementById("common-grocery-wrapper-stable");
@@ -58,6 +58,9 @@ function markSections() {
 
   const discovery = document.getElementById("discover-dishes-slot");
   if (discovery) discovery.dataset.workspaceMeals = "true";
+
+  const groceryMeals = document.getElementById("grocery-meal-details");
+  if (groceryMeals) groceryMeals.dataset.workspaceGrocery = "true";
 
   const presence = document.getElementById("presence-board-slot");
   if (presence) presence.dataset.workspacePresence = "true";
