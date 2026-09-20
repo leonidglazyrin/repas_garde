@@ -191,7 +191,7 @@ function render() {
 
   const header = document.createElement("div");
   header.className = "presence-board-header";
-  header.innerHTML = "<strong>Présences et infos des gardiennes</strong>";
+  header.innerHTML = "<strong>Présences et infos supplémentaires</strong>";
   slot.appendChild(header);
 
   const grid = document.createElement("div");
@@ -212,7 +212,7 @@ function render() {
     card.append(
       title,
       choices,
-      inputField("Consigne spéciale de la part des parents", "Ex. rendez-vous ou activité", dayNote.special_event, (value) => saveNote(dayKey, "special_event", value)),
+      inputField("Consigne spéciale de la part des parents", "Ex. rendez-vous", dayNote.special_event, (value) => saveNote(dayKey, "special_event", value)),
       inputField("Information des gardiennes", "Ajustement d’horaire", dayNote.early_leave, (value) => saveNote(dayKey, "early_leave", value))
     );
     grid.appendChild(card);
