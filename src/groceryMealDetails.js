@@ -1,11 +1,11 @@
 import { supabase } from "./supabaseClient.js";
 
 const DAYS = [
-  ["Lundi", "mon", 0],
-  ["Mardi", "tue", 1],
-  ["Mercredi", "wed", 2],
-  ["Jeudi", "thu", 3],
-  ["Vendredi", "fri", 4],
+  ["Lundi", "mon", 0, "#4C6B4E", "#E6EEE2"],
+  ["Mardi", "tue", 1, "#C98A3B", "#F6E9D3"],
+  ["Mercredi", "wed", 2, "#3E6E8E", "#E5EEF4"],
+  ["Jeudi", "thu", 3, "#7A5AA3", "#EEE8F5"],
+  ["Vendredi", "fri", 4, "#B24F35", "#F5E1D9"],
 ];
 
 let meals = new Map();
@@ -39,23 +39,30 @@ function formatDate(weekId, offset) {
   return date.toLocaleDateString("fr-CA", { day: "numeric", month: "short" });
 }
 
+function findGrocerySection() {
+  return Array.from(document.querySelectorAll("main > section")).find((section) => {
+    const text = section.textContent || "";
+    return text.includes("Liste d'épicerie") || text.includes("Liste d’épicerie") || text.includes("repas de la semaine");
+  }) || null;
+}
+
 function ensureSlot() {
-  const main = document.querySelector("main");
-  if (!main) return null;
+  const section = findGrocerySection();
+  if (!section) return null;
+
+  const header = Array.from(section.children).find((child) => {
+    const text = child.textContent || "";
+    return text.includes("Liste d'épicerie") || text.includes("Liste d’épicerie") || text.includes("repas de la semaine");
+  });
+  const body = Array.from(section.children).find((child) => child !== header);
+  if (!body) return null;
+
   let slot = document.getElementById("grocery-meal-details");
   if (!slot) {
-    slot = document.createElement("section");
+    slot = document.createElement("div");
     slot.id = "grocery-meal-details";
-    slot.dataset.workspaceGrocery = "true";
-    slot.hidden = true;
-    slot.style.display = "none";
-    const grocery = Array.from(main.children).find((child) =>
-      (child.textContent || "").includes("Liste d'épicerie") ||
-      (child.textContent || "").includes("Épicerie des repas")
-    );
-    if (grocery) main.insertBefore(slot, grocery);
-    else main.appendChild(slot);
   }
+  if (slot.parentElement !== body || body.firstElementChild !== slot) body.prepend(slot);
   return slot;
 }
 
@@ -65,7 +72,7 @@ async function load() {
   const id = ++requestId;
   const { data, error } = await supabase
     .from("week_meals")
-    .select("day_key,name,ingredients,status")
+    .select("day_key,name,ingredients,status,comment")
     .eq("week_id", weekId);
   if (id !== requestId || weekId !== currentWeekId()) return;
   if (error) {
@@ -80,19 +87,28 @@ async function load() {
 async function saveIngredients(dayKey, value) {
   const weekId = currentWeekId();
   if (!weekId) return;
-  const current = meals.get(dayKey) || { day_key: dayKey, name: "", status: "pending" };
+  const current = meals.get(dayKey);
+  if (!current || current.status !== "approved") return;
+
+  const previous = current.ingredients || "";
   const ingredients = String(value || "").trim();
   meals.set(dayKey, { ...current, ingredients });
+
   const { error } = await supabase.from("week_meals").upsert({
     week_id: weekId,
     day_key: dayKey,
     name: current.name || "",
     ingredients,
-    status: current.status || "pending",
+    status: "approved",
     comment: current.comment || "",
     updated_at: new Date().toISOString(),
   });
-  if (error) console.error("save grocery meal ingredients", error);
+
+  if (error) {
+    console.error("save grocery meal ingredients", error);
+    meals.set(dayKey, { ...current, ingredients: previous });
+    schedule();
+  }
 }
 
 function render() {
@@ -107,35 +123,55 @@ function render() {
 
   slot.replaceChildren();
 
-  const title = document.createElement("div");
-  title.className = "grocery-meals-title";
-  title.innerHTML = "<strong>Ingrédient pour les plats de la semaine</strong>";
-  slot.appendChild(title);
+  const approved = DAYS.filter(([, dayKey]) => {
+    const meal = meals.get(dayKey);
+    return meal?.status === "approved" && String(meal.name || "").trim();
+  });
+
+  const heading = document.createElement("div");
+  heading.className = "grocery-recipes-heading";
+  heading.textContent = "Repas approuvés et ingrédients";
+  slot.appendChild(heading);
+
+  if (!approved.length) {
+    const empty = document.createElement("p");
+    empty.className = "grocery-recipes-empty";
+    empty.textContent = "Aucun repas approuvé pour le moment.";
+    slot.appendChild(empty);
+    return;
+  }
 
   const grid = document.createElement("div");
-  grid.className = "grocery-meals-grid";
+  grid.className = "grocery-recipes-grid";
 
-  DAYS.forEach(([label, dayKey, offset]) => {
-    const meal = meals.get(dayKey) || {};
+  approved.forEach(([label, dayKey, offset, color, soft]) => {
+    const meal = meals.get(dayKey);
     const card = document.createElement("article");
-    card.className = "grocery-meal-card";
+    card.className = "grocery-recipe-card";
+    card.style.setProperty("--recipe-color", color);
+    card.style.setProperty("--recipe-soft", soft);
 
-    const heading = document.createElement("div");
-    heading.className = "grocery-meal-heading";
+    const title = document.createElement("div");
+    title.className = "grocery-recipe-title";
+
+    const dot = document.createElement("span");
+    dot.className = "grocery-recipe-dot";
+
+    const copy = document.createElement("div");
     const name = document.createElement("strong");
-    name.textContent = meal.name?.trim() || "Aucun souper";
-    const day = document.createElement("span");
-    day.textContent = `${label} · ${formatDate(weekId, offset)}`;
-    heading.append(name, day);
+    name.textContent = meal.name;
+    const meta = document.createElement("span");
+    meta.textContent = `${label} · ${formatDate(weekId, offset)}`;
+    copy.append(name, meta);
+    title.append(dot, copy);
 
     const textarea = document.createElement("textarea");
     textarea.rows = 3;
-    textarea.placeholder = "Ingrédients du souper, séparés par des virgules";
+    textarea.placeholder = "Ajouter les ingrédients de cette recette";
     textarea.value = meal.ingredients || "";
-    textarea.disabled = !meal.name?.trim();
     textarea.addEventListener("blur", () => saveIngredients(dayKey, textarea.value));
 
-    card.append(heading, textarea);
+    card.append(title, textarea);
     grid.appendChild(card);
   });
 
