@@ -176,8 +176,7 @@ function findMealRow(element) {
   while (node && node !== document.body) {
     if (
       node.querySelector?.('input[placeholder="Nom du souper"]') &&
-      node.querySelector?.('textarea[placeholder^="Ingrédients"]') &&
-      node.querySelector?.('input[placeholder^="Commentaire du parent"]')
+      node.querySelector?.('textarea[placeholder^="Ingrédients"]')
     ) {
       return node;
     }
@@ -206,15 +205,17 @@ function snapshotMeal(row) {
   const weekId = getWeekId();
   const dayKey = getDayKey(row);
   if (!weekId || !dayKey) return null;
-  return {
+  const snapshot = {
     week_id: weekId,
     day_key: dayKey,
     name: row.querySelector('input[placeholder="Nom du souper"]')?.value || "",
     ingredients: row.querySelector('textarea[placeholder^="Ingrédients"]')?.value || "",
-    comment: row.querySelector('input[placeholder^="Commentaire du parent"]')?.value || "",
     status: getStatus(row),
     updated_at: new Date().toISOString(),
   };
+  const comment = row.querySelector('input[placeholder^="Commentaire du parent"]');
+  if (comment) snapshot.comment = comment.value || "";
+  return snapshot;
 }
 
 async function saveMeal(snapshot) {
@@ -265,7 +266,7 @@ async function saveWeekend(textarea) {
 function isMealField(target) {
   if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return false;
   const placeholder = target.getAttribute("placeholder") || "";
-  return placeholder === "Nom du souper" || placeholder.startsWith("Ingrédients") || placeholder.startsWith("Commentaire du parent");
+  return placeholder === "Nom du souper" || placeholder.startsWith("Ingrédients");
 }
 
 function isWeekendField(target) {
