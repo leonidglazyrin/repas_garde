@@ -8,7 +8,6 @@ import "./groceryGrouping.js";
 import "./groceryMealDetails.js";
 import "./groceryCategories.js";
 import "./groceryDisclosure.js";
-import "./mealIngredientDisclosure.js";
 import "./todayFocus.js";
 import "./mobileKeyboardStability.js";
 import "./libraryPickerVisibility.js";
