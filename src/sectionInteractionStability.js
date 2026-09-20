@@ -5,6 +5,7 @@ let activeTop = 0;
 function isDisclosureControl(target) {
   const button = target?.closest?.("button");
   if (!button) return null;
+  if (button.closest?.("#common-grocery-wrapper-stable")) return null;
 
   const text = (button.textContent || "").trim();
   const aria = button.getAttribute("aria-label") || "";
