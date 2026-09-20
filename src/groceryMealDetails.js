@@ -14,6 +14,8 @@ let channel = null;
 let frame = null;
 let requestId = 0;
 const expandedDays = new Set();
+const ingredientTimers = new Map();
+const INGREDIENT_SAVE_DELAY_MS = 1500;
 
 function currentWeekId() {
   return document.body?.innerText?.match(/Semaine\s+(\d{4}-S\d{2})/)?.[1] || null;
@@ -185,7 +187,18 @@ function render() {
       textarea.rows = 3;
       textarea.placeholder = "Ajouter les ingrédients de cette recette";
       textarea.value = meal.ingredients || "";
-      textarea.addEventListener("blur", () => saveIngredients(dayKey, textarea.value));
+      textarea.addEventListener("input", () => {
+        clearTimeout(ingredientTimers.get(dayKey));
+        ingredientTimers.set(dayKey, setTimeout(() => {
+          ingredientTimers.delete(dayKey);
+          saveIngredients(dayKey, textarea.value);
+        }, INGREDIENT_SAVE_DELAY_MS));
+      });
+      textarea.addEventListener("blur", () => {
+        clearTimeout(ingredientTimers.get(dayKey));
+        ingredientTimers.delete(dayKey);
+        saveIngredients(dayKey, textarea.value);
+      });
       card.appendChild(textarea);
     }
 
