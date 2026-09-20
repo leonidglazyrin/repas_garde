@@ -613,7 +613,7 @@ export default function App() {
         <section style={{ marginTop: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <ShoppingBasket size={16} color="var(--ink-soft)" />
-            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Liste d'épicerie</span>
+            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Liste d'épicerie pour les repas de la semaine</span>
           </div>
           <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
             <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
