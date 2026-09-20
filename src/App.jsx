@@ -3,9 +3,9 @@ import { ChevronLeft, ChevronRight, Check, X, Clock, Plus, Trash2, CookingPot, U
 import { supabase } from "./supabaseClient";
 
 const WEEKDAYS = [
-  { key: "mon", label: "Lundi", color: "#4C6B4E" },
+  { key: "mon", label: "Lundi", color: "#1F7A3D" },
   { key: "tue", label: "Mardi", color: "#C98A3B" },
-  { key: "wed", label: "Mercredi", color: "#3E6E8E" },
+  { key: "wed", label: "Mercredi", color: "#2457C5" },
   { key: "thu", label: "Jeudi", color: "#7A5AA3" },
   { key: "fri", label: "Vendredi", color: "#B24F35" },
 ];
@@ -462,18 +462,18 @@ export default function App() {
         textarea { resize: none; }
       `}</style>
 
-      <header style={{ background: "#2F3B2C", color: "#F3EFE4", padding: "20px 20px 18px", position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          <h1 style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 600, fontSize: "clamp(24px,4vw,34px)", margin: "0 0 20px" }}>
-            Le souper de la semaine
+      <header className="app-header" style={{ background: "#2F3B2C", color: "#F3EFE4", padding: "20px 20px 18px", position: "sticky", top: 0, zIndex: 10 }}>
+        <div className="app-header-inner" style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <h1 className="app-title" style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 600, fontSize: "clamp(24px,4vw,34px)", margin: "0 0 20px" }}>
+            Organisation de la semaine
           </h1>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+          <div className="week-navigation" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
             <button onClick={() => setMonday(addDays(monday, -7))} style={navBtnStyle} aria-label="Semaine précédente">
               <ChevronLeft size={18} />
             </button>
-            <div style={{ minWidth: 210, textAlign: "center" }}>
-              <div style={{ fontSize: 12, color: "#C8CFC0", letterSpacing: 0.3 }}>Semaine {weekId}</div>
-              <div style={{ fontWeight: 600, fontSize: 16 }}>{rangeLabel}</div>
+            <div className="week-range" style={{ minWidth: 210, textAlign: "center" }}>
+              <div className="week-id" style={{ fontSize: 12, color: "#C8CFC0", letterSpacing: 0.3 }}>Semaine {weekId}</div>
+              <div className="week-dates" style={{ fontWeight: 600, fontSize: 16 }}>{rangeLabel}</div>
             </div>
             <button onClick={() => setMonday(addDays(monday, 7))} style={navBtnStyle} aria-label="Semaine suivante">
               <ChevronRight size={18} />
