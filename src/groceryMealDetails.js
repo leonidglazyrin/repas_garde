@@ -1,11 +1,11 @@
 import { supabase } from "./supabaseClient.js";
 
 const DAYS = [
-  ["Lundi", "mon", 0, "#4B4FBF", "#ECECFF"],
-  ["Mardi", "tue", 1, "#C23B78", "#FBE7F1"],
-  ["Mercredi", "wed", 2, "#1E6FB9", "#E7F2FB"],
-  ["Jeudi", "thu", 3, "#7A4FA3", "#F0EAF6"],
-  ["Vendredi", "fri", 4, "#B23A48", "#F8E7EA"],
+  ["Lundi", "mon", 0, "#1D4ED8", "#E8EEFF"],
+  ["Mardi", "tue", 1, "#C026D3", "#F8E8FC"],
+  ["Mercredi", "wed", 2, "#0891B2", "#E5F7FA"],
+  ["Jeudi", "thu", 3, "#7C3AED", "#F0E9FF"],
+  ["Vendredi", "fri", 4, "#E11D48", "#FDE8EE"],
 ];
 
 let meals = new Map();
