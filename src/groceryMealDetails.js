@@ -165,3 +165,4 @@ load();
 subscribe();
 queueMicrotask(schedule);
 setTimeout(load, 250);
+setTimeout(load, 900);
