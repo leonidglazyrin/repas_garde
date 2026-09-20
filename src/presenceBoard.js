@@ -17,6 +17,8 @@ let activeWeek = null;
 let channel = null;
 let frame = null;
 let requestId = 0;
+const noteTimers = new Map();
+const NOTE_SAVE_DELAY_MS = 1500;
 
 function currentWeekId() {
   return document.body?.innerText?.match(/Semaine\s+(\d{4}-S\d{2})/)?.[1] || null;
@@ -150,7 +152,7 @@ function caregiverButton(caregiver, dayKey) {
   return button;
 }
 
-function inputField(labelText, placeholder, value, onSave) {
+function inputField(labelText, placeholder, value, onSave, saveKey) {
   const wrap = document.createElement("label");
   wrap.className = "presence-field";
 
@@ -161,7 +163,21 @@ function inputField(labelText, placeholder, value, onSave) {
   textarea.rows = 2;
   textarea.placeholder = placeholder;
   textarea.value = value || "";
-  textarea.addEventListener("blur", () => onSave(textarea.value.trim()));
+
+  const scheduleSave = () => {
+    clearTimeout(noteTimers.get(saveKey));
+    noteTimers.set(saveKey, setTimeout(() => {
+      noteTimers.delete(saveKey);
+      onSave(textarea.value.trim());
+    }, NOTE_SAVE_DELAY_MS));
+  };
+
+  textarea.addEventListener("input", scheduleSave);
+  textarea.addEventListener("blur", () => {
+    clearTimeout(noteTimers.get(saveKey));
+    noteTimers.delete(saveKey);
+    onSave(textarea.value.trim());
+  });
 
   wrap.append(label, textarea);
   return wrap;
@@ -212,8 +228,8 @@ function render() {
     card.append(
       title,
       choices,
-      inputField("Consigne spéciale de la part des parents", "Ex. rendez-vous", dayNote.special_event, (value) => saveNote(dayKey, "special_event", value)),
-      inputField("Information des gardiennes", "Ajustement d’horaire", dayNote.early_leave, (value) => saveNote(dayKey, "early_leave", value))
+      inputField("Consigne spéciale de la part des parents", "Ex. rendez-vous", dayNote.special_event, (value) => saveNote(dayKey, "special_event", value), `${weekId}:${dayKey}:special_event`),
+      inputField("Information des gardiennes", "Ajustement d’horaire", dayNote.early_leave, (value) => saveNote(dayKey, "early_leave", value), `${weekId}:${dayKey}:early_leave`)
     );
     grid.appendChild(card);
   });
