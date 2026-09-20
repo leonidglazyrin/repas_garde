@@ -636,9 +636,9 @@ export default function App() {
         </div>
 
         <section data-weekly-grocery="true" data-workspace-grocery="true" style={{ marginTop: 32 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div data-weekly-grocery-header="true" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <CookingPot size={17} color="var(--ink-soft)" />
-            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Liste d'épicerie pour les repas de la semaine</span>
+            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Ingrédients des repas approuvés</span>
           </div>
           <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
             {groceryList.length === 0 ? (
