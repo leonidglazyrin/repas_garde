@@ -1499,3 +1499,79 @@ textarea {
     padding-bottom: 8px !important;
   }
 }
+
+
+/* Repas approuvés : une ligne compacte titre + date; la couleur est portée par la carte. */
+.grocery-recipes-grid {
+  gap: 6px !important;
+}
+
+.grocery-recipe-card {
+  padding: 0 !important;
+  border-left-width: 4px !important;
+}
+
+.grocery-recipe-dot,
+.grocery-recipe-disclosure {
+  display: none !important;
+}
+
+.grocery-recipe-title {
+  width: 100% !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--ink) !important;
+  font-family: inherit !important;
+  text-align: left !important;
+  cursor: pointer !important;
+}
+
+.grocery-recipe-title strong {
+  min-height: 0 !important;
+  margin: 0 !important;
+  color: var(--ink) !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+  overflow-wrap: anywhere !important;
+}
+
+.grocery-recipe-title > span {
+  color: var(--ink-soft) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+}
+
+.grocery-recipe-title[aria-expanded="true"] {
+  border-bottom: 1px solid color-mix(in srgb, var(--recipe-color) 35%, transparent) !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.grocery-recipe-card textarea {
+  margin: 0 8px 8px !important;
+  width: calc(100% - 16px) !important;
+}
+
+@media (max-width: 700px) {
+  .grocery-recipe-title {
+    min-height: 40px !important;
+    padding: 7px 8px !important;
+    gap: 8px !important;
+  }
+
+  .grocery-recipe-title strong {
+    font-size: 12.5px !important;
+  }
+
+  .grocery-recipe-title > span {
+    font-size: 10.5px !important;
+  }
+}
