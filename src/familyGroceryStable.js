@@ -17,7 +17,7 @@ const SYNC_DELAY_MS = 2000;
 function findSection() {
   return Array.from(document.querySelectorAll("main section")).find((section) => {
     const text = section.textContent || "";
-    return text.includes("Liste d'épicerie pour les repas préparés") || text.includes("Liste d'épicerie");
+    return text.includes("Liste d'épicerie pour les repas préparés") || text.includes("Liste d'épicerie") || text.includes("Épicerie des repas");
   }) || null;
 }
 
