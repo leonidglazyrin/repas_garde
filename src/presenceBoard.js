@@ -17,6 +17,7 @@ let activeWeek = null;
 let channel = null;
 let frame = null;
 let requestId = 0;
+let pendingPresenceRender = false;
 const noteTimers = new Map();
 const NOTE_SAVE_DELAY_MS = 1500;
 
@@ -98,7 +99,13 @@ async function load() {
     notes = new Map((noteResult.data || []).map((row) => [row.day_key, row]));
   }
   activeWeek = weekId;
-  schedule();
+  const active = document.activeElement;
+  if (active?.closest?.("#presence-board-slot")) {
+    pendingPresenceRender = true;
+  } else {
+    pendingPresenceRender = false;
+    schedule();
+  }
 }
 
 async function toggleAssignment(dayKey, caregiverId, selected) {
@@ -272,3 +279,13 @@ subscribe();
 queueMicrotask(schedule);
 setTimeout(load, 200);
 setTimeout(load, 800);
+
+
+document.addEventListener("focusout", (event) => {
+  if (!event.target?.closest?.("#presence-board-slot") || !pendingPresenceRender) return;
+  setTimeout(() => {
+    if (document.activeElement?.closest?.("#presence-board-slot")) return;
+    pendingPresenceRender = false;
+    schedule();
+  }, 0);
+}, true);
