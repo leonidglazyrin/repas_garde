@@ -17,14 +17,14 @@ const SYNC_DELAY_MS = 2000;
 function findSection() {
   return Array.from(document.querySelectorAll("main section")).find((section) => {
     const text = section.textContent || "";
-    return text.includes("Liste d'épicerie pour les repas préparés") || text.includes("Liste d'épicerie") || text.includes("Épicerie des repas");
+    return text.includes("Liste d'épicerie pour les repas préparés") || text.includes("Liste d'épicerie") || (text.includes("Épicerie des repas") || text.includes("repas préparés"));
   }) || null;
 }
 
 function findHeader(section) {
   return Array.from(section?.children || []).find((child) => {
     const text = child.textContent || "";
-    return text.includes("Liste d'épicerie") || text.includes("Épicerie des repas");
+    return text.includes("Liste d'épicerie") || (text.includes("Épicerie des repas") || text.includes("repas préparés"));
   }) || null;
 }
 
