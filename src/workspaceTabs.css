@@ -389,3 +389,40 @@ section[data-grocery-disclosure-ready="true"] > :first-child,
     min-width: 82px;
   }
 }
+
+
+.grocery-recipe-disclosure {
+  width: 100%;
+  min-height: 34px;
+  margin-top: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--recipe-color);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--recipe-color);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.grocery-recipe-disclosure[aria-expanded="true"] {
+  margin-bottom: 7px;
+}
+
+/* La liste quotidienne reste ancrée et visible lorsqu'elle s'ouvre. */
+#common-grocery-wrapper-stable {
+  overflow-anchor: none;
+  contain: layout style;
+}
+
+#common-grocery-wrapper-stable > div {
+  overflow: visible;
+}
+
+@media (max-width: 700px) {
+  #common-grocery-wrapper-stable > div > div {
+    grid-template-columns: minmax(0, 1fr) auto 30px;
+  }
+}
