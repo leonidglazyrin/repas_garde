@@ -386,7 +386,7 @@ export default function App() {
     const seen = new Map();
     WEEKDAYS.forEach((d) => {
       const meal = meals[d.key] || emptyMeal();
-      if (meal.name.trim() && meal.ingredients.trim()) {
+      if (meal.status === "approved" && meal.name.trim() && meal.ingredients.trim()) {
         meal.ingredients.split(",").forEach((raw) => {
           const item = raw.trim();
           if (!item) return;
@@ -689,11 +689,9 @@ function WeekendCard({ dateLabel, note, onChange }) {
 function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUpsert }) {
   const [name, setName] = useState(meal.name);
   const [ingredients, setIngredients] = useState(meal.ingredients);
-  const [comment, setComment] = useState(meal.comment);
 
   useEffect(() => setName(meal.name), [meal.name]);
   useEffect(() => setIngredients(meal.ingredients), [meal.ingredients]);
-  useEffect(() => setComment(meal.comment), [meal.comment]);
 
   const statusColors = {
     pending: { bg: "var(--card)", border: "var(--line)" },
@@ -761,17 +759,6 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
         <StatusButton active={meal.status === "pending"} onClick={() => onChange({ status: "pending" })} icon={<Clock size={12} />} label="En attente" />
         <StatusButton active={meal.status === "approved"} onClick={() => onChange({ status: "approved" })} icon={<Check size={12} />} label="Approuvé" color="var(--herb)" />
         <StatusButton active={meal.status === "refused"} onClick={() => onChange({ status: "refused" })} icon={<X size={12} />} label="Refusé" color="var(--paprika)" />
-      </div>
-
-      <div style={{ display: "none" }} aria-hidden="true">
-        <input
-          placeholder="Commentaire du parent (ex. « pas de noix », « il n'aime pas le poisson »)"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          onBlur={() => onChange({ comment })}
-          tabIndex={-1}
-          style={{ ...inputStyle, width: "100%", background: "var(--card)", fontSize: 13 }}
-        />
       </div>
     </div>
   );
