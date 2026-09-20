@@ -1325,3 +1325,177 @@ body[data-app-tab="grocery"] main[data-workspace-ready="true"] > section[data-we
     min-height: 18px !important;
   }
 }
+
+
+/* Passe finale de cohérence visuelle et responsive. */
+:root {
+  --ui-radius: 10px;
+  --ui-gap: 10px;
+}
+
+main {
+  min-width: 0;
+}
+
+main > * {
+  min-width: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  box-sizing: border-box;
+}
+
+.meal-week-card,
+.presence-day-card,
+.grocery-recipe-card,
+.daily-grocery-category {
+  overflow: hidden;
+}
+
+.meal-week-card {
+  align-items: flex-start;
+}
+
+.meal-main-block,
+.meal-name-line,
+.meal-status-block {
+  min-width: 0;
+}
+
+.meal-name-line > input,
+.meal-name-line > select,
+.meal-status-block select {
+  text-overflow: ellipsis;
+}
+
+.presence-grid {
+  align-items: stretch;
+}
+
+.presence-day-card h3 {
+  overflow-wrap: anywhere;
+}
+
+.presence-caregiver {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.presence-field textarea {
+  resize: vertical;
+  max-width: 100%;
+}
+
+#daily-grocery-panel,
+#grocery-list-content {
+  min-width: 0;
+}
+
+.daily-grocery-category {
+  align-self: start;
+}
+
+.daily-grocery-item-name {
+  overflow-wrap: anywhere;
+}
+
+.daily-grocery-status-dot {
+  touch-action: manipulation;
+}
+
+@media (min-width: 901px) {
+  .presence-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .presence-caregiver {
+    padding-left: 7px;
+    padding-right: 7px;
+    font-size: 11px;
+  }
+
+  #daily-grocery-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) and (min-width: 701px) {
+  .presence-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #daily-grocery-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .meal-week-card {
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .app-header {
+    position: relative !important;
+  }
+
+  .meal-week-card {
+    border-radius: 10px !important;
+  }
+
+  .meal-day-block {
+    font-size: 12px;
+  }
+
+  .meal-name-preview {
+    box-shadow: none !important;
+  }
+
+  .meal-name-line > select[aria-label="Piger dans la bibliothèque"] {
+    min-height: 38px !important;
+  }
+
+  .meal-status-block {
+    margin-top: 1px;
+  }
+
+  .presence-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .presence-caregivers {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .presence-caregiver {
+    min-height: 34px !important;
+    border-radius: 17px !important;
+  }
+
+  #daily-grocery-panel {
+    padding: 8px !important;
+  }
+
+  .daily-grocery-category h3 {
+    font-size: 11px !important;
+  }
+
+  .daily-grocery-item-name {
+    font-size: 12px !important;
+  }
+
+  .daily-grocery-status-dot {
+    touch-action: manipulation;
+  }
+
+  section[data-weekly-grocery="true"] > :first-child,
+  #common-grocery-wrapper-stable > [data-daily-grocery-toggle] {
+    min-height: 52px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+}
