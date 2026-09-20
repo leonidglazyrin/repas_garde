@@ -1,5 +1,5 @@
 const TABS = [
-  ["meals", "Repas de la semaine"],
+  ["meals", "Repas"],
   ["grocery", "Épicerie"],
   ["presence", "Présence et infos"],
 ];
