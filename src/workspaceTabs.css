@@ -1733,3 +1733,52 @@ textarea {
 .grocery-recipe-title strong {
   color: var(--recipe-color) !important;
 }
+
+
+/* Téléphone : le menu de préparation utilise toute la largeur de la carte. */
+@media (max-width: 700px) {
+  .meal-status-block {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  .meal-approved-actions {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 40px !important;
+    align-items: stretch !important;
+    gap: 7px !important;
+  }
+
+  .meal-approved-actions select[aria-label="Préparation du repas"] {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 6px 34px 6px 10px !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  .meal-approved-actions button[aria-label="Dévalider ce souper"] {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    border-radius: 9px !important;
+  }
+}
+
+/* La nouvelle palette des repas évite le vert et l'orange dominants de l'application. */
+.grocery-recipe-card[style*="#4B4FBF"] .grocery-recipe-title strong { color: #3F43A7 !important; }
+.grocery-recipe-card[style*="#C23B78"] .grocery-recipe-title strong { color: #A92E67 !important; }
+.grocery-recipe-card[style*="#1E6FB9"] .grocery-recipe-title strong { color: #185B98 !important; }
+.grocery-recipe-card[style*="#7A4FA3"] .grocery-recipe-title strong { color: #654087 !important; }
+.grocery-recipe-card[style*="#B23A48"] .grocery-recipe-title strong { color: #96303C !important; }
