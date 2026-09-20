@@ -300,18 +300,20 @@ function renderCommon(section) {
 
   const toggle = document.createElement("button");
   toggle.type = "button";
-  toggle.textContent = `✎ Épicerie quotidienne ${open ? "▴" : "▾"}`;
+  toggle.textContent = `Épicerie quotidienne ${open ? "▲" : "▼"}`;
   Object.assign(toggle.style, {
     width: "100%",
-    minHeight: "38px",
-    border: "1px solid var(--line)",
-    borderRadius: "9px",
-    background: "transparent",
-    color: "var(--ink-soft)",
-    fontWeight: "700",
+    minHeight: "56px",
+    border: `2px solid ${open ? "var(--herb)" : "var(--honey)"}`,
+    borderRadius: "10px",
+    background: open ? "var(--herb-soft)" : "var(--honey-soft)",
+    color: open ? "var(--herb)" : "var(--ink)",
+    fontWeight: "800",
+    fontSize: "15px",
     cursor: "pointer",
     textAlign: "left",
-    padding: "7px 10px",
+    padding: "12px 16px",
+    boxShadow: open ? "0 2px 8px rgba(76,107,78,0.16)" : "0 2px 8px rgba(201,138,59,0.18)",
   });
   toggle.addEventListener("click", () => {
     wrapper.dataset.open = String(!open);
@@ -387,39 +389,18 @@ function render() {
   );
   if (label) label.textContent = "Épicerie des repas de la semaine";
 
-  const mobile = window.matchMedia("(max-width: 700px)").matches;
-  const signature = `${fridge.map((x) => `${x.id}:${x.item}`).join(";")}|${pantry.map((x) => `${x.id}:${x.item}`).join(";")}|${inventoryOpen.get("fridge_items")}|${inventoryOpen.get("pantry_items")}|${mobile}`;
+  // Le frigo et les placards restent une source de filtrage, mais ne sont plus affichés.
+  const inventory = body.querySelector("[data-family-inventory-stable]");
+  inventory?.remove();
 
-  let inventory = body.querySelector("[data-family-inventory-stable]");
-  if (!inventory) {
-    inventory = document.createElement("div");
-    inventory.dataset.familyInventoryStable = "true";
-    body.appendChild(inventory);
-  }
-
-  if (inventory.dataset.signature !== signature) {
-    inventory.dataset.signature = signature;
-    inventory.replaceChildren(
-      inventoryPanel("🧊 Déjà dans le frigo", "Ces aliments ne sont pas ajoutés à la liste.", fridge, "fridge_items", "Ajouter au frigo"),
-      inventoryPanel("🥫 Déjà dans les placards", "Ces ingrédients ne sont pas ajoutés à la liste.", pantry, "pantry_items", "Ajouter aux placards")
-    );
-  }
-
-  Object.assign(inventory.style, {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    minWidth: "0",
-  });
-
-  body.style.display = "grid";
-  body.style.gridTemplateColumns = mobile ? "minmax(0,1fr)" : "minmax(0,1.65fr) minmax(230px,.75fr)";
-  body.style.columnGap = "14px";
-  body.style.rowGap = "10px";
+  body.style.display = "block";
+  body.style.gridTemplateColumns = "";
+  body.style.columnGap = "";
+  body.style.rowGap = "";
   Array.from(body.children).forEach((child) => {
-    child.style.gridColumn = child === inventory && !mobile ? "2" : "1";
+    child.style.gridColumn = "";
+    child.style.gridRow = "";
   });
-  inventory.style.gridRow = mobile ? "auto" : "1 / span 30";
 
   renderCommon(section);
   pendingRender = false;
