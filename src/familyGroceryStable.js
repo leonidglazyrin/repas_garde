@@ -313,7 +313,7 @@ function renderCommon(section) {
   }
 
   const open = wrapper.dataset.open === "true";
-  const signature = `${open}|${common.map((x) => `${x.id}:${x.item}:${x.checked}`).join(";")}`;
+  const signature = `${open}|${common.map((x) => `${x.id}:${x.item}:${x.checked}:${x.stock_status || "unknown"}`).join(";")}`;
   if (wrapper.dataset.signature === signature) return;
   wrapper.dataset.signature = signature;
   wrapper.replaceChildren();
