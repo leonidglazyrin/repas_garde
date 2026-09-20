@@ -44,7 +44,7 @@ function formatShort(d) {
 }
 
 function emptyMeal() {
-  return { name: "", ingredients: "", status: "pending", comment: "", prep_mode: "ready", prep_note: "" };
+  return { name: "", ingredients: "", status: "pending", comment: "", prep_mode: "prepare", prep_note: "" };
 }
 
 function emptyMeals() {
@@ -90,7 +90,7 @@ async function fetchWeekMeals(weekId) {
         ingredients: row.ingredients || "",
         status: row.status || "pending",
         comment: row.comment || "",
-        prep_mode: row.prep_mode || "ready",
+        prep_mode: row.prep_mode || "prepare",
         prep_note: row.prep_note || "",
       };
     }
@@ -765,17 +765,40 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
       <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 180, flexShrink: 0 }}>
         {meal.status === "approved" ? (
           <>
-            <select
-              aria-label="Préparation du repas"
-              value={meal.prep_mode || "ready"}
-              onChange={(e) => onChange({ prep_mode: e.target.value, prep_note: e.target.value === "info" ? meal.prep_note || "" : "" })}
-              style={{ ...inputStyle, width: "100%", background: "var(--card)", fontSize: 12, fontWeight: 700 }}
-            >
-              <option value="ready">Prêt à servir</option>
-              <option value="microwave">Réchauffer au micro-ondes</option>
-              <option value="oven">Réchauffer au four</option>
-              <option value="info">Information supplémentaire</option>
-            </select>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <select
+                aria-label="Préparation du repas"
+                value={meal.prep_mode || "prepare"}
+                onChange={(e) => onChange({ prep_mode: e.target.value, prep_note: e.target.value === "info" ? meal.prep_note || "" : "" })}
+                style={{ ...inputStyle, flex: 1, minWidth: 0, background: "var(--card)", fontSize: 12, fontWeight: 700 }}
+              >
+                <option value="prepare">À préparer</option>
+                <option value="reheat">À réchauffer</option>
+                <option value="ready">Prêt à servir</option>
+                <option value="info">Informations supplémentaires</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => onChange({ status: "pending", prep_mode: "prepare", prep_note: "" })}
+                aria-label="Dévalider ce souper"
+                title="Dévalider ce souper"
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 14,
+                  border: "1px solid var(--line)",
+                  background: "var(--card)",
+                  color: "var(--paprika)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                }}
+              >
+                <X size={13} />
+              </button>
+            </div>
             {meal.prep_mode === "info" && (
               <input
                 value={meal.prep_note || ""}
@@ -788,7 +811,7 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
         ) : (
           <>
             <StatusButton active={meal.status === "pending"} onClick={() => onChange({ status: "pending" })} icon={<Clock size={12} />} label="En attente" />
-            <StatusButton active={false} onClick={() => onChange({ status: "approved", prep_mode: "ready", prep_note: "" })} icon={<Check size={12} />} label="Approuvé" color="var(--herb)" />
+            <StatusButton active={false} onClick={() => onChange({ status: "approved", prep_mode: "prepare", prep_note: "" })} icon={<Check size={12} />} label="Approuvé" color="var(--herb)" />
             <StatusButton active={meal.status === "refused"} onClick={() => onChange({ status: "refused" })} icon={<X size={12} />} label="Refusé" color="var(--paprika)" />
           </>
         )}
