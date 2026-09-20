@@ -631,7 +631,7 @@ export default function App() {
             </div>
             {groceryList.length === 0 ? (
               <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>
-                Aucun item pour l'instant. Les ingrédients des soupers approuvés apparaissent ici automatiquement, ou ajoute un item toi-même.
+                Aucun item pour l'instant. Les ingrédients des soupers de la semaine apparaissent ici automatiquement, sauf ceux déjà au frigo ou dans les placards.
               </p>
             ) : (
               <>
