@@ -3,10 +3,7 @@ function findGrocerySection() {
 }
 
 function getHeader(section) {
-  return Array.from(section.children).find((child) => {
-    const text = child.textContent || "";
-    return text.includes("Liste d'épicerie") || (text.includes("Épicerie des repas") || text.includes("repas préparés"));
-  }) || null;
+  return section?.querySelector(':scope > [data-weekly-grocery-header="true"]') || null;
 }
 
 function getBody(section, header) {
