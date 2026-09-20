@@ -236,7 +236,7 @@ function render() {
       title,
       choices,
       inputField("Consigne spéciale de la part des parents", "Ex. rendez-vous", dayNote.special_event, (value) => saveNote(dayKey, "special_event", value), `${weekId}:${dayKey}:special_event`),
-      inputField("Information des gardiennes", "Ajustement d’horaire", dayNote.early_leave, (value) => saveNote(dayKey, "early_leave", value), `${weekId}:${dayKey}:early_leave`)
+      inputField("Information des gardiennes", "Ex. ajustement d’horaire", dayNote.early_leave, (value) => saveNote(dayKey, "early_leave", value), `${weekId}:${dayKey}:early_leave`)
     );
     grid.appendChild(card);
   });
