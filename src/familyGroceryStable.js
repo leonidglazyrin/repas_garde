@@ -109,12 +109,25 @@ async function addItem(table, item) {
 }
 
 async function removeItem(table, id) {
+  const source = table === "common_grocery_items" ? common : table === "fridge_items" ? fridge : pantry;
+  const previous = [...source];
+  if (table === "common_grocery_items") common = common.filter((item) => item.id !== id);
+  if (table === "fridge_items") fridge = fridge.filter((item) => item.id !== id);
+  if (table === "pantry_items") pantry = pantry.filter((item) => item.id !== id);
+  publishExcluded();
+  render();
+
   const { error } = await supabase.from(table).delete().eq("id", id);
   if (error) {
     console.error(`remove ${table}`, error);
+    if (table === "common_grocery_items") common = previous;
+    if (table === "fridge_items") fridge = previous;
+    if (table === "pantry_items") pantry = previous;
+    publishExcluded();
+    render();
     return;
   }
-  scheduleLoadAll();
+  scheduleLoadAll(250);
 }
 
 async function toggleCommon(id, checked) {
@@ -302,7 +315,7 @@ function renderCommon(section) {
   toggle.type = "button";
   toggle.replaceChildren();
   const toggleLabel = document.createElement("span");
-  toggleLabel.textContent = "Liste d’épicerie quotidienne";
+  toggleLabel.textContent = "Liste d'épicerie quotidienne";
   const toggleArrow = document.createElement("span");
   toggleArrow.textContent = open ? "▲" : "▼";
   Object.assign(toggleArrow.style, {
