@@ -188,14 +188,14 @@ header > div > div {
     font-size: 12px !important;
   }
 
-  div:has(> button[aria-pressed]) {
+  [data-meal-status-controls="true"] {
     width: 100% !important;
     display: grid !important;
     grid-template-columns: 1fr !important;
     gap: 3px !important;
   }
 
-  div:has(> button[aria-pressed]) > button {
+  [data-meal-status-controls="true"] > button {
     width: 100% !important;
     justify-content: center !important;
     min-height: 28px !important;
@@ -327,7 +327,7 @@ header > div > div {
     min-width: 0 !important;
   }
 
-  div:has(> button[aria-pressed]) {
+  [data-meal-status-controls="true"] {
     width: 100% !important;
     flex: 1 1 100% !important;
     max-width: 100% !important;
@@ -336,7 +336,7 @@ header > div > div {
     gap: 4px !important;
   }
 
-  div:has(> button[aria-pressed]) > button {
+  [data-meal-status-controls="true"] > button {
     width: 100% !important;
     justify-content: center !important;
     min-width: 0 !important;
