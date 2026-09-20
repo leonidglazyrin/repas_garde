@@ -276,3 +276,105 @@ body[data-app-tab="presence"] main[data-workspace-ready="true"] > :not(#presence
     min-height: 82px;
   }
 }
+
+
+/* Repas approuvés intégrés directement dans la liste d'épicerie hebdomadaire. */
+#grocery-meal-details {
+  margin: 0 0 16px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.grocery-recipes-heading {
+  margin-bottom: 9px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+.grocery-recipes-empty {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.grocery-recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
+}
+
+.grocery-recipe-card {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--recipe-color);
+  border-left-width: 5px;
+  border-radius: 9px;
+  background: var(--recipe-soft);
+}
+
+.grocery-recipe-title {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 7px;
+  align-items: start;
+  min-height: 52px;
+  margin-bottom: 7px;
+}
+
+.grocery-recipe-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--recipe-color);
+}
+
+.grocery-recipe-title > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.grocery-recipe-title strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.grocery-recipe-title span {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.grocery-recipe-card textarea {
+  width: 100%;
+  min-height: 78px;
+  padding: 7px 8px;
+  border: 1px solid var(--recipe-color);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  resize: vertical;
+}
+
+/* Les deux volets d'épicerie gardent exactement la même présence visuelle. */
+section[data-grocery-disclosure-ready="true"] > :first-child,
+#common-grocery-wrapper-stable > button:first-child {
+  font-family: inherit !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+}
+
+@media (max-width: 700px) {
+  .grocery-recipes-grid {
+    grid-template-columns: 1fr;
+  }
+  .grocery-recipe-title {
+    min-height: 0;
+  }
+}
