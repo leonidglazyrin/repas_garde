@@ -22,6 +22,27 @@ function currentWeekId() {
   return document.body?.innerText?.match(/Semaine\s+(\d{4}-S\d{2})/)?.[1] || null;
 }
 
+function mondayFromWeekId(weekId) {
+  const match = String(weekId || "").match(/^(\d{4})-S(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const week = Number(match[2]);
+  const jan4 = new Date(year, 0, 4, 12, 0, 0, 0);
+  const jan4Day = jan4.getDay() || 7;
+  const monday = new Date(jan4);
+  monday.setDate(jan4.getDate() - (jan4Day - 1) + (week - 1) * 7);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+function formatDayDate(weekId, offset) {
+  const monday = mondayFromWeekId(weekId);
+  if (!monday) return "";
+  const date = new Date(monday);
+  date.setDate(monday.getDate() + offset);
+  return date.toLocaleDateString("fr-CA", { day: "numeric", month: "short" });
+}
+
 function selectedFor(dayKey) {
   return assignments.get(dayKey) || new Set();
 }
@@ -170,18 +191,18 @@ function render() {
 
   const header = document.createElement("div");
   header.className = "presence-board-header";
-  header.innerHTML = "<strong>Présences et infos des gardiennes</strong><span>Clique sur une gardienne pour indiquer qu’elle est présente ce jour-là.</span>";
+  header.innerHTML = "<strong>Présences et infos des gardiennes</strong>";
   slot.appendChild(header);
 
   const grid = document.createElement("div");
   grid.className = "presence-grid";
 
-  DAYS.forEach(([label, dayKey]) => {
+  DAYS.forEach(([label, dayKey], index) => {
     const card = document.createElement("article");
     card.className = "presence-day-card";
 
     const title = document.createElement("h3");
-    title.textContent = label;
+    title.textContent = `${label} · ${formatDayDate(weekId, index)}`;
 
     const choices = document.createElement("div");
     choices.className = "presence-caregivers";
@@ -191,8 +212,8 @@ function render() {
     card.append(
       title,
       choices,
-      inputField("Événement spécial / à faire", "Ex. rendez-vous, activité, consigne spéciale…", dayNote.special_event, (value) => saveNote(dayKey, "special_event", value)),
-      inputField("Départ plus tôt / info gardienne", "Ex. doit partir à 16 h 30…", dayNote.early_leave, (value) => saveNote(dayKey, "early_leave", value))
+      inputField("Événement spécial / consigne spéciale de la part des parents", "Ex. rendez-vous, activité, consigne spéciale de la part des parents…", dayNote.special_event, (value) => saveNote(dayKey, "special_event", value)),
+      inputField("Information des gardiennes", "Ex. doit partir plus tôt, changement d’horaire, autre information…", dayNote.early_leave, (value) => saveNote(dayKey, "early_leave", value))
     );
     grid.appendChild(card);
   });
