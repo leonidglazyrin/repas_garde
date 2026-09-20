@@ -226,3 +226,53 @@ body[data-app-tab="presence"] main[data-workspace-ready="true"] > :not(#presence
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Alignements fixes pour éviter que les champs sautent d'une colonne à l'autre. */
+.presence-day-card h3 {
+  min-height: 38px;
+  display: flex;
+  align-items: flex-start;
+}
+.presence-caregivers {
+  min-height: 78px;
+  align-content: flex-start;
+}
+.presence-field > span {
+  min-height: 34px;
+  display: flex;
+  align-items: flex-end;
+}
+.presence-field textarea {
+  height: 92px;
+  min-height: 92px;
+}
+
+.grocery-meal-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.grocery-meal-heading strong {
+  min-height: 54px;
+  display: block;
+}
+.grocery-meal-heading span {
+  min-height: 17px;
+}
+.grocery-meal-card textarea {
+  align-self: end;
+}
+
+@media (max-width: 700px) {
+  .presence-day-card h3,
+  .presence-caregivers,
+  .presence-field > span,
+  .grocery-meal-heading strong,
+  .grocery-meal-heading span {
+    min-height: 0;
+  }
+  .presence-field textarea {
+    height: auto;
+    min-height: 82px;
+  }
+}
