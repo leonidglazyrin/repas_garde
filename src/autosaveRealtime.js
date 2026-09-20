@@ -160,7 +160,7 @@ function monitorRealtimeHealth() {
 }
 
 function applyAppTitle() {
-  const title = "Les souper de la semaine";
+  const title = "Organisation de la semaine";
   document.title = title;
   const heading = document.querySelector("h1");
   if (heading) heading.textContent = title;
