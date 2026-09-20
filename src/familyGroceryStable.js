@@ -54,7 +54,7 @@ async function loadAll({ allowRender = true } = {}) {
   const [fridgeResult, pantryResult, commonResult] = await Promise.all([
     supabase.from("fridge_items").select("id,item").order("item"),
     supabase.from("pantry_items").select("id,item").order("item"),
-    supabase.from("common_grocery_items").select("id,item,checked").order("created_at"),
+    supabase.from("common_grocery_items").select("id,item,checked,stock_status").order("created_at"),
   ]);
 
   if (!fridgeResult.error) fridge = fridgeResult.data || [];
@@ -130,16 +130,23 @@ async function removeItem(table, id) {
   scheduleLoadAll(250);
 }
 
-async function toggleCommon(id, checked) {
+async function setCommonStockStatus(id, stockStatus) {
+  const previous = common.map((item) => ({ ...item }));
+  common = common.map((item) => item.id === id ? { ...item, stock_status: stockStatus } : item);
+  render();
+
   const { error } = await supabase
     .from("common_grocery_items")
-    .update({ checked, updated_at: new Date().toISOString() })
+    .update({ stock_status: stockStatus, updated_at: new Date().toISOString() })
     .eq("id", id);
+
   if (error) {
-    console.error("toggle common grocery", error);
+    console.error("set common grocery stock status", error);
+    common = previous;
+    render();
     return;
   }
-  scheduleLoadAll();
+  scheduleLoadAll(250);
 }
 
 function inputRow(placeholder, onAdd) {
@@ -314,6 +321,11 @@ function renderCommon(section) {
   const toggle = document.createElement("button");
   toggle.type = "button";
   toggle.replaceChildren();
+  const icon = document.createElement("span");
+  icon.textContent = "🛒";
+  icon.setAttribute("aria-hidden", "true");
+  Object.assign(icon.style, { fontSize: "18px", lineHeight: "1", flexShrink: "0" });
+
   const toggleLabel = document.createElement("span");
   toggleLabel.textContent = "Liste d'épicerie quotidienne";
   const toggleArrow = document.createElement("span");
@@ -331,7 +343,7 @@ function renderCommon(section) {
     fontSize: "18px",
     flexShrink: "0",
   });
-  toggle.append(toggleLabel, toggleArrow);
+  toggle.append(icon, toggleLabel, toggleArrow);
   Object.assign(toggle.style, {
     width: "100%",
     minHeight: "56px",
@@ -366,31 +378,77 @@ function renderCommon(section) {
   });
   panel.appendChild(inputRow("Ajouter manuellement", (value) => addItem("common_grocery_items", value)));
 
+  const help = document.createElement("div");
+  help.textContent = "Pour chaque essentiel, indique s'il est en stock ou s'il faut le racheter.";
+  Object.assign(help.style, {
+    margin: "2px 0 8px",
+    color: "var(--ink-soft)",
+    fontSize: "12px",
+    lineHeight: "1.35",
+  });
+  panel.appendChild(help);
+
   common.forEach((item) => {
-    const row = document.createElement("label");
+    const row = document.createElement("div");
     Object.assign(row.style, {
       display: "grid",
-      gridTemplateColumns: "28px minmax(0,1fr) 30px",
-      gap: "5px",
+      gridTemplateColumns: "minmax(0,1fr) auto 30px",
+      gap: "7px",
       alignItems: "center",
-      padding: "5px 0",
+      padding: "7px 0",
       borderTop: "1px solid var(--line)",
     });
-    const check = document.createElement("input");
-    check.type = "checkbox";
-    check.checked = !!item.checked;
-    check.addEventListener("change", () => toggleCommon(item.id, check.checked));
+
     const text = document.createElement("span");
     text.textContent = item.item;
-    if (item.checked) {
-      text.style.textDecoration = "line-through";
-      text.style.opacity = ".55";
-    }
+    Object.assign(text.style, {
+      fontSize: "13px",
+      lineHeight: "1.3",
+      minWidth: "0",
+    });
+
+    const status = document.createElement("button");
+    status.type = "button";
+    const stockStatus = item.stock_status || "unknown";
+    status.dataset.stockStatus = stockStatus;
+    status.textContent =
+      stockStatus === "buy" ? "À racheter" :
+      stockStatus === "stock" ? "En stock" :
+      "À vérifier";
+    status.title = "Appuyer pour changer le statut";
+    Object.assign(status.style, {
+      minHeight: "32px",
+      padding: "5px 9px",
+      borderRadius: "16px",
+      border: "1px solid var(--line)",
+      background:
+        stockStatus === "buy" ? "var(--honey-soft)" :
+        stockStatus === "stock" ? "var(--herb-soft)" :
+        "var(--paper)",
+      color:
+        stockStatus === "buy" ? "var(--honey)" :
+        stockStatus === "stock" ? "var(--herb)" :
+        "var(--ink-soft)",
+      fontSize: "11px",
+      fontWeight: "800",
+      cursor: "pointer",
+      whiteSpace: "nowrap",
+    });
+    status.addEventListener("click", () => {
+      const next =
+        stockStatus === "unknown" ? "buy" :
+        stockStatus === "buy" ? "stock" :
+        "unknown";
+      setCommonStockStatus(item.id, next);
+    });
+
     const del = document.createElement("button");
     del.type = "button";
     del.textContent = "×";
+    del.setAttribute("aria-label", `Retirer ${item.item}`);
     del.addEventListener("click", (event) => {
       event.preventDefault();
+      event.stopPropagation();
       removeItem("common_grocery_items", item.id);
     });
     Object.assign(del.style, {
@@ -400,7 +458,8 @@ function renderCommon(section) {
       cursor: "pointer",
       fontSize: "18px",
     });
-    row.append(check, text, del);
+
+    row.append(text, status, del);
     panel.appendChild(row);
   });
   wrapper.appendChild(panel);
