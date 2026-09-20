@@ -623,7 +623,7 @@ export default function App() {
           ))}
         </div>
 
-        <section data-weekly-grocery="true" style={{ marginTop: 32 }}>
+        <section data-weekly-grocery="true" data-workspace-grocery="true" style={{ marginTop: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <CookingPot size={17} color="var(--ink-soft)" />
             <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Liste d'épicerie pour les repas de la semaine</span>
@@ -675,7 +675,7 @@ function WeekendCard({ dateLabel, note, onChange }) {
 
   return (
     <div style={{ background: "var(--honey-soft)", border: "1px solid var(--honey)", borderRadius: 10, padding: 12, display: "flex", flexWrap: "wrap", gap: 12 }}>
-      <div style={{ width: 92, flexShrink: 0, paddingTop: 6 }}>
+      <div className="meal-day-block" style={{ width: 92, flexShrink: 0, paddingTop: 6 }}>
         <div style={{ fontWeight: 600, fontSize: 14 }}>Fin de semaine</div>
         <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>{dateLabel}</div>
       </div>
@@ -720,14 +720,14 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
   };
 
   return (
-    <div style={{ background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 10, padding: 12, display: "flex", flexWrap: "wrap", gap: 12 }}>
+    <div className="meal-week-card" data-meal-row="true" style={{ background: sc.bg, border: `1px solid ${sc.border}`, borderRadius: 10, padding: 12, display: "flex", flexWrap: "wrap", gap: 12 }}>
       <div style={{ width: 92, flexShrink: 0, paddingTop: 6 }}>
         <div style={{ fontWeight: 600, fontSize: 14 }}>{dayLabel}</div>
         <div style={{ fontSize: 12, color: "var(--ink-soft)" }}>{dateLabel}</div>
       </div>
 
-      <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      <div className="meal-main-block" style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 6 }}>
+        <div className="meal-name-line" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           <input
             placeholder="Nom du souper"
             value={name}
@@ -762,10 +762,10 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
         />
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 180, flexShrink: 0 }}>
+      <div className="meal-status-block" data-meal-status-controls="true" style={{ display: "flex", flexDirection: "column", gap: 6, width: 180, flexShrink: 0 }}>
         {meal.status === "approved" ? (
           <>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div className="meal-approved-actions" style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <select
                 aria-label="Préparation du repas"
                 value={meal.prep_mode || "prepare"}
