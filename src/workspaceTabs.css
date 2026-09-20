@@ -1575,3 +1575,56 @@ textarea {
     font-size: 10.5px !important;
   }
 }
+
+
+/* Ordinateur : les gardiennes restent sur une seule ligne dans chaque journée. */
+@media (min-width: 701px) {
+  .presence-caregivers {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    min-height: 42px !important;
+    align-items: start !important;
+  }
+
+  .presence-caregiver {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+    padding: 4px 3px !important;
+    font-size: 10px !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+/* Téléphone : le menu de préparation occupe l'espace disponible et son texte reste lisible. */
+@media (max-width: 700px) {
+  .meal-approved-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 38px !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .meal-approved-actions select[aria-label="Préparation du repas"] {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 6px 30px 6px 9px !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+  }
+
+  .meal-approved-actions button[aria-label="Dévalider ce souper"] {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+  }
+}
