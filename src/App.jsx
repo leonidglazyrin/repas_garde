@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Check, X, Clock, Plus, Trash2, ShoppingBasket, Users, BookOpen, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, Plus, Trash2, CookingPot, Users, BookOpen, Search } from "lucide-react";
 import { supabase } from "./supabaseClient";
 
 const WEEKDAYS = [
-  { key: "mon", label: "Lundi" },
-  { key: "tue", label: "Mardi" },
-  { key: "wed", label: "Mercredi" },
-  { key: "thu", label: "Jeudi" },
-  { key: "fri", label: "Vendredi" },
+  { key: "mon", label: "Lundi", color: "#4C6B4E" },
+  { key: "tue", label: "Mardi", color: "#C98A3B" },
+  { key: "wed", label: "Mercredi", color: "#3E6E8E" },
+  { key: "thu", label: "Jeudi", color: "#7A5AA3" },
+  { key: "fri", label: "Vendredi", color: "#B24F35" },
 ];
 
 const PROFILE_COLORS = ["#4C6B4E", "#C98A3B", "#B24F35", "#3E6E8E", "#7A5AA3", "#2F8F82", "#8A5A3E"];
@@ -44,7 +44,7 @@ function formatShort(d) {
 }
 
 function emptyMeal() {
-  return { name: "", ingredients: "", status: "pending", comment: "" };
+  return { name: "", ingredients: "", status: "pending", comment: "", prep_mode: "ready", prep_note: "" };
 }
 
 function emptyMeals() {
@@ -90,6 +90,8 @@ async function fetchWeekMeals(weekId) {
         ingredients: row.ingredients || "",
         status: row.status || "pending",
         comment: row.comment || "",
+        prep_mode: row.prep_mode || "ready",
+        prep_note: row.prep_note || "",
       };
     }
   });
@@ -393,18 +395,23 @@ export default function App() {
     WEEKDAYS.forEach((d) => {
       const meal = meals[d.key] || emptyMeal();
       if (meal.status === "approved" && meal.name.trim() && meal.ingredients.trim()) {
-        meal.ingredients.split(",").forEach((raw) => {
+        meal.ingredients.split(/[,;\n]+/).forEach((raw) => {
           const item = raw.trim();
           if (!item) return;
           const lower = item.toLowerCase();
-          if (!seen.has(lower)) seen.set(lower, { label: item.charAt(0).toUpperCase() + item.slice(1), removable: false });
+          if (!seen.has(lower)) {
+            seen.set(lower, {
+              label: item.charAt(0).toUpperCase() + item.slice(1),
+              removable: false,
+              color: d.color,
+              sourceNames: [meal.name.trim()],
+            });
+          } else {
+            const existing = seen.get(lower);
+            if (!existing.sourceNames.includes(meal.name.trim())) existing.sourceNames.push(meal.name.trim());
+          }
         });
       }
-    });
-    groceryExtra.forEach((item) => {
-      const lower = item.toLowerCase();
-      if (!seen.has(lower)) seen.set(lower, { label: item, removable: true });
-      else seen.set(lower, { ...seen.get(lower), removable: false });
     });
     return Array.from(seen.entries())
       .map(([key, v]) => ({ key, ...v }))
@@ -618,23 +625,10 @@ export default function App() {
 
         <section style={{ marginTop: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <ShoppingBasket size={16} color="var(--ink-soft)" />
+            <CookingPot size={17} color="var(--ink-soft)" />
             <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Liste d'épicerie pour les repas de la semaine</span>
           </div>
           <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-              <input
-                placeholder="Ajouter un item (ex. lait, papier essuie-tout...)"
-                value={newGroceryItem}
-                onChange={(e) => setNewGroceryItem(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addGroceryItem()}
-                style={{ ...inputStyle, flex: 1 }}
-              />
-              <button onClick={addGroceryItem} style={{ ...pillBtnStyle, background: "var(--herb)", color: "#fff" }}>
-                <Plus size={14} style={{ marginRight: 6 }} />
-                Ajouter
-              </button>
-            </div>
             {groceryList.length === 0 ? (
               <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>
                 Aucun item pour l'instant. Les ingrédients des soupers de la semaine apparaissent ici automatiquement, sauf ceux déjà au frigo ou dans les placards.
@@ -644,15 +638,22 @@ export default function App() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 6 }}>
                   {groceryList.map((item) => (
                     <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                      <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", flex: 1, textDecoration: grocery[item.key] ? "line-through" : "none", color: grocery[item.key] ? "var(--ink-soft)" : "var(--ink)" }}>
+                      <label
+                        title={item.sourceNames?.join(" · ")}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          cursor: "pointer",
+                          flex: 1,
+                          textDecoration: grocery[item.key] ? "line-through" : "none",
+                          color: grocery[item.key] ? "var(--ink-soft)" : (item.color || "var(--ink)"),
+                          fontWeight: grocery[item.key] ? 500 : 700,
+                        }}
+                      >
                         <input type="checkbox" checked={!!grocery[item.key]} onChange={() => toggleGroceryItem(item.key)} />
                         {item.label}
                       </label>
-                      {item.removable && (
-                        <button onClick={() => removeGroceryExtra(item.label)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)" }} aria-label={`Retirer ${item.label}`}>
-                          <X size={13} />
-                        </button>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -761,10 +762,36 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
         />
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 130, flexShrink: 0 }}>
-        <StatusButton active={meal.status === "pending"} onClick={() => onChange({ status: "pending" })} icon={<Clock size={12} />} label="En attente" />
-        <StatusButton active={meal.status === "approved"} onClick={() => onChange({ status: "approved" })} icon={<Check size={12} />} label="Approuvé" color="var(--herb)" />
-        <StatusButton active={meal.status === "refused"} onClick={() => onChange({ status: "refused" })} icon={<X size={12} />} label="Refusé" color="var(--paprika)" />
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 180, flexShrink: 0 }}>
+        {meal.status === "approved" ? (
+          <>
+            <select
+              aria-label="Préparation du repas"
+              value={meal.prep_mode || "ready"}
+              onChange={(e) => onChange({ prep_mode: e.target.value, prep_note: e.target.value === "info" ? meal.prep_note || "" : "" })}
+              style={{ ...inputStyle, width: "100%", background: "var(--card)", fontSize: 12, fontWeight: 700 }}
+            >
+              <option value="ready">Prêt à servir</option>
+              <option value="microwave">Réchauffer au micro-ondes</option>
+              <option value="oven">Réchauffer au four</option>
+              <option value="info">Information supplémentaire</option>
+            </select>
+            {meal.prep_mode === "info" && (
+              <input
+                value={meal.prep_note || ""}
+                onChange={(e) => onChange({ prep_note: e.target.value })}
+                placeholder="Information supplémentaire"
+                style={{ ...inputStyle, width: "100%", background: "var(--card)", fontSize: 12 }}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <StatusButton active={meal.status === "pending"} onClick={() => onChange({ status: "pending" })} icon={<Clock size={12} />} label="En attente" />
+            <StatusButton active={false} onClick={() => onChange({ status: "approved", prep_mode: "ready", prep_note: "" })} icon={<Check size={12} />} label="Approuvé" color="var(--herb)" />
+            <StatusButton active={meal.status === "refused"} onClick={() => onChange({ status: "refused" })} icon={<X size={12} />} label="Refusé" color="var(--paprika)" />
+          </>
+        )}
       </div>
     </div>
   );
