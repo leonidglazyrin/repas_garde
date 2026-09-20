@@ -23,7 +23,7 @@ function inventoryMatches(groceryLabel, inventoryKey) {
 
 function findGrocerySection() {
   return Array.from(document.querySelectorAll("main section")).find((section) =>
-    (section.textContent || "").includes("Liste d'épicerie")
+    ((section.textContent || "").includes("Liste d'épicerie") || (section.textContent || "").includes("Épicerie des repas"))
   ) || null;
 }
 
