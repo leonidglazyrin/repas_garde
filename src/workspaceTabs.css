@@ -378,3 +378,14 @@ section[data-grocery-disclosure-ready="true"] > :first-child,
     min-height: 0;
   }
 }
+
+
+#common-grocery-wrapper-stable [data-stock-status] {
+  font-family: inherit;
+}
+
+@media (max-width: 700px) {
+  #common-grocery-wrapper-stable [data-stock-status] {
+    min-width: 82px;
+  }
+}
