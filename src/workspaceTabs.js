@@ -41,7 +41,7 @@ function markSections() {
     if (text.includes("en attente d'approbation") || text.includes("Tous les soupers saisis")) {
       child.dataset.workspaceMeals = "true";
     }
-    if (text.includes("Liste d'épicerie") || text.includes("Épicerie des repas")) child.dataset.workspaceGrocery = "true";
+    if (text.includes("Liste d'épicerie") || (text.includes("Épicerie des repas") || text.includes("repas préparés"))) child.dataset.workspaceGrocery = "true";
   });
 
   const common = document.getElementById("common-grocery-wrapper-stable");
