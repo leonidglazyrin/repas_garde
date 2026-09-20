@@ -1,13 +1,15 @@
 function findGrocerySection() {
-  return Array.from(document.querySelectorAll("main section")).find((section) =>
-    (section.textContent || "").includes("Liste d'épicerie")
-  );
+  return Array.from(document.querySelectorAll("main section")).find((section) => {
+    const text = section.textContent || "";
+    return text.includes("Liste d'épicerie") || text.includes("Épicerie des repas");
+  });
 }
 
 function getHeader(section) {
-  return Array.from(section.children).find((child) =>
-    (child.textContent || "").includes("Liste d'épicerie")
-  ) || null;
+  return Array.from(section.children).find((child) => {
+    const text = child.textContent || "";
+    return text.includes("Liste d'épicerie") || text.includes("Épicerie des repas");
+  }) || null;
 }
 
 function getBody(section, header) {
@@ -87,6 +89,13 @@ function setOpen(section, header, body, open) {
     body.style.removeProperty("display");
   } else {
     body.style.setProperty("display", "none", "important");
+  }
+
+  const mealDetails = document.getElementById("grocery-meal-details");
+  if (mealDetails) {
+    mealDetails.hidden = !open;
+    if (open) mealDetails.style.removeProperty("display");
+    else mealDetails.style.setProperty("display", "none", "important");
   }
 }
 
