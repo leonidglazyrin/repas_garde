@@ -63,12 +63,15 @@ body[data-app-tab="presence"] main[data-workspace-ready="true"] > :not(#presence
 
 .presence-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 }
 
 .presence-day-card {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -152,5 +155,74 @@ body[data-app-tab="presence"] main[data-workspace-ready="true"] > :not(#presence
     width: 100%;
     min-width: 0;
     padding: 5px 4px;
+  }
+}
+
+
+#grocery-meal-details {
+  margin-bottom: 14px;
+}
+.grocery-meals-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 9px;
+}
+.grocery-meals-title strong {
+  font-size: 16px;
+}
+.grocery-meals-title span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.grocery-meals-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.grocery-meal-card {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+}
+.grocery-meal-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 7px;
+}
+.grocery-meal-heading strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.grocery-meal-heading span {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+.grocery-meal-card textarea {
+  width: 100%;
+  min-height: 82px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 12px;
+  resize: vertical;
+}
+.grocery-meal-card textarea:disabled {
+  opacity: .55;
+}
+@media (max-width: 900px) and (min-width: 701px) {
+  .presence-grid,
+  .grocery-meals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .grocery-meals-grid {
+    grid-template-columns: 1fr;
   }
 }
