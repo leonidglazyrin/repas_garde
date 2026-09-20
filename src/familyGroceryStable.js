@@ -300,169 +300,204 @@ function inventoryPanel(title, hint, items, table, placeholder) {
   return panel;
 }
 
-function renderCommon(section) {
+const DAILY_CATEGORIES = [
+  {
+    name: "Viandes et protéines",
+    match: ["jambon", "saumon", "oeuf", "œuf", "oeufs", "œufs"],
+  },
+  {
+    name: "Produits laitiers",
+    match: ["lait ", "lait 2", "yogourt", "yaourt", "fromage", "beurre", "crème", "creme"],
+  },
+  {
+    name: "Fruits et légumes",
+    match: ["banane", "fruit", "fraise", "mangue", "bleuet", "framboise", "pomme", "kiwi", "concombre", "avocat", "laitue", "tomate", "citron", "lime"],
+  },
+  {
+    name: "Boulangerie",
+    match: ["pain", "bagel", "mcmuffin"],
+  },
+  {
+    name: "Boissons",
+    match: ["jus", "orange", "canneberge", "limonade"],
+  },
+  {
+    name: "Collations et autres",
+    match: [],
+  },
+];
+
+function normalizeDaily(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("fr-CA");
+}
+
+function dailyCategory(item) {
+  const normalized = normalizeDaily(item);
+  for (const category of DAILY_CATEGORIES.slice(0, -1)) {
+    if (category.match.some((keyword) => normalized.includes(normalizeDaily(keyword)))) return category.name;
+  }
+  return "Collations et autres";
+}
+
+function ensureCommonShell(section) {
   let wrapper = document.getElementById("common-grocery-wrapper-stable");
   if (!wrapper) {
     wrapper = document.createElement("section");
     wrapper.id = "common-grocery-wrapper-stable";
     wrapper.dataset.workspaceGrocery = "true";
-    wrapper.dataset.open = "false";
+    wrapper.dataset.open = "true";
     section.insertAdjacentElement("afterend", wrapper);
   } else {
     wrapper.dataset.workspaceGrocery = "true";
+    if (!wrapper.dataset.open) wrapper.dataset.open = "true";
   }
 
-  const open = wrapper.dataset.open === "true";
-  const signature = `${open}|${common.map((x) => `${x.id}:${x.item}:${x.checked}:${x.stock_status || "unknown"}`).join(";")}`;
-  if (wrapper.dataset.signature === signature) return;
-  wrapper.dataset.signature = signature;
-  wrapper.replaceChildren();
+  let toggle = wrapper.querySelector(":scope > [data-daily-grocery-toggle]");
+  let panel = wrapper.querySelector(":scope > [data-daily-grocery-panel]");
 
-  const toggle = document.createElement("button");
-  toggle.type = "button";
-  toggle.replaceChildren();
-  const icon = document.createElement("span");
-  icon.textContent = "🛒";
-  icon.setAttribute("aria-hidden", "true");
-  Object.assign(icon.style, { fontSize: "18px", lineHeight: "1", flexShrink: "0" });
+  if (!toggle) {
+    toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.dataset.dailyGroceryToggle = "true";
+    toggle.setAttribute("aria-controls", "daily-grocery-panel");
 
-  const toggleLabel = document.createElement("span");
-  toggleLabel.textContent = "Liste d'épicerie quotidienne";
-  const toggleArrow = document.createElement("span");
-  toggleArrow.textContent = open ? "▲" : "▼";
-  Object.assign(toggleArrow.style, {
-    marginLeft: "auto",
-    width: "34px",
-    height: "34px",
-    borderRadius: "50%",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    border: "2px solid currentColor",
-    background: "var(--card)",
-    fontSize: "18px",
-    flexShrink: "0",
-  });
-  toggle.append(icon, toggleLabel, toggleArrow);
-  Object.assign(toggle.style, {
-    width: "100%",
-    minHeight: "56px",
-    border: `2px solid ${open ? "var(--herb)" : "var(--honey)"}`,
-    borderRadius: "10px",
-    background: open ? "var(--herb-soft)" : "var(--honey-soft)",
-    color: open ? "var(--herb)" : "var(--ink)",
-    fontWeight: "800",
-    fontSize: "15px",
-    cursor: "pointer",
-    textAlign: "left",
-    padding: "10px 12px 10px 16px",
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    boxShadow: open ? "0 2px 8px rgba(76,107,78,0.16)" : "0 2px 8px rgba(201,138,59,0.18)",
-  });
-  toggle.addEventListener("click", () => {
-    wrapper.dataset.open = String(!open);
-    renderCommon(section);
-  });
-  wrapper.appendChild(toggle);
-  if (!open) return;
+    const icon = document.createElement("span");
+    icon.dataset.dailyGroceryIcon = "true";
+    icon.textContent = "🛒";
+    icon.setAttribute("aria-hidden", "true");
 
-  const panel = document.createElement("div");
-  Object.assign(panel.style, {
-    marginTop: "7px",
-    padding: "10px",
-    border: "1px solid var(--line)",
-    borderRadius: "10px",
-    background: "var(--card)",
-  });
-  panel.appendChild(inputRow("Ajouter manuellement", (value) => addItem("common_grocery_items", value)));
+    const label = document.createElement("span");
+    label.dataset.dailyGroceryLabel = "true";
+    label.textContent = "Liste d'épicerie quotidienne";
 
-  const help = document.createElement("div");
-  help.textContent = "Pour chaque essentiel, indique s'il est en stock ou s'il faut le racheter.";
-  Object.assign(help.style, {
-    margin: "2px 0 8px",
-    color: "var(--ink-soft)",
-    fontSize: "12px",
-    lineHeight: "1.35",
-  });
-  panel.appendChild(help);
+    const arrow = document.createElement("span");
+    arrow.dataset.dailyGroceryArrow = "true";
+    arrow.setAttribute("aria-hidden", "true");
 
-  common.forEach((item) => {
-    const row = document.createElement("div");
-    Object.assign(row.style, {
-      display: "grid",
-      gridTemplateColumns: "minmax(0,1fr) auto 30px",
-      gap: "7px",
-      alignItems: "center",
-      padding: "7px 0",
-      borderTop: "1px solid var(--line)",
-    });
-
-    const text = document.createElement("span");
-    text.textContent = item.item;
-    Object.assign(text.style, {
-      fontSize: "13px",
-      lineHeight: "1.3",
-      minWidth: "0",
-    });
-
-    const status = document.createElement("button");
-    status.type = "button";
-    const stockStatus = item.stock_status || "unknown";
-    status.dataset.stockStatus = stockStatus;
-    status.textContent =
-      stockStatus === "buy" ? "À racheter" :
-      stockStatus === "stock" ? "En stock" :
-      "À vérifier";
-    status.title = "Appuyer pour changer le statut";
-    Object.assign(status.style, {
-      minHeight: "32px",
-      padding: "5px 9px",
-      borderRadius: "16px",
-      border: "1px solid var(--line)",
-      background:
-        stockStatus === "buy" ? "var(--honey-soft)" :
-        stockStatus === "stock" ? "var(--herb-soft)" :
-        "var(--paper)",
-      color:
-        stockStatus === "buy" ? "var(--honey)" :
-        stockStatus === "stock" ? "var(--herb)" :
-        "var(--ink-soft)",
-      fontSize: "11px",
-      fontWeight: "800",
-      cursor: "pointer",
-      whiteSpace: "nowrap",
-    });
-    status.addEventListener("click", () => {
-      const next =
-        stockStatus === "unknown" ? "buy" :
-        stockStatus === "buy" ? "stock" :
-        "unknown";
-      setCommonStockStatus(item.id, next);
-    });
-
-    const del = document.createElement("button");
-    del.type = "button";
-    del.textContent = "×";
-    del.setAttribute("aria-label", `Retirer ${item.item}`);
-    del.addEventListener("click", (event) => {
+    toggle.append(icon, label, arrow);
+    toggle.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      removeItem("common_grocery_items", item.id);
-    });
-    Object.assign(del.style, {
-      minHeight: "30px",
-      border: "none",
-      background: "transparent",
-      cursor: "pointer",
-      fontSize: "18px",
+      const nextOpen = wrapper.dataset.open !== "true";
+      wrapper.dataset.open = String(nextOpen);
+      updateCommonVisibility(wrapper);
     });
 
-    row.append(text, status, del);
-    panel.appendChild(row);
+    wrapper.prepend(toggle);
+  }
+
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "daily-grocery-panel";
+    panel.dataset.dailyGroceryPanel = "true";
+    wrapper.appendChild(panel);
+  }
+
+  return { wrapper, toggle, panel };
+}
+
+function updateCommonVisibility(wrapper) {
+  const open = wrapper.dataset.open === "true";
+  const toggle = wrapper.querySelector(":scope > [data-daily-grocery-toggle]");
+  const panel = wrapper.querySelector(":scope > [data-daily-grocery-panel]");
+  const arrow = toggle?.querySelector("[data-daily-grocery-arrow]");
+
+  toggle?.setAttribute("aria-expanded", String(open));
+  if (arrow) arrow.textContent = open ? "▲" : "▼";
+  if (panel) {
+    panel.hidden = !open;
+    panel.style.display = open ? "block" : "none";
+  }
+}
+
+function statusButton(item, value, label) {
+  const active = (item.stock_status || "unknown") === value;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.dailyStockChoice = value;
+  button.setAttribute("aria-pressed", String(active));
+  button.textContent = label;
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (active) return;
+    setCommonStockStatus(item.id, value);
   });
-  wrapper.appendChild(panel);
+  return button;
+}
+
+function renderCommon(section) {
+  const { wrapper, toggle, panel } = ensureCommonShell(section);
+  updateCommonVisibility(wrapper);
+
+  const open = wrapper.dataset.open === "true";
+  toggle.dataset.open = String(open);
+
+  panel.replaceChildren();
+
+  const add = inputRow("Ajouter un item à l'épicerie quotidienne", (value) => addItem("common_grocery_items", value));
+  add.dataset.dailyGroceryAdd = "true";
+  panel.appendChild(add);
+
+  const help = document.createElement("div");
+  help.className = "daily-grocery-help";
+  help.textContent = "Coche le statut de chaque essentiel : À vérifier, À racheter ou En stock.";
+  panel.appendChild(help);
+
+  const byCategory = new Map(DAILY_CATEGORIES.map((category) => [category.name, []]));
+  common.forEach((item) => byCategory.get(dailyCategory(item.item))?.push(item));
+
+  DAILY_CATEGORIES.forEach((category) => {
+    const items = byCategory.get(category.name) || [];
+    if (!items.length) return;
+
+    const group = document.createElement("section");
+    group.className = "daily-grocery-category";
+
+    const title = document.createElement("h3");
+    title.textContent = category.name;
+    group.appendChild(title);
+
+    items.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "daily-grocery-item";
+
+      const text = document.createElement("span");
+      text.className = "daily-grocery-item-name";
+      text.textContent = item.item;
+
+      const statuses = document.createElement("div");
+      statuses.className = "daily-grocery-statuses";
+      statuses.setAttribute("role", "group");
+      statuses.setAttribute("aria-label", `Statut de ${item.item}`);
+      statuses.append(
+        statusButton(item, "unknown", "À vérifier"),
+        statusButton(item, "buy", "À racheter"),
+        statusButton(item, "stock", "En stock")
+      );
+
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "daily-grocery-delete";
+      del.textContent = "×";
+      del.setAttribute("aria-label", `Retirer ${item.item}`);
+      del.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        removeItem("common_grocery_items", item.id);
+      });
+
+      row.append(text, statuses, del);
+      group.appendChild(row);
+    });
+
+    panel.appendChild(group);
+  });
+
+  updateCommonVisibility(wrapper);
 }
 
 function render() {
