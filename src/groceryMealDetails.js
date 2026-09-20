@@ -13,6 +13,7 @@ let activeWeek = null;
 let channel = null;
 let frame = null;
 let requestId = 0;
+let pendingIngredientRender = false;
 const expandedDays = new Set();
 const ingredientTimers = new Map();
 const INGREDIENT_SAVE_DELAY_MS = 1500;
@@ -84,7 +85,13 @@ async function load() {
   }
   meals = new Map((data || []).map((row) => [row.day_key, row]));
   activeWeek = weekId;
-  schedule();
+  const active = document.activeElement;
+  if (active?.closest?.("#grocery-meal-details")) {
+    pendingIngredientRender = true;
+  } else {
+    pendingIngredientRender = false;
+    schedule();
+  }
 }
 
 async function saveIngredients(dayKey, value) {
@@ -234,3 +241,13 @@ subscribe();
 queueMicrotask(schedule);
 setTimeout(load, 250);
 setTimeout(load, 900);
+
+
+document.addEventListener("focusout", (event) => {
+  if (!event.target?.closest?.("#grocery-meal-details") || !pendingIngredientRender) return;
+  setTimeout(() => {
+    if (document.activeElement?.closest?.("#grocery-meal-details")) return;
+    pendingIngredientRender = false;
+    schedule();
+  }, 0);
+}, true);
