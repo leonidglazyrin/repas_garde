@@ -426,3 +426,21 @@ section[data-grocery-disclosure-ready="true"] > :first-child,
     grid-template-columns: minmax(0, 1fr) auto 30px;
   }
 }
+
+
+/* La liste quotidienne est un bloc autonome: elle ne doit jamais être masquée par le volet des repas. */
+body[data-app-tab="grocery"] #common-grocery-wrapper-stable {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: static !important;
+  contain: none !important;
+  overflow: visible !important;
+  margin-top: 12px;
+}
+
+body[data-app-tab="grocery"] #common-grocery-wrapper-stable > div {
+  display: block;
+  visibility: visible;
+  overflow: visible;
+}
