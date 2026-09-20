@@ -15,10 +15,7 @@ const inventoryOpen = new Map([
 const SYNC_DELAY_MS = 2000;
 
 function findSection() {
-  return Array.from(document.querySelectorAll("main section")).find((section) => {
-    const text = section.textContent || "";
-    return text.includes("Liste d'épicerie pour les repas préparés") || text.includes("Liste d'épicerie") || (text.includes("Épicerie des repas") || text.includes("repas préparés"));
-  }) || null;
+  return document.querySelector('main > section[data-weekly-grocery="true"]');
 }
 
 function findHeader(section) {
@@ -308,8 +305,11 @@ function renderCommon(section) {
   if (!wrapper) {
     wrapper = document.createElement("section");
     wrapper.id = "common-grocery-wrapper-stable";
+    wrapper.dataset.workspaceGrocery = "true";
     wrapper.dataset.open = "false";
     section.insertAdjacentElement("afterend", wrapper);
+  } else {
+    wrapper.dataset.workspaceGrocery = "true";
   }
 
   const open = wrapper.dataset.open === "true";
