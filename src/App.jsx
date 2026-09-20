@@ -197,7 +197,11 @@ async function addGroceryExtraRow(weekId, item) {
 
 async function removeGroceryExtraRow(weekId, item) {
   const { error } = await supabase.from("grocery_extra").delete().eq("week_id", weekId).eq("item", item);
-  if (error) console.error("removeGroceryExtraRow", error);
+  if (error) {
+    console.error("removeGroceryExtraRow", error);
+    return false;
+  }
+  return true;
 }
 
 export default function App() {
@@ -368,8 +372,10 @@ export default function App() {
   };
 
   const removeGroceryExtra = async (item) => {
+    const previous = groceryExtra;
     setGroceryExtra((prev) => prev.filter((i) => i !== item));
-    await removeGroceryExtraRow(weekId, item);
+    const removed = await removeGroceryExtraRow(weekId, item);
+    if (!removed) setGroceryExtra(previous);
   };
 
   const clearCheckedGrocery = async () => {
