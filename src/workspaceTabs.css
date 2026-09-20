@@ -1675,3 +1675,61 @@ textarea {
     justify-content: center !important;
   }
 }
+
+
+/* Ordinateur : gardiennes en colonne, centrées et régulières pour remplir proprement la carte. */
+@media (min-width: 701px) {
+  .presence-caregivers {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-auto-rows: 32px !important;
+    gap: 5px !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 0 10px !important;
+    align-content: start !important;
+  }
+
+  .presence-caregiver {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    margin: 0 !important;
+    padding: 4px 8px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .grocery-recipe-title strong {
+    color: var(--recipe-color) !important;
+    font-weight: 900 !important;
+  }
+
+  #grocery-meal-details {
+    margin-bottom: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .grocery-recipes-grid {
+    margin-bottom: 2px !important;
+  }
+}
+
+/* Les repas approuvés restent visuellement au-dessus de leurs ingrédients à acheter. */
+#grocery-meal-details {
+  order: -1;
+}
+
+.grocery-recipe-title strong {
+  color: var(--recipe-color) !important;
+}
