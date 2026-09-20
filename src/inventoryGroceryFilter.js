@@ -22,9 +22,7 @@ function inventoryMatches(groceryLabel, inventoryKey) {
 }
 
 function findGrocerySection() {
-  return Array.from(document.querySelectorAll("main section")).find((section) =>
-    ((section.textContent || "").includes("Liste d'épicerie") || ((section.textContent || "").includes("Épicerie des repas") || (section.textContent || "").includes("repas préparés")))
-  ) || null;
+  return document.querySelector('main > section[data-weekly-grocery="true"]');
 }
 
 function applyInventoryFilter() {
