@@ -19,10 +19,7 @@ function findSection() {
 }
 
 function findHeader(section) {
-  return Array.from(section?.children || []).find((child) => {
-    const text = child.textContent || "";
-    return text.includes("Liste d'épicerie") || (text.includes("Épicerie des repas") || text.includes("repas préparés"));
-  }) || null;
+  return section?.querySelector(':scope > [data-weekly-grocery-header="true"]') || null;
 }
 
 function findBody(section, header) {
@@ -526,11 +523,6 @@ function render() {
   const header = findHeader(section);
   const body = findBody(section, header);
   if (!header || !body) return;
-
-  const label = Array.from(header.querySelectorAll("span")).find((span) =>
-    (span.textContent || "").includes("Liste d'épicerie")
-  );
-  if (label) label.textContent = "Liste d’épicerie pour les repas de la semaine";
 
   // Le frigo et les placards restent une source de filtrage, mais ne sont plus affichés.
   const inventory = body.querySelector("[data-family-inventory-stable]");
