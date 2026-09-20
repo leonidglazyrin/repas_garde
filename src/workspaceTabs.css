@@ -1036,3 +1036,212 @@ body[data-app-tab="grocery"] main[data-workspace-ready="true"] > section[data-we
     justify-content: flex-end;
   }
 }
+
+
+/* Épicerie quotidienne compacte : légende + un seul point de statut par aliment. */
+#daily-grocery-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
+#daily-grocery-panel > [data-daily-grocery-add],
+#daily-grocery-panel > .daily-grocery-legend {
+  grid-column: 1 / -1;
+}
+
+.daily-grocery-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.daily-grocery-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.daily-grocery-legend-dot,
+.daily-grocery-status-dot {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+}
+
+.daily-grocery-legend-dot[data-stock-status="unknown"],
+.daily-grocery-status-dot[data-stock-status="unknown"] {
+  background: #2F6FC5;
+  border-color: #1E55A0;
+}
+
+.daily-grocery-legend-dot[data-stock-status="buy"],
+.daily-grocery-status-dot[data-stock-status="buy"] {
+  background: #C94A3B;
+  border-color: #9D3027;
+}
+
+.daily-grocery-legend-dot[data-stock-status="stock"],
+.daily-grocery-status-dot[data-stock-status="stock"] {
+  background: #438A4D;
+  border-color: #2F6C38;
+}
+
+.daily-grocery-status-dot {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px var(--card), 0 0 0 3px var(--line);
+}
+
+.daily-grocery-category {
+  min-width: 0;
+  margin-top: 0 !important;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--card);
+}
+
+.daily-grocery-category h3 {
+  margin-bottom: 3px !important;
+  padding-bottom: 4px !important;
+}
+
+.daily-grocery-item {
+  grid-template-columns: minmax(0, 1fr) 24px !important;
+  gap: 6px !important;
+  padding: 4px 0 !important;
+  min-height: 30px;
+}
+
+.daily-grocery-item-name {
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+}
+
+/* Un seul titre de plat visible sur téléphone; toucher le titre permet de le modifier. */
+.meal-name-preview {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .meal-name-line > .meal-name-input {
+    display: none !important;
+  }
+
+  .meal-name-line[data-editing="true"] > .meal-name-input {
+    display: block !important;
+  }
+
+  .meal-name-line > .meal-name-preview {
+    display: block !important;
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 9px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.3;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: text;
+  }
+
+  .meal-name-line[data-editing="true"] > .meal-name-preview {
+    display: none !important;
+  }
+
+  #daily-grocery-panel {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  #daily-grocery-panel > [data-daily-grocery-add],
+  #daily-grocery-panel > .daily-grocery-legend {
+    grid-column: 1;
+  }
+
+  .daily-grocery-legend {
+    justify-content: center;
+    gap: 7px 10px;
+    padding: 6px;
+  }
+
+  .daily-grocery-legend-item {
+    font-size: 10px;
+  }
+
+  .daily-grocery-category {
+    padding: 5px 7px;
+  }
+
+  .daily-grocery-item {
+    min-height: 28px;
+  }
+
+  .daily-grocery-status-dot {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+  }
+
+  /* Présences : date isolée au-dessus, gardiennes sur leur propre ligne. */
+  .presence-day-card {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+
+  .presence-day-card h3 {
+    display: block !important;
+    width: 100% !important;
+    min-height: 24px !important;
+    margin: 0 0 8px !important;
+    padding: 0 0 6px !important;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    white-space: normal !important;
+  }
+
+  .presence-caregivers {
+    width: 100% !important;
+    margin: 0 0 8px !important;
+    padding: 0 !important;
+    align-self: stretch !important;
+  }
+
+  .presence-caregiver {
+    min-height: 30px !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    padding: 4px 2px !important;
+  }
+
+  .presence-field {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
