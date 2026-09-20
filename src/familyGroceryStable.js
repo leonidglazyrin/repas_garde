@@ -12,7 +12,7 @@ const inventoryOpen = new Map([
   ["pantry_items", false],
 ]);
 
-const SYNC_DELAY_MS = 2000;
+const SYNC_DELAY_MS = 500;
 
 function findSection() {
   return document.querySelector('main > section[data-weekly-grocery="true"]');
