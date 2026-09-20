@@ -550,3 +550,11 @@ supabase.channel("family-grocery-stable")
   .subscribe();
 
 loadAll({ allowRender: true });
+
+
+document.addEventListener("grocery-tab-opened", () => {
+  const wrapper = document.getElementById("common-grocery-wrapper-stable");
+  if (!wrapper) return;
+  wrapper.dataset.open = "false";
+  updateCommonVisibility(wrapper);
+});
