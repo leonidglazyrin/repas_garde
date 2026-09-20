@@ -1628,3 +1628,50 @@ textarea {
     margin: 0 !important;
   }
 }
+
+
+/* Présences sur ordinateur : gardiennes compactes et parfaitement alignées sur une ligne. */
+@media (min-width: 701px) {
+  .presence-day-card {
+    padding: 10px !important;
+  }
+
+  .presence-day-card h3 {
+    min-height: 30px !important;
+    margin: 0 0 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
+
+  .presence-caregivers {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-height: 34px !important;
+    margin: 0 0 10px !important;
+    align-items: stretch !important;
+    align-content: stretch !important;
+  }
+
+  .presence-caregiver {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 30px !important;
+    height: 30px !important;
+    margin: 0 !important;
+    padding: 3px 2px !important;
+    border-radius: 7px !important;
+    font-size: 9.5px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
