@@ -129,9 +129,17 @@ async function removeItem(table, id) {
   scheduleLoadAll(250);
 }
 
+function statusLabel(stockStatus) {
+  if (stockStatus === "buy") return "À racheter";
+  if (stockStatus === "stock") return "En stock";
+  return "À vérifier";
+}
+
 function paintStatusButtons(id, stockStatus) {
-  document.querySelectorAll(`[data-daily-grocery-item-id="${id}"] [data-daily-stock-choice]`).forEach((button) => {
-    button.setAttribute("aria-pressed", String(button.dataset.dailyStockChoice === stockStatus));
+  document.querySelectorAll(`[data-daily-grocery-item-id="${id}"] [data-daily-stock-dot]`).forEach((button) => {
+    button.dataset.stockStatus = stockStatus;
+    button.setAttribute("aria-label", `${button.dataset.itemName || "Aliment"} — ${statusLabel(stockStatus)}. Appuyer pour changer.`);
+    button.title = statusLabel(stockStatus);
   });
 }
 
@@ -422,18 +430,22 @@ function updateCommonVisibility(wrapper) {
   }
 }
 
-function statusButton(item, value, label) {
-  const active = (item.stock_status || "unknown") === value;
+function statusDot(item) {
+  const stockStatus = item.stock_status || "unknown";
   const button = document.createElement("button");
   button.type = "button";
-  button.dataset.dailyStockChoice = value;
-  button.setAttribute("aria-pressed", String(active));
-  button.textContent = label;
+  button.className = "daily-grocery-status-dot";
+  button.dataset.dailyStockDot = "true";
+  button.dataset.stockStatus = stockStatus;
+  button.dataset.itemName = item.item;
+  button.setAttribute("aria-label", `${item.item} — ${statusLabel(stockStatus)}. Appuyer pour changer.`);
+  button.title = statusLabel(stockStatus);
   button.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    if (active) return;
-    setCommonStockStatus(item.id, value);
+    const current = common.find((row) => row.id === item.id)?.stock_status || "unknown";
+    const next = current === "unknown" ? "buy" : current === "buy" ? "stock" : "unknown";
+    setCommonStockStatus(item.id, next);
   });
   return button;
 }
@@ -451,10 +463,24 @@ function renderCommon(section) {
   add.dataset.dailyGroceryAdd = "true";
   panel.appendChild(add);
 
-  const help = document.createElement("div");
-  help.className = "daily-grocery-help";
-  help.textContent = "Coche le statut de chaque essentiel : À vérifier, À racheter ou En stock.";
-  panel.appendChild(help);
+  const legend = document.createElement("div");
+  legend.className = "daily-grocery-legend";
+  [
+    ["unknown", "À vérifier"],
+    ["buy", "À racheter"],
+    ["stock", "En stock"],
+  ].forEach(([status, label]) => {
+    const item = document.createElement("span");
+    item.className = "daily-grocery-legend-item";
+    const dot = document.createElement("span");
+    dot.className = "daily-grocery-legend-dot";
+    dot.dataset.stockStatus = status;
+    const text = document.createElement("span");
+    text.textContent = label;
+    item.append(dot, text);
+    legend.appendChild(item);
+  });
+  panel.appendChild(legend);
 
   const byCategory = new Map(DAILY_CATEGORIES.map((category) => [category.name, []]));
   common.forEach((item) => byCategory.get(dailyCategory(item.item))?.push(item));
@@ -479,17 +505,7 @@ function renderCommon(section) {
       text.className = "daily-grocery-item-name";
       text.textContent = item.item;
 
-      const statuses = document.createElement("div");
-      statuses.className = "daily-grocery-statuses";
-      statuses.setAttribute("role", "group");
-      statuses.setAttribute("aria-label", `Statut de ${item.item}`);
-      statuses.append(
-        statusButton(item, "unknown", "À vérifier"),
-        statusButton(item, "buy", "À racheter"),
-        statusButton(item, "stock", "En stock")
-      );
-
-      row.append(text, statuses);
+      row.append(text, statusDot(item));
       group.appendChild(row);
     });
 
