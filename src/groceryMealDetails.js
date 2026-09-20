@@ -13,6 +13,7 @@ let activeWeek = null;
 let channel = null;
 let frame = null;
 let requestId = 0;
+const expandedDays = new Set();
 
 function currentWeekId() {
   return document.body?.innerText?.match(/Semaine\s+(\d{4}-S\d{2})/)?.[1] || null;
@@ -165,13 +166,29 @@ function render() {
     copy.append(name, meta);
     title.append(dot, copy);
 
-    const textarea = document.createElement("textarea");
-    textarea.rows = 3;
-    textarea.placeholder = "Ajouter les ingrédients de cette recette";
-    textarea.value = meal.ingredients || "";
-    textarea.addEventListener("blur", () => saveIngredients(dayKey, textarea.value));
+    const disclosure = document.createElement("button");
+    disclosure.type = "button";
+    disclosure.className = "grocery-recipe-disclosure";
+    const expanded = expandedDays.has(dayKey);
+    disclosure.setAttribute("aria-expanded", String(expanded));
+    disclosure.textContent = expanded ? "Masquer les ingrédients ▲" : "Modifier les ingrédients ▼";
+    disclosure.addEventListener("click", () => {
+      if (expandedDays.has(dayKey)) expandedDays.delete(dayKey);
+      else expandedDays.add(dayKey);
+      schedule();
+    });
 
-    card.append(title, textarea);
+    card.append(title, disclosure);
+
+    if (expanded) {
+      const textarea = document.createElement("textarea");
+      textarea.rows = 3;
+      textarea.placeholder = "Ajouter les ingrédients de cette recette";
+      textarea.value = meal.ingredients || "";
+      textarea.addEventListener("blur", () => saveIngredients(dayKey, textarea.value));
+      card.appendChild(textarea);
+    }
+
     grid.appendChild(card);
   });
 
