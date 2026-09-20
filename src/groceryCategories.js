@@ -58,9 +58,7 @@ function normalize(value) {
 }
 
 function findGrocerySection() {
-  return Array.from(document.querySelectorAll("main section")).find((section) =>
-    ((section.textContent || "").includes("Liste d'épicerie") || (section.textContent || "").includes("Liste d’épicerie"))
-  );
+  return document.querySelector('main > section[data-weekly-grocery="true"]');
 }
 
 function findGroceryGrid(section) {
