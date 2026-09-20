@@ -38,8 +38,7 @@ function findMealRowFromInput(input) {
   while (node && node !== document.body) {
     if (
       node.querySelector?.('input[placeholder="Nom du souper"]') &&
-      node.querySelector?.('textarea[placeholder^="Ingrédients"]') &&
-      node.querySelector?.('input[placeholder^="Commentaire du parent"]')
+      node.querySelector?.('textarea[placeholder^="Ingrédients"]')
     ) return node;
     node = node.parentElement;
   }
