@@ -367,6 +367,9 @@ function ensureCommonShell(section) {
   } else {
     wrapper.dataset.workspaceGrocery = "true";
     if (!wrapper.dataset.open) wrapper.dataset.open = "false";
+    if (wrapper.previousElementSibling !== section) {
+      section.insertAdjacentElement("afterend", wrapper);
+    }
   }
 
   let toggle = wrapper.querySelector(":scope > [data-daily-grocery-toggle]");
