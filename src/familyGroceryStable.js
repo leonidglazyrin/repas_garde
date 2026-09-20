@@ -22,9 +22,10 @@ function findSection() {
 }
 
 function findHeader(section) {
-  return Array.from(section?.children || []).find((child) =>
-    (child.textContent || "").includes("Liste d'épicerie")
-  ) || null;
+  return Array.from(section?.children || []).find((child) => {
+    const text = child.textContent || "";
+    return text.includes("Liste d'épicerie") || text.includes("Épicerie des repas");
+  }) || null;
 }
 
 function findBody(section, header) {
