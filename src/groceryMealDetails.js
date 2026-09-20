@@ -138,11 +138,6 @@ function render() {
     return meal?.status === "approved" && String(meal.name || "").trim();
   });
 
-  const heading = document.createElement("div");
-  heading.className = "grocery-recipes-heading";
-  heading.textContent = "Repas approuvés et ingrédients";
-  slot.appendChild(heading);
-
   if (!approved.length) {
     const empty = document.createElement("p");
     empty.className = "grocery-recipes-empty";
@@ -161,33 +156,26 @@ function render() {
     card.style.setProperty("--recipe-color", color);
     card.style.setProperty("--recipe-soft", soft);
 
-    const title = document.createElement("div");
+    const title = document.createElement("button");
+    title.type = "button";
     title.className = "grocery-recipe-title";
+    const expanded = expandedDays.has(dayKey);
+    title.setAttribute("aria-expanded", String(expanded));
+    title.setAttribute("aria-label", `${meal.name}, ${formatDate(weekId, offset)} — modifier les ingrédients`);
 
-    const dot = document.createElement("span");
-    dot.className = "grocery-recipe-dot";
-
-    const copy = document.createElement("div");
     const name = document.createElement("strong");
     name.textContent = meal.name;
     const meta = document.createElement("span");
-    meta.textContent = `${label} · ${formatDate(weekId, offset)}`;
-    copy.append(name, meta);
-    title.append(dot, copy);
+    meta.textContent = formatDate(weekId, offset);
+    title.append(name, meta);
 
-    const disclosure = document.createElement("button");
-    disclosure.type = "button";
-    disclosure.className = "grocery-recipe-disclosure";
-    const expanded = expandedDays.has(dayKey);
-    disclosure.setAttribute("aria-expanded", String(expanded));
-    disclosure.textContent = expanded ? "Masquer les ingrédients ▲" : "Modifier les ingrédients ▼";
-    disclosure.addEventListener("click", () => {
+    title.addEventListener("click", () => {
       if (expandedDays.has(dayKey)) expandedDays.delete(dayKey);
       else expandedDays.add(dayKey);
       schedule();
     });
 
-    card.append(title, disclosure);
+    card.append(title);
 
     if (expanded) {
       const textarea = document.createElement("textarea");
