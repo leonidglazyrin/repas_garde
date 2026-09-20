@@ -31,7 +31,9 @@ function findBody(section, header) {
 
 function isEditing() {
   const active = document.activeElement;
-  return active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement;
+  if (!active) return false;
+  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLSelectElement) return true;
+  return !!active.closest?.("#common-grocery-wrapper-stable");
 }
 
 function publishExcluded() {
@@ -127,10 +129,17 @@ async function removeItem(table, id) {
   scheduleLoadAll(250);
 }
 
+function paintStatusButtons(id, stockStatus) {
+  document.querySelectorAll(`[data-daily-grocery-item-id="${id}"] [data-daily-stock-choice]`).forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.dailyStockChoice === stockStatus));
+  });
+}
+
 async function setCommonStockStatus(id, stockStatus) {
-  const previous = common.map((item) => ({ ...item }));
+  const previousItem = common.find((item) => item.id === id);
+  const previousStatus = previousItem?.stock_status || "unknown";
   common = common.map((item) => item.id === id ? { ...item, stock_status: stockStatus } : item);
-  render();
+  paintStatusButtons(id, stockStatus);
 
   const { error } = await supabase
     .from("common_grocery_items")
@@ -139,11 +148,11 @@ async function setCommonStockStatus(id, stockStatus) {
 
   if (error) {
     console.error("set common grocery stock status", error);
-    common = previous;
-    render();
+    common = common.map((item) => item.id === id ? { ...item, stock_status: previousStatus } : item);
+    paintStatusButtons(id, previousStatus);
     return;
   }
-  scheduleLoadAll(250);
+  scheduleLoadAll(500);
 }
 
 function inputRow(placeholder, onAdd) {
@@ -348,11 +357,11 @@ function ensureCommonShell(section) {
     wrapper = document.createElement("section");
     wrapper.id = "common-grocery-wrapper-stable";
     wrapper.dataset.workspaceGrocery = "true";
-    wrapper.dataset.open = "true";
+    wrapper.dataset.open = "false";
     section.insertAdjacentElement("afterend", wrapper);
   } else {
     wrapper.dataset.workspaceGrocery = "true";
-    if (!wrapper.dataset.open) wrapper.dataset.open = "true";
+    if (!wrapper.dataset.open) wrapper.dataset.open = "false";
   }
 
   let toggle = wrapper.querySelector(":scope > [data-daily-grocery-toggle]");
@@ -464,6 +473,7 @@ function renderCommon(section) {
     items.forEach((item) => {
       const row = document.createElement("div");
       row.className = "daily-grocery-item";
+      row.dataset.dailyGroceryItemId = String(item.id);
 
       const text = document.createElement("span");
       text.className = "daily-grocery-item-name";
@@ -479,18 +489,7 @@ function renderCommon(section) {
         statusButton(item, "stock", "En stock")
       );
 
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "daily-grocery-delete";
-      del.textContent = "×";
-      del.setAttribute("aria-label", `Retirer ${item.item}`);
-      del.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        removeItem("common_grocery_items", item.id);
-      });
-
-      row.append(text, statuses, del);
+      row.append(text, statuses);
       group.appendChild(row);
     });
 
