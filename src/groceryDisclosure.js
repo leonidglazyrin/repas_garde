@@ -28,7 +28,7 @@ function styleHeader(header, open) {
     border: `2px solid ${open ? "var(--herb)" : "var(--honey)"}`,
     background: open ? "var(--herb-soft)" : "var(--honey-soft)",
     boxShadow: open ? "0 2px 8px rgba(76,107,78,0.16)" : "0 2px 8px rgba(201,138,59,0.18)",
-    fontWeight: "700",
+    fontWeight: "800",
     fontSize: "15px",
     alignItems: "center",
     gap: "10px",
@@ -37,7 +37,7 @@ function styleHeader(header, open) {
 
   Array.from(header.querySelectorAll("span")).forEach((span) => {
     if (span.dataset.groceryDisclosureArrow === "true") return;
-    span.style.fontWeight = "700";
+    span.style.fontWeight = "800";
     span.style.fontSize = "15px";
     span.style.color = open ? "var(--herb)" : "var(--ink)";
   });
