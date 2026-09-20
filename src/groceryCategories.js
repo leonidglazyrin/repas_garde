@@ -15,13 +15,15 @@ const CATEGORIES = [
       "épinards", "epinards", "champignon", "champignons", "concombre", "concombres", "aubergine", "aubergines",
       "céleri", "celeri", "poireau", "poireaux", "patate", "patates", "pomme de terre", "pommes de terre",
       "avocat", "avocats", "citron", "citrons", "lime", "limes", "pomme", "pommes", "banane", "bananes",
-      "orange", "oranges", "fraise", "fraises", "framboise", "framboises"
+      "orange", "oranges", "fraise", "fraises", "framboise", "framboises", "mangue", "mangues",
+      "bleuet", "bleuets", "kiwi", "kiwis", "fruit du dragon", "fruits du dragon", "lime", "limes"
     ],
   },
   {
     name: "Produits laitiers",
     keywords: [
-      "lait", "crème", "creme", "beurre", "fromage", "mozzarella", "cheddar", "parmesan", "yogourt", "yaourt"
+      "lait", "crème", "creme", "beurre", "fromage", "mozzarella", "cheddar", "parmesan", "brie",
+      "yogourt", "yaourt", "liberté", "liberte", "crème à cuisson", "creme a cuisson"
     ],
   },
   {
@@ -57,7 +59,7 @@ function normalize(value) {
 
 function findGrocerySection() {
   return Array.from(document.querySelectorAll("main section")).find((section) =>
-    (section.textContent || "").includes("Liste d'épicerie")
+    ((section.textContent || "").includes("Liste d'épicerie") || (section.textContent || "").includes("Liste d’épicerie"))
   );
 }
 
