@@ -421,7 +421,7 @@ function render() {
   const label = Array.from(header.querySelectorAll("span")).find((span) =>
     (span.textContent || "").includes("Liste d'épicerie")
   );
-  if (label) label.textContent = "Liste d’épicerie pour les repas préparés";
+  if (label) label.textContent = "Liste d’épicerie pour les repas de la semaine";
 
   // Le frigo et les placards restent une source de filtrage, mais ne sont plus affichés.
   const inventory = body.querySelector("[data-family-inventory-stable]");
