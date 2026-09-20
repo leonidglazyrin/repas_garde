@@ -133,15 +133,20 @@ function getMealIngredientLines() {
 
     let card = textarea.parentElement;
     let mealName = "";
+    let approved = false;
     while (card && card !== document.body) {
       const input = card.querySelector?.('input[placeholder="Nom du souper"]');
-      if (input) {
+      const approvedButton = Array.from(card.querySelectorAll?.('button[aria-pressed]') || []).find(
+        (button) => (button.textContent || "").includes("Approuvé")
+      );
+      if (input && approvedButton) {
         mealName = String(input.value || "").trim();
+        approved = approvedButton.getAttribute("aria-pressed") === "true";
         break;
       }
       card = card.parentElement;
     }
-    if (!mealName) return;
+    if (!mealName || !approved) return;
 
     String(textarea.value || "")
       .split(/[,;\n]+/)
