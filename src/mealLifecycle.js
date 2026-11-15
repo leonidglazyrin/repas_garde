@@ -136,8 +136,8 @@ async function rateMeal(weekId, dayKey, name, ingredients, rating) {
     return;
   }
 
-  // Chaque repas évalué reste dans l’historique, même si la famille ne veut plus le refaire.
-  await keepInLibrary(name, ingredients, rating);
+  // Un plat aimé ou accepté entre dans la bibliothèque. Un refus ne détruit aucun historique.
+  if (rating === "love" || rating === "okay") await keepInLibrary(name, ingredients, rating);
 
   ratings.set(dayKey, { day_key: dayKey, meal_name: name, rating });
   document.dispatchEvent(new CustomEvent("meal-rating-changed"));
