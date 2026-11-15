@@ -136,9 +136,8 @@ async function rateMeal(weekId, dayKey, name, ingredients, rating) {
     return;
   }
 
-  if (rating === "no") await removeFromLibrary(name);
-  if (rating === "love") await keepInLibrary(name, ingredients, "love");
-  if (rating === "okay") await keepInLibrary(name, ingredients, "okay");
+  // Un plat aimé ou accepté entre dans la bibliothèque. Un refus ne détruit aucun historique.
+  if (rating === "love" || rating === "okay") await keepInLibrary(name, ingredients, rating);
 
   ratings.set(dayKey, { day_key: dayKey, meal_name: name, rating });
   document.dispatchEvent(new CustomEvent("meal-rating-changed"));
@@ -314,7 +313,7 @@ document.addEventListener("focusout", (event) => {
     const rowEntry = getMealRows().find((entry) => entry.input === input);
     const dayKey = rowEntry?.day?.[1];
     if (dayKey && ratings.has(dayKey)) return;
-    await removeFromLibrary(name);
+    // Ne jamais effacer un plat de l’historique lors du changement de focus.
   }, 700);
 }, true);
 

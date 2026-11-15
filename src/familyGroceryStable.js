@@ -362,11 +362,11 @@ function ensureCommonShell(section) {
     wrapper = document.createElement("section");
     wrapper.id = "common-grocery-wrapper-stable";
     wrapper.dataset.workspaceGrocery = "true";
-    wrapper.dataset.open = "false";
+    wrapper.dataset.open = "true";
     section.insertAdjacentElement("afterend", wrapper);
   } else {
     wrapper.dataset.workspaceGrocery = "true";
-    if (!wrapper.dataset.open) wrapper.dataset.open = "false";
+    wrapper.dataset.open = "true";
     if (wrapper.previousElementSibling !== section) {
       section.insertAdjacentElement("afterend", wrapper);
     }
@@ -398,8 +398,7 @@ function ensureCommonShell(section) {
     toggle.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const nextOpen = wrapper.dataset.open !== "true";
-      wrapper.dataset.open = String(nextOpen);
+      wrapper.dataset.open = "true";
       updateCommonVisibility(wrapper);
     });
 
@@ -417,7 +416,7 @@ function ensureCommonShell(section) {
 }
 
 function updateCommonVisibility(wrapper) {
-  const open = wrapper.dataset.open === "true";
+  const open = true;
   const toggle = wrapper.querySelector(":scope > [data-daily-grocery-toggle]");
   const panel = wrapper.querySelector(":scope > [data-daily-grocery-panel]");
   const arrow = toggle?.querySelector("[data-daily-grocery-arrow]");
@@ -454,7 +453,7 @@ function renderCommon(section) {
   const { wrapper, toggle, panel } = ensureCommonShell(section);
   updateCommonVisibility(wrapper);
 
-  const open = wrapper.dataset.open === "true";
+  const open = true;
   toggle.dataset.open = String(open);
 
   panel.replaceChildren();

@@ -1,7 +1,7 @@
 #app-section-tabs {
   position: static;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   max-width: 1000px;
   margin: 0 auto;
@@ -40,6 +40,10 @@ body[data-app-tab="grocery"] main[data-workspace-ready="true"] > :not([data-work
 }
 
 body[data-app-tab="presence"] main[data-workspace-ready="true"] > :not(#presence-board-slot):not([data-workspace-presence="true"]) {
+  display: none !important;
+}
+
+body[data-app-tab="library"] main[data-workspace-ready="true"] > :not([data-workspace-library="true"]) {
   display: none !important;
 }
 
@@ -1874,3 +1878,16 @@ textarea {
 .grocery-recipe-card[style*="#E11D48"] .grocery-recipe-title strong { color: #B61639 !important; }
 
 /* redeploy refresh 2026-09-20 */
+
+/* Nouveau parcours : la liste quotidienne seule dans Épicerie. */
+body[data-app-tab="grocery"] main > section[data-weekly-grocery="true"] { display: none !important; }
+#common-grocery-wrapper-stable [data-daily-grocery-toggle] { cursor: default !important; }
+#common-grocery-wrapper-stable [data-daily-grocery-arrow] { display: none !important; }
+/* La bibliothèque demeure visible intégralement dans son onglet dédié. */
+body[data-app-tab="library"] main > [data-workspace-library="true"] { display: block !important; }
+
+/* Aucun bouton de suppression dans l'archive historique, mais les éléments
+   restent présents dans le DOM pour les fonctions de filtrage existantes. */
+body[data-app-tab="library"] [data-workspace-library="true"] button[aria-label^="Supprimer "] {
+  display: none !important;
+}

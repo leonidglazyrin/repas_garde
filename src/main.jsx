@@ -2,10 +2,8 @@ import "./domStability.js";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
-import Accompaniments from "./Accompaniments.jsx";
 import "./autosaveRealtime.js";
 import "./groceryGrouping.js";
-import "./groceryMealDetails.js";
 import "./groceryCategories.js";
 import "./groceryDisclosure.js";
 import "./todayFocus.js";
@@ -29,7 +27,6 @@ import "./weekResponsibility.css";
 import "./finalUiFixes.css";
 import "./workspaceTabs.css";
 
-const DiscoverDishes = React.lazy(() => import("./DiscoverDishes.jsx"));
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -55,14 +52,6 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <>
     <ErrorBoundary fallback={<div style={{ padding: 24, fontFamily: "system-ui" }}>L'application n'a pas pu s'afficher. Recharge la page.</div>}>
       <App />
-    </ErrorBoundary>
-    <ErrorBoundary fallback={null}>
-      <Accompaniments />
-    </ErrorBoundary>
-    <ErrorBoundary fallback={null}>
-      <React.Suspense fallback={null}>
-        <DiscoverDishes />
-      </React.Suspense>
     </ErrorBoundary>
   </>
 );
