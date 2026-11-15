@@ -7,7 +7,6 @@ const WEEKDAYS = [
   { key: "tue", label: "Mardi", color: "#C026D3" },
   { key: "wed", label: "Mercredi", color: "#0891B2" },
   { key: "thu", label: "Jeudi", color: "#7C3AED" },
-  { key: "fri", label: "Vendredi", color: "#E11D48" },
 ];
 
 const PROFILE_COLORS = ["#4C6B4E", "#C98A3B", "#B24F35", "#3E6E8E", "#7A5AA3", "#2F8F82", "#8A5A3E"];
@@ -621,6 +620,11 @@ export default function App() {
             : "Tous les soupers saisis ont une réponse des parents. Prêt pour l'épicerie."}
         </div>
 
+        <div data-workspace-meals="true" style={{ marginBottom: 16 }}>
+          <a href="https://www.metro.ca/" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--herb)", fontWeight: 800, padding: "10px 14px", border: "1px solid var(--herb)", borderRadius: 10, background: "var(--herb-soft)", textDecoration: "none" }}>
+            🛒 Ouvrir mon panier Metro et passer la commande ↗
+          </a>
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {WEEKDAYS.map((d, i) => (
             <EveningRow
@@ -634,6 +638,11 @@ export default function App() {
             />
           ))}
         </div>
+        <section data-workspace-meals="true" style={{ marginTop: 16, border: "1px solid var(--line)", borderRadius: 12, background: "var(--card)", padding: 16 }}>
+          <label htmlFor="weekend-extra-meals" style={{ display: "block", fontWeight: 800, marginBottom: 6 }}>Repas supplémentaires pour la fin de semaine (facultatif)</label>
+          <p style={{ fontSize: 12, color: "var(--ink-soft)", margin: "0 0 10px" }}>Pour les portions ou soupers préparés en trop. Cette case reste libre si rien n'est prévu.</p>
+          <textarea id="weekend-extra-meals" rows={3} value={weekendNote} onChange={(e) => updateWeekendNote(e.target.value)} placeholder="Ex. : Portions de lasagne restantes pour samedi…" style={{ ...inputStyle, width: "100%", minHeight: 72, resize: "vertical" }} />
+        </section>
 
         <section data-weekly-grocery="true" data-workspace-grocery="true" style={{ marginTop: 32 }}>
           <div data-weekly-grocery-header="true" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
@@ -748,8 +757,7 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
             onChange={(e) => setName(e.target.value)}
             onBlur={(e) => {
               onChange({ name });
-              onLibraryUpsert(name, ingredients);
-              e.currentTarget.closest(".meal-name-line")?.removeAttribute("data-editing");
+               e.currentTarget.closest(".meal-name-line")?.removeAttribute("data-editing");
             }}
             style={{ ...inputStyle, flex: "1 1 180px", fontWeight: 600, background: "var(--card)" }}
           />
