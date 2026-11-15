@@ -1891,3 +1891,39 @@ body[data-app-tab="library"] main > [data-workspace-library="true"] { display: b
 body[data-app-tab="library"] [data-workspace-library="true"] button[aria-label^="Supprimer "] {
   display: none !important;
 }
+
+/* Présences : appuyer sur le jour pour afficher ses deux consignes. */
+.presence-day-notes { margin-bottom: 8px; }
+.presence-day-toggle {
+  display: list-item;
+  list-style: disclosure-closed inside;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 800;
+  padding: 5px 0 9px;
+  color: var(--ink);
+}
+.presence-day-notes[open] > .presence-day-toggle { list-style-type: disclosure-open; }
+.presence-day-note-fields { display: grid; gap: 6px; margin: 0 0 10px; }
+.presence-day-card .presence-day-toggle { min-height: 38px; }
+.presence-day-card .presence-caregivers { min-height: 0; }
+
+/* Sur téléphone : quatre onglets en grille carrée de deux par deux. */
+@media (max-width: 700px) {
+  #app-section-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-auto-rows: minmax(58px, auto) !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+  #app-section-tabs button {
+    min-height: 58px !important;
+    font-size: 13px !important;
+    border-radius: 12px !important;
+    line-height: 1.25 !important;
+    padding: 10px 6px !important;
+  }
+}
+/* La section de génération hebdomadaire n'a plus d'interface. */
+main > section[data-weekly-grocery="true"] { display: none !important; }
