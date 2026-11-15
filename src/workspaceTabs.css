@@ -1,7 +1,7 @@
 #app-section-tabs {
   position: static;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   max-width: 1000px;
   margin: 0 auto;
@@ -40,6 +40,10 @@ body[data-app-tab="grocery"] main[data-workspace-ready="true"] > :not([data-work
 }
 
 body[data-app-tab="presence"] main[data-workspace-ready="true"] > :not(#presence-board-slot):not([data-workspace-presence="true"]) {
+  display: none !important;
+}
+
+body[data-app-tab="library"] main[data-workspace-ready="true"] > :not([data-workspace-library="true"]) {
   display: none !important;
 }
 
