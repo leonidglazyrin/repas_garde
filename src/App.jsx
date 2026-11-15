@@ -757,7 +757,7 @@ function EveningRow({ dayLabel, dateLabel, meal, library, onChange, onLibraryUps
             onChange={(e) => setName(e.target.value)}
             onBlur={(e) => {
               onChange({ name });
-               e.currentTarget.closest(".meal-name-line")?.removeAttribute("data-editing");
+              e.currentTarget.closest(".meal-name-line")?.removeAttribute("data-editing");
             }}
             style={{ ...inputStyle, flex: "1 1 180px", fontWeight: 600, background: "var(--card)" }}
           />
