@@ -5,7 +5,6 @@ import App from "./App.jsx";
 import "./autosaveRealtime.js";
 import "./groceryGrouping.js";
 import "./groceryCategories.js";
-import "./groceryDisclosure.js";
 import "./todayFocus.js";
 import "./mobileKeyboardStability.js";
 import "./libraryPickerVisibility.js";
