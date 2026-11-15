@@ -1878,3 +1878,10 @@ textarea {
 .grocery-recipe-card[style*="#E11D48"] .grocery-recipe-title strong { color: #B61639 !important; }
 
 /* redeploy refresh 2026-09-20 */
+
+/* Nouveau parcours : la liste quotidienne seule dans Épicerie. */
+body[data-app-tab="grocery"] main > section[data-weekly-grocery="true"] { display: none !important; }
+#common-grocery-wrapper-stable [data-daily-grocery-toggle] { cursor: default !important; }
+#common-grocery-wrapper-stable [data-daily-grocery-arrow] { display: none !important; }
+/* La bibliothèque demeure visible intégralement dans son onglet dédié. */
+body[data-app-tab="library"] main > [data-workspace-library="true"] { display: block !important; }
