@@ -1935,3 +1935,10 @@ main > section[data-weekly-grocery="true"] { display: none !important; }
 #common-grocery-wrapper-stable {
   margin-top: 0 !important;
 }
+
+/* Cacher definitivement l'ancien volet orange de l'epicerie hebdomadaire. */
+body[data-app-tab="grocery"] main[data-workspace-ready="true"] > section[data-weekly-grocery="true"],
+main[data-workspace-ready="true"] > section[data-weekly-grocery="true"] {
+  display: none !important;
+  visibility: hidden !important;
+}
