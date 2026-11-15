@@ -20,6 +20,7 @@ let frame = null;
 let requestId = 0;
 let pendingPresenceRender = false;
 const noteTimers = new Map();
+const expandedDayNotes = new Set();
 const NOTE_SAVE_DELAY_MS = 1500;
 
 function currentWeekId() {
@@ -220,34 +221,6 @@ function render() {
   header.innerHTML = "<strong>Présences et infos supplémentaires</strong>";
   slot.appendChild(header);
 
-  const confidential = document.createElement("details");
-  confidential.className = "presence-private-info";
-  confidential.style.cssText = "margin:0 0 16px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px";
-  const summary = document.createElement("summary");
-  summary.textContent = "Informations sur les enfants et les gardiennes — toucher la flèche pour afficher";
-  summary.style.cssText = "cursor:pointer;font-weight:800;font-size:13px;color:var(--herb)";
-  const content = document.createElement("div");
-  content.style.cssText = "padding-top:12px;font-size:13px;display:grid;gap:8px";
-  const caregiversInfo = document.createElement("div");
-  caregiversInfo.textContent = "Gardiennes : " + (caregivers.map((caregiver) => caregiver.name).join(", ") || "Aucune");
-  content.appendChild(caregiversInfo);
-  const childrenTitle = document.createElement("strong");
-  childrenTitle.textContent = "Profils des enfants et informations importantes";
-  content.appendChild(childrenTitle);
-  if (!profiles.length) {
-    const empty = document.createElement("span");
-    empty.textContent = "Aucun profil enregistré.";
-    content.appendChild(empty);
-  } else {
-    profiles.forEach((profile) => {
-      const item = document.createElement("div");
-      item.textContent = profile.name + (profile.notes ? " — " + profile.notes : "");
-      content.appendChild(item);
-    });
-  }
-  confidential.append(summary, content);
-  slot.appendChild(confidential);
-
   const grid = document.createElement("div");
   grid.className = "presence-grid";
 
@@ -255,20 +228,31 @@ function render() {
     const card = document.createElement("article");
     card.className = "presence-day-card";
 
-    const title = document.createElement("h3");
+    const dayDetails = document.createElement("details");
+    dayDetails.className = "presence-day-notes";
+    dayDetails.open = expandedDayNotes.has(dayKey);
+    const title = document.createElement("summary");
+    title.className = "presence-day-toggle";
     title.textContent = `${label} · ${formatDayDate(weekId, index)}`;
+    title.setAttribute("aria-label", `Afficher ou masquer les consignes du ${label}`);
+    dayDetails.addEventListener("toggle", () => {
+      if (dayDetails.open) expandedDayNotes.add(dayKey);
+      else expandedDayNotes.delete(dayKey);
+    });
 
     const choices = document.createElement("div");
     choices.className = "presence-caregivers";
     caregivers.forEach((caregiver) => choices.appendChild(caregiverButton(caregiver, dayKey)));
 
     const dayNote = noteFor(dayKey);
-    card.append(
-      title,
-      choices,
+    const noteFields = document.createElement("div");
+    noteFields.className = "presence-day-note-fields";
+    noteFields.append(
       inputField("Consigne spéciale de la part des parents", "Ex. rendez-vous", dayNote.special_event, (value) => saveNote(dayKey, "special_event", value), `${weekId}:${dayKey}:special_event`),
       inputField("Information des gardiennes", "Ex. ajustement d’horaire", dayNote.early_leave, (value) => saveNote(dayKey, "early_leave", value), `${weekId}:${dayKey}:early_leave`)
     );
+    dayDetails.append(title, noteFields);
+    card.append(dayDetails, choices);
     grid.appendChild(card);
   });
 
