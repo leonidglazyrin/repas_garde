@@ -552,55 +552,25 @@ export default function App() {
           </div>
         </section>
 
-        <section style={{ marginBottom: 26 }}>
+        <section data-workspace-library="true" style={{ marginBottom: 26 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <BookOpen size={16} color="var(--ink-soft)" />
-            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Bibliothèque de plats déjà utilisés</span>
+            <span style={{ fontSize: 15, color: "var(--ink)", fontWeight: 800 }}>Bibliothèque de tous les plats enregistrés</span>
           </div>
-          <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-              <div style={{ position: "relative", flex: "1 1 200px" }}>
-                <Search size={14} color="var(--ink-soft)" style={{ position: "absolute", left: 10, top: 10 }} />
-                <input
-                  placeholder="Chercher un plat ou un ingrédient..."
-                  value={librarySearch}
-                  onChange={(e) => setLibrarySearch(e.target.value)}
-                  style={{ ...inputStyle, width: "100%", paddingLeft: 30 }}
-                />
-              </div>
-              {!showAddLibraryItem && (
-                <button onClick={() => setShowAddLibraryItem(true)} style={{ ...pillBtnStyle, background: "var(--herb)", color: "#fff" }}>
-                  <Plus size={14} style={{ marginRight: 6 }} />
-                  Nouveau plat
-                </button>
-              )}
-            </div>
-            {showAddLibraryItem && (
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12, background: "var(--paper)", padding: 10, borderRadius: 8 }}>
-                <input placeholder="Nom du plat" value={newLibName} onChange={(e) => setNewLibName(e.target.value)} style={{ ...inputStyle, width: 160 }} />
-                <input placeholder="Ingrédients, séparés par virgules" value={newLibIngredients} onChange={(e) => setNewLibIngredients(e.target.value)} style={{ ...inputStyle, flex: "1 1 220px" }} />
-                <button onClick={addLibraryItemManually} style={{ ...pillBtnStyle, background: "var(--herb)", color: "#fff" }}>Enregistrer</button>
-                <button onClick={() => setShowAddLibraryItem(false)} style={{ ...pillBtnStyle, background: "transparent", border: "1px solid var(--line)", color: "var(--ink-soft)" }}>Annuler</button>
-              </div>
-            )}
-            {filteredLibrary.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>
-                Aucun plat pour l'instant. Ajoute un plat ci-dessus, ou remplis un souper plus bas — il sera enregistré ici automatiquement.
-              </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
+            {library.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--ink-soft)" }}>Aucun plat enregistré pour le moment.</p>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
-                {filteredLibrary.map((m) => (
-                  <div key={m.id} style={{ border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 6 }}>
-                      <span style={{ fontWeight: 600, fontSize: 13 }}>{m.name}</span>
-                      <button onClick={() => deleteLibraryItem(m.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)", flexShrink: 0 }} aria-label={`Supprimer ${m.name}`}>
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                    {m.ingredients && <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 4 }}>{m.ingredients}</div>}
+              [...library].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((dish) => (
+                <details key={dish.id} style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 9, padding: "12px 14px", alignSelf: "start" }}>
+                  <summary style={{ fontSize: 14, fontWeight: 700, cursor: "pointer", lineHeight: 1.4 }}>
+                    {dish.name}
+                  </summary>
+                  <div style={{ paddingTop: 10, marginTop: 8, borderTop: "1px solid var(--line)", fontSize: 13, color: "var(--ink-soft)", whiteSpace: "pre-wrap" }}>
+                    {dish.ingredients?.trim() || "Ingrédients non renseignés."}
                   </div>
-                ))}
-              </div>
+                </details>
+              ))
             )}
           </div>
         </section>
@@ -644,46 +614,10 @@ export default function App() {
           <textarea id="weekend-extra-meals" rows={3} value={weekendNote} onChange={(e) => setWeekendNote(e.target.value)} onBlur={(e) => upsertWeekendNote(weekId, e.target.value)} placeholder="Ex. : Portions de lasagne restantes pour samedi…" style={{ ...inputStyle, width: "100%", minHeight: 72, resize: "vertical" }} />
         </section>
 
-        <section data-weekly-grocery="true" data-workspace-grocery="true" style={{ marginTop: 32 }}>
-          <div data-weekly-grocery-header="true" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <CookingPot size={17} color="var(--ink-soft)" />
-            <span style={{ fontSize: 13, color: "var(--ink-soft)", fontWeight: 500 }}>Ingrédients des repas approuvés</span>
-          </div>
-          <div style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
-            {groceryList.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>
-                Aucun item pour l'instant. Les ingrédients des soupers de la semaine apparaissent ici automatiquement, sauf ceux déjà au frigo ou dans les placards.
-              </p>
-            ) : (
-              <>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 6 }}>
-                  {groceryList.map((item) => (
-                    <div key={item.key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                      <label
-                        title={item.sourceNames?.join(" · ")}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          cursor: "pointer",
-                          flex: 1,
-                          textDecoration: grocery[item.key] ? "line-through" : "none",
-                          color: grocery[item.key] ? "var(--ink-soft)" : (item.color || "var(--ink)"),
-                          fontWeight: grocery[item.key] ? 500 : 700,
-                        }}
-                      >
-                        <input type="checkbox" checked={!!grocery[item.key]} onChange={() => toggleGroceryItem(item.key)} />
-                        {item.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <button onClick={clearCheckedGrocery} style={{ ...pillBtnStyle, marginTop: 12, background: "transparent", border: "1px solid var(--line)", color: "var(--ink-soft)" }}>
-                  Décocher tout
-                </button>
-              </>
-            )}
-          </div>
+        {/* Point d'ancrage invisible pour la synchronisation de l'épicerie quotidienne. */}
+        <section data-weekly-grocery="true" data-workspace-grocery="true" aria-hidden="true" style={{ display: "none" }}>
+          <div data-weekly-grocery-header="true" />
+          <div />
         </section>
       </main>
     </div>
