@@ -1885,3 +1885,9 @@ body[data-app-tab="grocery"] main > section[data-weekly-grocery="true"] { displa
 #common-grocery-wrapper-stable [data-daily-grocery-arrow] { display: none !important; }
 /* La bibliothèque demeure visible intégralement dans son onglet dédié. */
 body[data-app-tab="library"] main > [data-workspace-library="true"] { display: block !important; }
+
+/* Aucun bouton de suppression dans l'archive historique, mais les éléments
+   restent présents dans le DOM pour les fonctions de filtrage existantes. */
+body[data-app-tab="library"] [data-workspace-library="true"] button[aria-label^="Supprimer "] {
+  display: none !important;
+}
