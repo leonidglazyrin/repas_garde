@@ -1927,3 +1927,11 @@ body[data-app-tab="library"] [data-workspace-library="true"] button[aria-label^=
 }
 /* La section de génération hebdomadaire n'a plus d'interface. */
 main > section[data-weekly-grocery="true"] { display: none !important; }
+
+/* Afficher directement l'épicerie quotidienne sans la grande bande orange. */
+#common-grocery-wrapper-stable > [data-daily-grocery-toggle] {
+  display: none !important;
+}
+#common-grocery-wrapper-stable {
+  margin-top: 0 !important;
+}
