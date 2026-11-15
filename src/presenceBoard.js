@@ -243,12 +243,6 @@ function render() {
 
   slot.appendChild(grid);
 
-  const add = document.createElement("button");
-  add.type = "button";
-  add.className = "presence-add-caregiver";
-  add.textContent = "+ Ajouter une gardienne";
-  add.addEventListener("click", addCaregiver);
-  slot.appendChild(add);
 }
 
 function schedule() {
