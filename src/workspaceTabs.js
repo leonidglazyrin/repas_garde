@@ -1,7 +1,8 @@
 const TABS = [
   ["meals", "Repas"],
+  ["presence", "Présence et info"],
   ["grocery", "Épicerie"],
-  ["presence", "Présence et infos"],
+  ["library", "Bibliothèque"],
 ];
 
 let activeTab = localStorage.getItem("repasgarde:active-tab") || "meals";
@@ -30,7 +31,7 @@ function markSections() {
   const librarySection = Array.from(main.children).find((child) =>
     (child.textContent || "").includes("Bibliothèque de plats déjà utilisés")
   );
-  if (librarySection) librarySection.dataset.workspaceHidden = "true";
+  if (librarySection) librarySection.dataset.workspaceLibrary = "true";
 
   const mealInput = main.querySelector('input[placeholder="Nom du souper"]');
   const mealBlock = directChildOfMain(mealInput);
@@ -57,7 +58,7 @@ function markSections() {
   if (ratings) ratings.dataset.workspaceMeals = "true";
 
   const discovery = document.getElementById("discover-dishes-slot");
-  if (discovery) discovery.dataset.workspaceMeals = "true";
+
 
   const groceryMeals = document.getElementById("grocery-meal-details");
   if (groceryMeals) groceryMeals.dataset.workspaceGrocery = "true";
@@ -82,6 +83,7 @@ function selectTab(key) {
     button.setAttribute("aria-selected", String(active));
   });
   scheduleMark();
+  if (key === "library") document.dispatchEvent(new CustomEvent("library-tab-opened"));
   if (key === "grocery") {
     document.dispatchEvent(new CustomEvent("grocery-tab-opened"));
   }
