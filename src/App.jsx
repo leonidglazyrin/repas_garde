@@ -641,7 +641,7 @@ export default function App() {
         <section data-workspace-meals="true" style={{ marginTop: 16, border: "1px solid var(--line)", borderRadius: 12, background: "var(--card)", padding: 16 }}>
           <label htmlFor="weekend-extra-meals" style={{ display: "block", fontWeight: 800, marginBottom: 6 }}>Repas supplémentaires pour la fin de semaine (facultatif)</label>
           <p style={{ fontSize: 12, color: "var(--ink-soft)", margin: "0 0 10px" }}>Pour les portions ou soupers préparés en trop. Cette case reste libre si rien n'est prévu.</p>
-          <textarea id="weekend-extra-meals" rows={3} value={weekendNote} onChange={(e) => updateWeekendNote(e.target.value)} placeholder="Ex. : Portions de lasagne restantes pour samedi…" style={{ ...inputStyle, width: "100%", minHeight: 72, resize: "vertical" }} />
+          <textarea id="weekend-extra-meals" rows={3} value={weekendNote} onChange={(e) => setWeekendNote(e.target.value)} onBlur={(e) => upsertWeekendNote(weekId, e.target.value)} placeholder="Ex. : Portions de lasagne restantes pour samedi…" style={{ ...inputStyle, width: "100%", minHeight: 72, resize: "vertical" }} />
         </section>
 
         <section data-weekly-grocery="true" data-workspace-grocery="true" style={{ marginTop: 32 }}>
