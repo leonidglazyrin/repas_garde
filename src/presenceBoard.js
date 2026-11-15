@@ -11,6 +11,7 @@ const DAYS = [
 const COLORS = ["#4C6B4E", "#C98A3B", "#B24F35", "#3E6E8E", "#7A5AA3", "#2F8F82", "#8A5A3E", "#B05A7A"];
 
 let caregivers = [];
+let profiles = [];
 let assignments = new Map();
 let notes = new Map();
 let activeWeek = null;
@@ -80,14 +81,16 @@ async function load() {
   const weekId = currentWeekId();
   if (!weekId) return;
   const id = ++requestId;
-  const [caregiverResult, assignmentResult, noteResult] = await Promise.all([
+  const [caregiverResult, assignmentResult, noteResult, profileResult] = await Promise.all([
     supabase.from("caregivers").select("id,name,color").order("created_at"),
     supabase.from("week_caregivers").select("day_key,caregiver_id").eq("week_id", weekId),
     supabase.from("week_presence_notes").select("day_key,special_event,early_leave").eq("week_id", weekId),
+    supabase.from("profiles").select("name,notes").order("name"),
   ]);
   if (id !== requestId || weekId !== currentWeekId()) return;
 
   if (!caregiverResult.error) caregivers = caregiverResult.data || [];
+  if (!profileResult.error) profiles = profileResult.data || [];
   if (!assignmentResult.error) {
     assignments = new Map(DAYS.map(([, key]) => [key, new Set()]));
     (assignmentResult.data || []).forEach((row) => {
@@ -216,6 +219,34 @@ function render() {
   header.className = "presence-board-header";
   header.innerHTML = "<strong>Présences et infos supplémentaires</strong>";
   slot.appendChild(header);
+
+  const confidential = document.createElement("details");
+  confidential.className = "presence-private-info";
+  confidential.style.cssText = "margin:0 0 16px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px";
+  const summary = document.createElement("summary");
+  summary.textContent = "Informations sur les enfants et les gardiennes — toucher la flèche pour afficher";
+  summary.style.cssText = "cursor:pointer;font-weight:800;font-size:13px;color:var(--herb)";
+  const content = document.createElement("div");
+  content.style.cssText = "padding-top:12px;font-size:13px;display:grid;gap:8px";
+  const caregiversInfo = document.createElement("div");
+  caregiversInfo.textContent = "Gardiennes : " + (caregivers.map((caregiver) => caregiver.name).join(", ") || "Aucune");
+  content.appendChild(caregiversInfo);
+  const childrenTitle = document.createElement("strong");
+  childrenTitle.textContent = "Profils des enfants et informations importantes";
+  content.appendChild(childrenTitle);
+  if (!profiles.length) {
+    const empty = document.createElement("span");
+    empty.textContent = "Aucun profil enregistré.";
+    content.appendChild(empty);
+  } else {
+    profiles.forEach((profile) => {
+      const item = document.createElement("div");
+      item.textContent = profile.name + (profile.notes ? " — " + profile.notes : "");
+      content.appendChild(item);
+    });
+  }
+  confidential.append(summary, content);
+  slot.appendChild(confidential);
 
   const grid = document.createElement("div");
   grid.className = "presence-grid";
