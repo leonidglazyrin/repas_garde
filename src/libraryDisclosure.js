@@ -96,7 +96,7 @@ function styleTab(button, open) {
     cursor: "pointer",
   });
   button.setAttribute("aria-expanded", String(open));
-  button.textContent = open ? "Bibliothèque de plats déjà faits ▴" : "Bibliothèque de plats déjà faits ▾";
+  button.textContent = "Tous les plats validés";
 }
 
 function ensureTabs(section) {
@@ -262,7 +262,7 @@ function initLibraryDisclosure() {
   if (!search) return false;
 
   section.dataset.libraryDisclosureReady = "true";
-  section.dataset.libraryOpen = "false";
+  section.dataset.libraryOpen = "true";
   section.dataset.libraryGenre = "ALL";
   refreshLibrary(section);
 
@@ -274,7 +274,7 @@ function initLibraryDisclosure() {
   section.addEventListener("click", (event) => {
     const savedTab = event.target.closest?.("[data-library-mode-button='saved']");
     if (savedTab) {
-      section.dataset.libraryOpen = String(!isOpen(section));
+      section.dataset.libraryOpen = "true";
       syncResults(section);
       return;
     }
